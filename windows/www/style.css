@@ -916,6 +916,20 @@ body{padding-inline:env(safe-area-inset-left) env(safe-area-inset-right)}
 .nav__search {
   position: relative;
 }
+.nav__search-btn {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-muted);
+  transition: color var(--ease);
+}
+.nav__search-btn:hover {
+  color: var(--color-accent);
+}
 .search-dropdown {
   position: absolute;
   top: calc(100% + 8px);

@@ -193,7 +193,8 @@ const BUILTIN_CATALOG = [
     synopsis: "A group of fishermen in the deep sea capture an enigmatic young woman in their net, unraveling unexplained supernatural mysteries.",
     cast: "Chanchal Chowdhury, Nazifa Tushi, Sariful Razz, Sumon Anowar, Nasir Uddin Khan",
     parentsGuide: { nudity: "None", violence: "Moderate", profanity: "Moderate" },
-    southAsian: true
+    southAsian: true,
+    bangla: true
   },
   {
     id: "priyotoma",
@@ -213,7 +214,8 @@ const BUILTIN_CATALOG = [
     synopsis: "An intense romantic tragedy that spans decades, following a fearless youth who falls in love under turbulent social circumstances.",
     cast: "Shakib Khan, Idhika Paul, Kazi Hayat, Shahiduzzaman Selim",
     parentsGuide: { nudity: "None", violence: "Moderate", profanity: "Mild" },
-    southAsian: true
+    southAsian: true,
+    bangla: true
   },
   {
     id: "toofan",
@@ -233,7 +235,8 @@ const BUILTIN_CATALOG = [
     synopsis: "Set in the 90s underworld, an ambitious gangster rises with fury to rule the city, facing off against an unyielding CID officer.",
     cast: "Shakib Khan, Mimi Chakraborty, Chanchal Chowdhury, Nabila",
     parentsGuide: { nudity: "Mild", violence: "Moderate", profanity: "Moderate" },
-    southAsian: true
+    southAsian: true,
+    bangla: true
   },
   {
     id: "surongo",
@@ -253,7 +256,8 @@ const BUILTIN_CATALOG = [
     synopsis: "Driven by extreme love and betrayal, a simple well-digger undertakes an audacious subterranean bank heist.",
     cast: "Afran Nisho, Tama Mirza, Mostafa Monwar, Shahiduzzaman Selim",
     parentsGuide: { nudity: "Moderate", violence: "Moderate", profanity: "Moderate" },
-    southAsian: true
+    southAsian: true,
+    bangla: true
   },
   {
     id: "aynabaji",
@@ -273,7 +277,8 @@ const BUILTIN_CATALOG = [
     synopsis: "Ayna is an actor who lives in Old Dhaka and serves jail time on behalf of convicted wealthy criminals, until one assignment goes dangerously wrong.",
     cast: "Chanchal Chowdhury, Masuma Rahman Nabila, Partha Barua, Lutfur Rahman George",
     parentsGuide: { nudity: "None", violence: "Mild", profanity: "Mild" },
-    southAsian: true
+    southAsian: true,
+    bangla: true
   },
   {
     id: "rrr",

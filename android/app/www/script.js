@@ -576,19 +576,47 @@ function hydrateContinueWatching() {
 
 function hydrateBanglaSection() {
   if (!banglaCarousel) return;
-  const banglaMovies = BUILTIN_CATALOG.filter(m => m.bangla);
-  banglaCarousel.innerHTML = banglaMovies.map(createMovieCardHTML).join("");
+  // If cards are already pre-rendered in HTML, do NOT overwrite them!
+  if (banglaCarousel.querySelectorAll(".movie-card").length === 0) {
+    const banglaMovies = BUILTIN_CATALOG.filter(m => m.bangla || m.southAsian);
+    banglaCarousel.innerHTML = banglaMovies.map(createMovieCardHTML).join("");
+  }
   bindCardInteractions(banglaCarousel);
   initImageLoading();
 }
 
 function hydrateThrillersSection() {
   if (!thrillersCarousel) return;
-  const thrillerMovies = BUILTIN_CATALOG.filter(m => m.thriller);
-  thrillersCarousel.innerHTML = thrillerMovies.map(createMovieCardHTML).join("");
+  // If cards are already pre-rendered in HTML, do NOT overwrite them!
+  if (thrillersCarousel.querySelectorAll(".movie-card").length === 0) {
+    const thrillerMovies = BUILTIN_CATALOG.filter(m => m.thriller);
+    thrillersCarousel.innerHTML = thrillerMovies.map(createMovieCardHTML).join("");
+  }
   bindCardInteractions(thrillersCarousel);
   initImageLoading();
 }
+
+const TMDB_GENRES = {
+  28: "Action",
+  12: "Adventure",
+  16: "Animation",
+  35: "Comedy",
+  80: "Crime",
+  99: "Documentary",
+  18: "Drama",
+  10751: "Family",
+  14: "Fantasy",
+  36: "History",
+  27: "Horror",
+  10402: "Music",
+  9648: "Mystery",
+  10749: "Romance",
+  878: "Sci-Fi",
+  10770: "TV Movie",
+  53: "Thriller",
+  10752: "War",
+  37: "Western"
+};
 
 async function fetchTmdbBrowseMovies(page = 1) {
   try {
@@ -596,62 +624,88 @@ async function fetchTmdbBrowseMovies(page = 1) {
     const res = await fetch(url);
     if (!res.ok) throw new Error("TMDB fetch failed");
     const data = await res.json();
-    return (data.results || []).map(item => ({
-      id: `tmdb_${item.id}`,
-      title: item.title,
-      year: (item.release_date || "2024").slice(0, 4),
-      duration: 130,
-      score: item.vote_average ? item.vote_average.toFixed(1) : "8.4",
-      genre: "Top Rated",
-      genres: ["Drama", "Cinema"],
-      moods: ["mind-bending", "adrenaline"],
-      tmdbId: String(item.id),
-      trailerId: "",
-      type: "movie",
-      poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "https://picsum.photos/seed/cinema/300/450",
-      synopsis: item.overview || "Acclaimed top rated cinema selection on BioscopeBD.",
-      cast: "Leading international cast and crew.",
-      parentsGuide: { nudity: "Mild", violence: "Moderate", profanity: "Mild" }
-    }));
+    return (data.results || []).map(item => {
+      const gList = (item.genre_ids || []).map(gid => TMDB_GENRES[gid]).filter(Boolean);
+      const primaryGenre = gList[0] || "Cinema";
+      return {
+        id: `tmdb_${item.id}`,
+        title: item.title,
+        year: (item.release_date || "2024").slice(0, 4),
+        duration: 130,
+        score: item.vote_average ? item.vote_average.toFixed(1) : "8.4",
+        genre: primaryGenre,
+        genres: gList.length ? gList : [primaryGenre],
+        moods: ["mind-bending", "adrenaline"],
+        tmdbId: String(item.id),
+        trailerId: "",
+        type: "movie",
+        poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "https://picsum.photos/seed/cinema/300/450",
+        synopsis: item.overview || "Acclaimed top rated cinema selection on BioscopeBD.",
+        cast: "Leading international cast and crew.",
+        parentsGuide: { nudity: "Mild", violence: "Moderate", profanity: "Mild" }
+      };
+    });
   } catch (_) {
-    // Built-in dataset fallback
-    return BUILTIN_CATALOG.filter(m => m.topRated);
+    // Built-in dataset fallback - return items from BUILTIN_CATALOG not already shown
+    const existingTitles = new Set(Array.from(document.querySelectorAll("#main-browse-grid .movie-card")).map(c => (c.dataset.title || "").toLowerCase()));
+    return BUILTIN_CATALOG.filter(m => !existingTitles.has(m.title.toLowerCase()));
   }
 }
 
 async function hydrateBrowseGrid(page = 1, append = false) {
   if (!topRatedGrid) return;
-  isLoadingMore = true;
 
   if (!append) {
-    // Show shimmer skeleton cards
-    topRatedGrid.innerHTML = Array(8).fill(`
+    // If the grid already has pre-rendered cards from HTML (e.g. 22 cards), preserve them!
+    const existingCards = topRatedGrid.querySelectorAll(".movie-card");
+    if (existingCards.length > 0) {
+      if (catalogCountBadge) {
+        catalogCountBadge.textContent = `Showing All ${existingCards.length} Titles`;
+      }
+      bindCardInteractions(topRatedGrid);
+      initImageLoading();
+      return;
+    }
+  }
+
+  // If append or empty, load more movies
+  isLoadingMore = true;
+  let tempSkeletons = null;
+
+  if (append) {
+    const skelWrap = document.createElement("div");
+    skelWrap.id = "temp-skeleton-row";
+    skelWrap.className = "skeleton-append-row";
+    skelWrap.innerHTML = Array(4).fill(`
       <div class="skeleton-card">
-        <div class="skeleton-img"></div>
-        <div class="skeleton-line" style="width:75%;"></div>
-        <div class="skeleton-line" style="width:45%;"></div>
+        <div class="skeleton-thumb"></div>
+        <div class="skeleton-title"></div>
+        <div class="skeleton-text"></div>
       </div>
     `).join("");
+    topRatedGrid.appendChild(skelWrap);
+    tempSkeletons = skelWrap;
   }
 
   const newMovies = await fetchTmdbBrowseMovies(page);
   isLoadingMore = false;
+  if (tempSkeletons) tempSkeletons.remove();
 
   if (append) {
-    displayedCatalog = [...displayedCatalog, ...newMovies];
     const html = newMovies.map(createMovieCardHTML).join("");
     topRatedGrid.insertAdjacentHTML("beforeend", html);
   } else {
-    displayedCatalog = newMovies.length ? newMovies : BUILTIN_CATALOG.filter(m => m.topRated);
-    topRatedGrid.innerHTML = displayedCatalog.map(createMovieCardHTML).join("");
+    topRatedGrid.innerHTML = newMovies.map(createMovieCardHTML).join("");
   }
 
+  const totalCards = topRatedGrid.querySelectorAll(".movie-card").length;
   if (catalogCountBadge) {
-    catalogCountBadge.textContent = `Showing ${displayedCatalog.length}+ titles`;
+    catalogCountBadge.textContent = `Showing All ${totalCards} Titles`;
   }
 
   bindCardInteractions(topRatedGrid);
   initImageLoading();
+  filterCatalog();
 }
 
 if (btnLoadMore) {
@@ -718,6 +772,22 @@ function searchCatalogPrefix(query) {
   const pool = [...BUILTIN_CATALOG];
   const seen = new Set();
   const ranked = [];
+
+  // Index cards from DOM browse grid and carousels
+  document.querySelectorAll(".movie-card").forEach(card => {
+    const title = card.dataset.title;
+    if (!title || seen.has(title.toLowerCase())) return;
+    pool.push({
+      title,
+      year: card.dataset.year || card.querySelector("p")?.textContent.slice(0, 4) || "2024",
+      tmdbId: card.dataset.tmdb || "",
+      type: card.dataset.type || "movie",
+      trailerId: card.dataset.trailer || "",
+      poster: card.querySelector("img")?.src || "https://picsum.photos/seed/cinema/300/450",
+      score: card.dataset.score || card.querySelector(".movie-card__score")?.textContent.replace("★ ", "") || "8.5",
+      genre: card.dataset.genre || "Cinema"
+    });
+  });
 
   pool.forEach(movie => {
     const title = movie.title.toLowerCase();
@@ -893,13 +963,19 @@ if (searchInput) {
   if (searchForm) {
     searchForm.addEventListener("submit", (e) => {
       e.preventDefault();
-      const first = searchDropdown?.querySelector(".search-item");
-      if (first) {
-        first.click();
-      } else {
-        const trend = document.querySelector("#trending") || document.querySelector("#top-rated");
-        if (trend) trend.scrollIntoView({ behavior: "smooth" });
-      }
+      if (searchDropdown) searchDropdown.hidden = true;
+      filterCatalog();
+      document.querySelector("#top-rated")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
+  const navSearchBtn = document.querySelector("#nav-search-btn");
+  if (navSearchBtn) {
+    navSearchBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (searchDropdown) searchDropdown.hidden = true;
+      filterCatalog();
+      document.querySelector("#top-rated")?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   }
 }
@@ -917,19 +993,35 @@ let activeDurationBudget = "all";
 let activeMood = "all";
 let activeGenre = "";
 
+function resetAllFilters() {
+  activeDurationBudget = "all";
+  activeMood = "all";
+  activeGenre = "";
+  if (searchInput) searchInput.value = "";
+  document.querySelectorAll(".budget-chip").forEach(c => c.classList.toggle("is-active", c.dataset.duration === "all" || !c.dataset.duration));
+  document.querySelectorAll(".mood-chip").forEach(c => c.classList.toggle("is-active", c.dataset.mood === "all" || !c.dataset.mood));
+  document.querySelectorAll("[data-genre-filter]").forEach(c => c.classList.remove("is-active"));
+  filterCatalog();
+}
+
 function filterCatalog() {
   const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
   const allCards = document.querySelectorAll(".movie-card");
+  let visibleInBrowseGrid = 0;
 
   allCards.forEach(card => {
     const title = (card.dataset.title || "").toLowerCase();
-    const genre = card.dataset.genre || "";
-    const mood = card.dataset.mood || "";
+    const genre = (card.dataset.genre || "").toLowerCase();
+    const genres = (card.dataset.genres || "").toLowerCase();
+    const mood = (card.dataset.mood || "").toLowerCase();
     const duration = parseInt(card.dataset.duration || "120", 10);
 
-    const matchesQuery = !query || title.includes(query) || genre.toLowerCase().includes(query) || mood.includes(query);
+    const matchesQuery = !query || title.includes(query) || genre.includes(query) || genres.includes(query) || mood.includes(query);
     const matchesMood = activeMood === "all" || mood.includes(activeMood);
-    const matchesGenre = !activeGenre || genre === activeGenre;
+    
+    // Check genre against primary genre and all genres
+    const targetGenre = activeGenre.toLowerCase();
+    const matchesGenre = !activeGenre || genre.includes(targetGenre) || genres.includes(targetGenre);
 
     let matchesDuration = true;
     if (activeDurationBudget === "short") matchesDuration = duration <= 30;
@@ -938,7 +1030,64 @@ function filterCatalog() {
 
     const show = matchesQuery && matchesMood && matchesGenre && matchesDuration;
     card.hidden = !show;
+
+    if (show && card.closest("#main-browse-grid")) {
+      visibleInBrowseGrid++;
+    }
   });
+
+  // Carousel sections clean hide/show:
+  // If activeGenre or search query is active, hide carousels that have 0 visible cards so there is no awkward empty space
+  const carousels = [
+    { sec: document.querySelector("#trending"), car: document.querySelector("#trending-carousel") },
+    { sec: document.querySelector("#ai-cinema"), car: document.querySelector("#ai-carousel") },
+    { sec: document.querySelector("#bangla-gems"), car: document.querySelector("#bangla-carousel") },
+    { sec: document.querySelector("#mind-thrillers"), car: document.querySelector("#thrillers-carousel") }
+  ];
+
+  carousels.forEach(({ sec, car }) => {
+    if (!sec || !car) return;
+    if (!activeGenre && !query && activeMood === "all" && activeDurationBudget === "all") {
+      sec.style.display = "";
+    } else {
+      const hasVisible = Array.from(car.querySelectorAll(".movie-card")).some(c => !c.hidden);
+      sec.style.display = hasVisible ? "" : "none";
+    }
+  });
+
+  // Update catalog count badge
+  if (catalogCountBadge) {
+    if (activeGenre) {
+      catalogCountBadge.textContent = `Showing ${visibleInBrowseGrid} ${activeGenre} Titles`;
+    } else if (query) {
+      catalogCountBadge.textContent = `Found ${visibleInBrowseGrid} results for "${query}"`;
+    } else {
+      const total = document.querySelectorAll("#main-browse-grid .movie-card").length;
+      catalogCountBadge.textContent = `Showing All ${total} Titles`;
+    }
+  }
+
+  // Handle empty state in main browse grid if no matches
+  let emptyState = document.querySelector("#catalog-empty-state");
+  if (visibleInBrowseGrid === 0) {
+    if (!emptyState) {
+      emptyState = document.createElement("div");
+      emptyState.id = "catalog-empty-state";
+      emptyState.className = "catalog-empty-state";
+      topRatedGrid?.appendChild(emptyState);
+    }
+    emptyState.hidden = false;
+    emptyState.innerHTML = `
+      <div style="text-align:center; padding: 48px 20px; color: var(--color-muted); grid-column: 1 / -1; width: 100%;">
+        <p style="font-size: 1.25rem; font-weight: 700; margin-bottom: 8px; color: #fff;">🎬 No titles found matching "${activeGenre || query}"</p>
+        <p style="font-size: 0.9rem; margin-bottom: 16px;">Try selecting another genre or resetting all filters.</p>
+        <button type="button" class="button button--secondary button--sm" id="btn-reset-filters">Reset All Filters</button>
+      </div>
+    `;
+    emptyState.querySelector("#btn-reset-filters")?.addEventListener("click", resetAllFilters);
+  } else if (emptyState) {
+    emptyState.hidden = true;
+  }
 }
 
 // Time Budget Chips
@@ -948,6 +1097,7 @@ document.querySelectorAll(".budget-chip").forEach(chip => {
     document.querySelectorAll(".budget-chip").forEach(c => c.classList.toggle("is-active", c === chip));
     filterCatalog();
     notify(`⏱️ Duration Filter: ${chip.textContent.trim()}`);
+    document.querySelector("#top-rated")?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 });
 
@@ -957,15 +1107,20 @@ document.querySelectorAll(".mood-chip").forEach(chip => {
     activeMood = chip.dataset.mood || "all";
     document.querySelectorAll(".mood-chip").forEach(c => c.classList.toggle("is-active", c === chip));
     filterCatalog();
+    document.querySelector("#top-rated")?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 });
 
 // Genre Chips
 document.querySelectorAll("[data-genre-filter]").forEach(chip => {
   chip.addEventListener("click", () => {
-    activeGenre = activeGenre === chip.dataset.genreFilter ? "" : chip.dataset.genreFilter;
+    const filter = chip.dataset.genreFilter;
+    activeGenre = activeGenre === filter ? "" : filter;
     document.querySelectorAll("[data-genre-filter]").forEach(c => c.classList.toggle("is-active", c.dataset.genreFilter === activeGenre));
     filterCatalog();
+    if (activeGenre) {
+      document.querySelector("#top-rated")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   });
 });
 
@@ -1317,8 +1472,10 @@ function openStream(title, tmdbId, type = "movie", trailerId = "") {
 
   if (videoTitle) videoTitle.textContent = `Now Streaming: ${title}`;
 
-  // If YouTube/AI Cinema or trailer-only title
-  if (type === "youtube" || !tmdbId) {
+  // Prioritize unified custom BioscopeBD Media Player wrapper with zero external site branding
+  if (trailerId) {
+    loadCustomWhitelabelStream(trailerId);
+  } else if (type === "youtube" || !tmdbId) {
     loadCustomWhitelabelStream(trailerId || "Way9Dexny3w");
   } else {
     stopCustomWhitelabelStream();
@@ -1801,7 +1958,10 @@ if (dialogPartyBtn && quickDialog) {
 
 // Bind clicks on cards
 function bindCardInteractions(container) {
+  if (!container) return;
   container.querySelectorAll(".quick-view").forEach(btn => {
+    if (btn.dataset.bound) return;
+    btn.dataset.bound = "true";
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
       openQuickView(btn.dataset.title || btn.closest(".movie-card")?.dataset.title);
@@ -1809,6 +1969,8 @@ function bindCardInteractions(container) {
   });
 
   container.querySelectorAll(".card-play-btn").forEach(btn => {
+    if (btn.dataset.bound) return;
+    btn.dataset.bound = "true";
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
       openStream(btn.dataset.title, btn.dataset.tmdb, btn.dataset.type, btn.dataset.trailer);
@@ -1816,6 +1978,8 @@ function bindCardInteractions(container) {
   });
 
   container.querySelectorAll(".movie-card").forEach(card => {
+    if (card.dataset.bound) return;
+    card.dataset.bound = "true";
     card.addEventListener("click", () => {
       openStream(card.dataset.title, card.dataset.tmdb, card.dataset.type, card.dataset.trailer);
     });

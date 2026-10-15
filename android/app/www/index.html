@@ -46,7 +46,9 @@
       </div>
       <form class="nav__search" role="search" id="search-form">
         <label class="sr-only" for="site-search">Search movies, mood, or dialogue</label>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg>
+        <button type="submit" class="nav__search-btn" id="nav-search-btn" aria-label="Search movies">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg>
+        </button>
         <input id="site-search" type="search" placeholder="Search movie, mood, or dialogue..." autocomplete="off">
         <div class="search-dropdown" id="search-dropdown" role="listbox" aria-label="Search recommendations" hidden></div>
       </form>
@@ -517,7 +519,111 @@
           <button class="round-button" id="bangla-next" type="button" aria-label="Scroll Bangla movies right">→</button>
         </div>
       </div>
-      <div class="carousel" id="bangla-carousel" aria-label="Bangla and South Asian movies"></div>
+      <div class="carousel" id="bangla-carousel" aria-label="Bangla and South Asian movies">
+        <article class="movie-card" data-title="Hawa (হাওয়া)" data-genre="Drama" data-genres="Drama Mystery Thriller" data-mood="rainy mind-bending" data-tmdb="1009187" data-trailer="0YvVw1E5pE0" data-type="movie" data-duration="135">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/0oXq2Zf0X02b2j6kK1LqWbYxM2s.jpg" alt="Hawa" loading="lazy">
+            <span class="movie-card__score">★ 8.5</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.5 · Mystery</p>
+              <button type="button" class="button button--primary quick-view" data-title="Hawa (হাওয়া)">Quick View</button>
+            </div>
+          </div>
+          <h3>Hawa (হাওয়া)</h3>
+          <p>2022 · Bangla Cinema · Mystery</p>
+        </article>
+
+        <article class="movie-card" data-title="Priyotoma (প্রিয়তমা)" data-genre="Romance" data-genres="Romance Drama Action" data-mood="feel-good rainy" data-tmdb="1147573" data-trailer="2xM3c6C1sN8" data-type="movie" data-duration="150">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/s3T1vB4w5eJ3k0eH9Vf7o2bN.jpg" alt="Priyotoma" loading="lazy">
+            <span class="movie-card__score">★ 8.2</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.2 · Romance</p>
+              <button type="button" class="button button--primary quick-view" data-title="Priyotoma (প্রিয়তমা)">Quick View</button>
+            </div>
+          </div>
+          <h3>Priyotoma (প্রিয়তমা)</h3>
+          <p>2023 · Bangla Cinema · Romance</p>
+        </article>
+
+        <article class="movie-card" data-title="Toofan (তুফান)" data-genre="Action" data-genres="Action Crime Thriller" data-mood="adrenaline" data-tmdb="1255979" data-trailer="C9jT4qA7B4E" data-type="movie" data-duration="145">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/n5O3p5vW7Jk0eH9Vf7o2bN.jpg" alt="Toofan" loading="lazy">
+            <span class="movie-card__score">★ 8.6</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.6 · Action Thriller</p>
+              <button type="button" class="button button--primary quick-view" data-title="Toofan (তুফান)">Quick View</button>
+            </div>
+          </div>
+          <h3>Toofan (তুফান)</h3>
+          <p>2024 · Shakib Khan Blockbuster</p>
+        </article>
+
+        <article class="movie-card" data-title="Aynabaji (আয়নাবাজি)" data-genre="Thriller" data-genres="Thriller Crime Drama" data-mood="mind-bending" data-tmdb="418827" data-trailer="JgVvD9fN7V8" data-type="movie" data-duration="144">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/m5T1vB4w5eJ3k0eH9Vf7o2bN.jpg" alt="Aynabaji" loading="lazy">
+            <span class="movie-card__score">★ 8.9</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.9 · Crime Mystery</p>
+              <button type="button" class="button button--primary quick-view" data-title="Aynabaji (আয়নাবাজি)">Quick View</button>
+            </div>
+          </div>
+          <h3>Aynabaji (আয়নাবাজি)</h3>
+          <p>2016 · Chanchal Chowdhury Classic</p>
+        </article>
+
+        <article class="movie-card" data-title="Shurongo (সুরঙ্গ)" data-genre="Thriller" data-genres="Thriller Crime Mystery" data-mood="mind-bending adrenaline" data-tmdb="1144081" data-trailer="Wv0Gv1J4XwM" data-type="movie" data-duration="150">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/k5T1vB4w5eJ3k0eH9Vf7o2bN.jpg" alt="Shurongo" loading="lazy">
+            <span class="movie-card__score">★ 8.4</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.4 · Bank Heist</p>
+              <button type="button" class="button button--primary quick-view" data-title="Shurongo (সুরঙ্গ)">Quick View</button>
+            </div>
+          </div>
+          <h3>Shurongo (সুরঙ্গ)</h3>
+          <p>2023 · Afran Nisho Thriller</p>
+        </article>
+
+        <article class="movie-card" data-title="Pather Panchali (পথের পাঁচালী)" data-genre="Drama" data-genres="Drama Classic History" data-mood="rainy family feel-good" data-tmdb="5900" data-trailer="H3dD7-r1Fj8" data-type="movie" data-duration="125">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/8gT1vB4w5eJ3k0eH9Vf7o2bN.jpg" alt="Pather Panchali" loading="lazy">
+            <span class="movie-card__score">★ 9.1</span>
+            <div class="movie-card__overlay">
+              <p>★ 9.1 · Satyajit Ray</p>
+              <button type="button" class="button button--primary quick-view" data-title="Pather Panchali (পথের পাঁচালী)">Quick View</button>
+            </div>
+          </div>
+          <h3>Pather Panchali (পথের পাঁচালী)</h3>
+          <p>1955 · All-Time Masterpiece</p>
+        </article>
+
+        <article class="movie-card" data-title="Poran (পরাণ)" data-genre="Romance" data-genres="Romance Crime Thriller" data-mood="adrenaline" data-tmdb="1003463" data-trailer="K9T4qA7B4E" data-type="movie" data-duration="138">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/p5T1vB4w5eJ3k0eH9Vf7o2bN.jpg" alt="Poran" loading="lazy">
+            <span class="movie-card__score">★ 8.1</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.1 · Thriller Romance</p>
+              <button type="button" class="button button--primary quick-view" data-title="Poran (পরাণ)">Quick View</button>
+            </div>
+          </div>
+          <h3>Poran (পরাণ)</h3>
+          <p>2022 · Bidya Sinha Mim Hit</p>
+        </article>
+
+        <article class="movie-card" data-title="Monpura (মনপুরা)" data-genre="Drama" data-genres="Drama Romance Music" data-mood="rainy feel-good" data-tmdb="43336" data-trailer="M8T4qA7B4E" data-type="movie" data-duration="140">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/q5T1vB4w5eJ3k0eH9Vf7o2bN.jpg" alt="Monpura" loading="lazy">
+            <span class="movie-card__score">★ 8.7</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.7 · Folk Romance</p>
+              <button type="button" class="button button--primary quick-view" data-title="Monpura (মনপুরা)">Quick View</button>
+            </div>
+          </div>
+          <h3>Monpura (মনপুরা)</h3>
+          <p>2009 · Giasuddin Selim Classic</p>
+        </article>
+      </div>
     </section>
 
     <!-- 6.5 Mind-Bending Thrillers & Sci-Fi Epics -->
@@ -532,7 +638,111 @@
           <button class="round-button" id="thrillers-next" type="button" aria-label="Scroll thriller movies right">→</button>
         </div>
       </div>
-      <div class="carousel" id="thrillers-carousel" aria-label="Mind-bending thriller movies"></div>
+      <div class="carousel" id="thrillers-carousel" aria-label="Mind-bending thriller movies">
+        <article class="movie-card" data-title="Inception" data-genre="Sci-Fi" data-genres="Sci-Fi Action Thriller" data-mood="mind-bending adrenaline" data-tmdb="27205" data-trailer="YoHD9XEInc0" data-type="movie" data-duration="148">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg" alt="Inception" loading="lazy">
+            <span class="movie-card__score">★ 8.8</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.8 · Mind-Bending</p>
+              <button type="button" class="button button--primary quick-view" data-title="Inception">Quick View</button>
+            </div>
+          </div>
+          <h3>Inception</h3>
+          <p>2010 · Christopher Nolan</p>
+        </article>
+
+        <article class="movie-card" data-title="Shutter Island" data-genre="Thriller" data-genres="Thriller Mystery Drama" data-mood="mind-bending rainy" data-tmdb="11324" data-trailer="5iaYLCiq5RM" data-type="movie" data-duration="138">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/4GDy0PHYX3VRXUtwK5ysagvk2Te.jpg" alt="Shutter Island" loading="lazy">
+            <span class="movie-card__score">★ 8.2</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.2 · Mystery</p>
+              <button type="button" class="button button--primary quick-view" data-title="Shutter Island">Quick View</button>
+            </div>
+          </div>
+          <h3>Shutter Island</h3>
+          <p>2010 · Martin Scorsese</p>
+        </article>
+
+        <article class="movie-card" data-title="Interstellar" data-genre="Sci-Fi" data-genres="Sci-Fi Adventure Drama" data-mood="mind-bending" data-tmdb="157336" data-trailer="zSWdZVtXT7E" data-type="movie" data-duration="169">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg" alt="Interstellar" loading="lazy">
+            <span class="movie-card__score">★ 8.7</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.7 · Cosmic Sci-Fi</p>
+              <button type="button" class="button button--primary quick-view" data-title="Interstellar">Quick View</button>
+            </div>
+          </div>
+          <h3>Interstellar</h3>
+          <p>2014 · Christopher Nolan</p>
+        </article>
+
+        <article class="movie-card" data-title="Se7en" data-genre="Thriller" data-genres="Thriller Crime Mystery" data-mood="mind-bending rainy" data-tmdb="807" data-trailer="znmZoVkCjpI" data-type="movie" data-duration="127">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/6yoghtyTpznpBik8EngEmJskVUO.jpg" alt="Se7en" loading="lazy">
+            <span class="movie-card__score">★ 8.6</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.6 · Crime Mystery</p>
+              <button type="button" class="button button--primary quick-view" data-title="Se7en">Quick View</button>
+            </div>
+          </div>
+          <h3>Se7en</h3>
+          <p>1995 · David Fincher</p>
+        </article>
+
+        <article class="movie-card" data-title="Parasite" data-genre="Comedy" data-genres="Comedy Thriller Drama" data-mood="mind-bending" data-tmdb="496243" data-trailer="5xH0R_fxysQ" data-type="movie" data-duration="132">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg" alt="Parasite" loading="lazy">
+            <span class="movie-card__score">★ 8.5</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.5 · Dark Comedy</p>
+              <button type="button" class="button button--primary quick-view" data-title="Parasite">Quick View</button>
+            </div>
+          </div>
+          <h3>Parasite</h3>
+          <p>2019 · Bong Joon-ho Oscar Winner</p>
+        </article>
+
+        <article class="movie-card" data-title="Fight Club" data-genre="Drama" data-genres="Drama Thriller Action" data-mood="adrenaline mind-bending" data-tmdb="550" data-trailer="qtRKdVHc-cE" data-type="movie" data-duration="139">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg" alt="Fight Club" loading="lazy">
+            <span class="movie-card__score">★ 8.8</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.8 · Cult Classic</p>
+              <button type="button" class="button button--primary quick-view" data-title="Fight Club">Quick View</button>
+            </div>
+          </div>
+          <h3>Fight Club</h3>
+          <p>1999 · David Fincher</p>
+        </article>
+
+        <article class="movie-card" data-title="The Prestige" data-genre="Thriller" data-genres="Thriller Drama Mystery" data-mood="mind-bending" data-tmdb="1124" data-trailer="o4gHCmTQDVI" data-type="movie" data-duration="130">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/bdN3gXu4zBvG4Vv1V3K3K9oN.jpg" alt="The Prestige" loading="lazy">
+            <span class="movie-card__score">★ 8.5</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.5 · Mystery Illusion</p>
+              <button type="button" class="button button--primary quick-view" data-title="The Prestige">Quick View</button>
+            </div>
+          </div>
+          <h3>The Prestige</h3>
+          <p>2006 · Christopher Nolan</p>
+        </article>
+
+        <article class="movie-card" data-title="Memento" data-genre="Thriller" data-genres="Thriller Mystery Drama" data-mood="mind-bending" data-tmdb="77" data-trailer="4CV41hoyS8A" data-type="movie" data-duration="113">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/yuNs09hvpHVU19thMFdt9NmK2P4.jpg" alt="Memento" loading="lazy">
+            <span class="movie-card__score">★ 8.4</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.4 · Reverse Mystery</p>
+              <button type="button" class="button button--primary quick-view" data-title="Memento">Quick View</button>
+            </div>
+          </div>
+          <h3>Memento</h3>
+          <p>2000 · Christopher Nolan</p>
+        </article>
+      </div>
     </section>
 
     <!-- 7. High-Density Browse Grid with TMDB Pagination & Infinite Scroll -->
@@ -561,7 +771,317 @@
         <div class="skeleton-card"><div class="skeleton-thumb"></div><div class="skeleton-title"></div><div class="skeleton-text"></div></div>
       </div>
 
-      <div class="movie-grid" id="main-browse-grid"></div>
+      <div class="movie-grid" id="main-browse-grid">
+        <!-- 1. Comedy: Parasite -->
+        <article class="movie-card" data-title="Parasite" data-genre="Comedy" data-genres="Comedy Thriller Drama" data-mood="mind-bending" data-tmdb="496243" data-trailer="5xH0R_fxysQ" data-type="movie" data-duration="132">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg" alt="Parasite" loading="lazy">
+            <span class="movie-card__score">★ 8.5</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.5 · Dark Comedy</p>
+              <button type="button" class="button button--primary quick-view" data-title="Parasite">Quick View</button>
+            </div>
+          </div>
+          <h3>Parasite</h3>
+          <p>2019 · Dark Comedy · Oscar Winner</p>
+        </article>
+
+        <!-- 2. Comedy: The Grand Budapest Hotel -->
+        <article class="movie-card" data-title="The Grand Budapest Hotel" data-genre="Comedy" data-genres="Comedy Adventure Drama" data-mood="feel-good" data-tmdb="120467" data-trailer="1Fg5iWmQjwk" data-type="movie" data-duration="99">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/eWdyYQreja6JGCzqHWXpWHDrrPo.jpg" alt="The Grand Budapest Hotel" loading="lazy">
+            <span class="movie-card__score">★ 8.1</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.1 · Wes Anderson Comedy</p>
+              <button type="button" class="button button--primary quick-view" data-title="The Grand Budapest Hotel">Quick View</button>
+            </div>
+          </div>
+          <h3>The Grand Budapest Hotel</h3>
+          <p>2014 · Comedy · Wes Anderson</p>
+        </article>
+
+        <!-- 3. Comedy: Superbad -->
+        <article class="movie-card" data-title="Superbad" data-genre="Comedy" data-genres="Comedy Coming-of-Age" data-mood="feel-good" data-tmdb="8363" data-trailer="4eaZ_48ZYog" data-type="movie" data-duration="113">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/ek8e8txUyUwd2BNqj6lFEerJfbq.jpg" alt="Superbad" loading="lazy">
+            <span class="movie-card__score">★ 7.7</span>
+            <div class="movie-card__overlay">
+              <p>★ 7.7 · Cult Comedy</p>
+              <button type="button" class="button button--primary quick-view" data-title="Superbad">Quick View</button>
+            </div>
+          </div>
+          <h3>Superbad</h3>
+          <p>2007 · Comedy · Jonah Hill</p>
+        </article>
+
+        <!-- 4. Action: The Dark Knight -->
+        <article class="movie-card" data-title="The Dark Knight" data-genre="Action" data-genres="Action Crime Thriller" data-mood="adrenaline mind-bending" data-tmdb="155" data-trailer="EXeTwQWrcwY" data-type="movie" data-duration="152">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg" alt="The Dark Knight" loading="lazy">
+            <span class="movie-card__score">★ 9.0</span>
+            <div class="movie-card__overlay">
+              <p>★ 9.0 · Action Epic</p>
+              <button type="button" class="button button--primary quick-view" data-title="The Dark Knight">Quick View</button>
+            </div>
+          </div>
+          <h3>The Dark Knight</h3>
+          <p>2008 · Action · Christopher Nolan</p>
+        </article>
+
+        <!-- 5. Action: John Wick 4 -->
+        <article class="movie-card" data-title="John Wick: Chapter 4" data-genre="Action" data-genres="Action Thriller Crime" data-mood="adrenaline" data-tmdb="603692" data-trailer="qEVUtrk8_B4" data-type="movie" data-duration="169">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/vZloFAK7NKnMGKEslUsZloNXzBP.jpg" alt="John Wick 4" loading="lazy">
+            <span class="movie-card__score">★ 8.2</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.2 · Action Thriller</p>
+              <button type="button" class="button button--primary quick-view" data-title="John Wick: Chapter 4">Quick View</button>
+            </div>
+          </div>
+          <h3>John Wick: Chapter 4</h3>
+          <p>2023 · Action · Keanu Reeves</p>
+        </article>
+
+        <!-- 6. Action: Mad Max: Fury Road -->
+        <article class="movie-card" data-title="Mad Max: Fury Road" data-genre="Action" data-genres="Action Sci-Fi Adventure" data-mood="adrenaline" data-tmdb="76341" data-trailer="hEJnMQG930g" data-type="movie" data-duration="120">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/hA2ple9q4qnwxp3hKVNhroipsir.jpg" alt="Mad Max: Fury Road" loading="lazy">
+            <span class="movie-card__score">★ 8.6</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.6 · Non-Stop Action</p>
+              <button type="button" class="button button--primary quick-view" data-title="Mad Max: Fury Road">Quick View</button>
+            </div>
+          </div>
+          <h3>Mad Max: Fury Road</h3>
+          <p>2015 · Action · George Miller</p>
+        </article>
+
+        <!-- 7. Drama: Oppenheimer -->
+        <article class="movie-card" data-title="Oppenheimer" data-genre="Drama" data-genres="Drama Biography History" data-mood="mind-bending" data-tmdb="872585" data-trailer="uYPbbksJxIg" data-type="movie" data-duration="180">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg" alt="Oppenheimer" loading="lazy">
+            <span class="movie-card__score">★ 8.9</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.9 · Masterpiece Drama</p>
+              <button type="button" class="button button--primary quick-view" data-title="Oppenheimer">Quick View</button>
+            </div>
+          </div>
+          <h3>Oppenheimer</h3>
+          <p>2023 · Drama · Cillian Murphy</p>
+        </article>
+
+        <!-- 8. Drama: The Shawshank Redemption -->
+        <article class="movie-card" data-title="The Shawshank Redemption" data-genre="Drama" data-genres="Drama Crime Classic" data-mood="feel-good rainy" data-tmdb="278" data-trailer="PLl99DlL6b4" data-type="movie" data-duration="142">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg" alt="The Shawshank Redemption" loading="lazy">
+            <span class="movie-card__score">★ 9.3</span>
+            <div class="movie-card__overlay">
+              <p>★ 9.3 · All-Time #1 Drama</p>
+              <button type="button" class="button button--primary quick-view" data-title="The Shawshank Redemption">Quick View</button>
+            </div>
+          </div>
+          <h3>The Shawshank Redemption</h3>
+          <p>1994 · Drama · Frank Darabont</p>
+        </article>
+
+        <!-- 9. Drama: Whiplash -->
+        <article class="movie-card" data-title="Whiplash" data-genre="Drama" data-genres="Drama Music Psychological" data-mood="adrenaline mind-bending" data-tmdb="244786" data-trailer="7d_jQycdQGo" data-type="movie" data-duration="107">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/7fn624j5lj3xTme2SgiLCeuedmO.jpg" alt="Whiplash" loading="lazy">
+            <span class="movie-card__score">★ 8.5</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.5 · Intense Drama</p>
+              <button type="button" class="button button--primary quick-view" data-title="Whiplash">Quick View</button>
+            </div>
+          </div>
+          <h3>Whiplash</h3>
+          <p>2014 · Drama · Damien Chazelle</p>
+        </article>
+
+        <!-- 10. Horror: A Quiet Place -->
+        <article class="movie-card" data-title="A Quiet Place" data-genre="Horror" data-genres="Horror Sci-Fi Thriller" data-mood="adrenaline rainy" data-tmdb="447332" data-trailer="WR7cc5t7tv8" data-type="movie" data-duration="90">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/nAU74GmpUk7t5iklEp3bufwDq4n.jpg" alt="A Quiet Place" loading="lazy">
+            <span class="movie-card__score">★ 7.5</span>
+            <div class="movie-card__overlay">
+              <p>★ 7.5 · Horror Sci-Fi</p>
+              <button type="button" class="button button--primary quick-view" data-title="A Quiet Place">Quick View</button>
+            </div>
+          </div>
+          <h3>A Quiet Place</h3>
+          <p>2018 · Horror · Emily Blunt</p>
+        </article>
+
+        <!-- 11. Horror: Hereditary -->
+        <article class="movie-card" data-title="Hereditary" data-genre="Horror" data-genres="Horror Mystery Drama" data-mood="mind-bending" data-tmdb="493922" data-trailer="V6wWKNij_1M" data-type="movie" data-duration="127">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/p9fmuz2Oj3HtEJHG0wJt5J6x9iR.jpg" alt="Hereditary" loading="lazy">
+            <span class="movie-card__score">★ 7.3</span>
+            <div class="movie-card__overlay">
+              <p>★ 7.3 · Psychological Horror</p>
+              <button type="button" class="button button--primary quick-view" data-title="Hereditary">Quick View</button>
+            </div>
+          </div>
+          <h3>Hereditary</h3>
+          <p>2018 · Horror · Ari Aster</p>
+        </article>
+
+        <!-- 12. Horror: The Conjuring -->
+        <article class="movie-card" data-title="The Conjuring" data-genre="Horror" data-genres="Horror Mystery Thriller" data-mood="adrenaline" data-tmdb="138843" data-trailer="k10ETZ41q5o" data-type="movie" data-duration="112">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/wVYREutTvI2tmxr6ujrHT704wGF.jpg" alt="The Conjuring" loading="lazy">
+            <span class="movie-card__score">★ 7.5</span>
+            <div class="movie-card__overlay">
+              <p>★ 7.5 · Supernatural Horror</p>
+              <button type="button" class="button button--primary quick-view" data-title="The Conjuring">Quick View</button>
+            </div>
+          </div>
+          <h3>The Conjuring</h3>
+          <p>2013 · Horror · James Wan</p>
+        </article>
+
+        <!-- 13. Sci-Fi: Interstellar -->
+        <article class="movie-card" data-title="Interstellar" data-genre="Sci-Fi" data-genres="Sci-Fi Adventure Drama" data-mood="mind-bending" data-tmdb="157336" data-trailer="zSWdZVtXT7E" data-type="movie" data-duration="169">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg" alt="Interstellar" loading="lazy">
+            <span class="movie-card__score">★ 8.7</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.7 · Cosmic Sci-Fi</p>
+              <button type="button" class="button button--primary quick-view" data-title="Interstellar">Quick View</button>
+            </div>
+          </div>
+          <h3>Interstellar</h3>
+          <p>2014 · Sci-Fi · Christopher Nolan</p>
+        </article>
+
+        <!-- 14. Sci-Fi: Dune: Part Two -->
+        <article class="movie-card" data-title="Dune: Part Two" data-genre="Sci-Fi" data-genres="Sci-Fi Adventure Action" data-mood="adrenaline mind-bending" data-tmdb="693134" data-trailer="Way9Dexny3w" data-type="movie" data-duration="166">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg" alt="Dune 2" loading="lazy">
+            <span class="movie-card__score">★ 8.7</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.7 · Sci-Fi Masterpiece</p>
+              <button type="button" class="button button--primary quick-view" data-title="Dune: Part Two">Quick View</button>
+            </div>
+          </div>
+          <h3>Dune: Part Two</h3>
+          <p>2024 · Sci-Fi Epic · Denis Villeneuve</p>
+        </article>
+
+        <!-- 15. Sci-Fi: The Matrix -->
+        <article class="movie-card" data-title="The Matrix" data-genre="Sci-Fi" data-genres="Sci-Fi Action Cyberpunk" data-mood="mind-bending adrenaline" data-tmdb="603" data-trailer="vKQi3bBA1y8" data-type="movie" data-duration="136">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg" alt="The Matrix" loading="lazy">
+            <span class="movie-card__score">★ 8.7</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.7 · Cyberpunk Classic</p>
+              <button type="button" class="button button--primary quick-view" data-title="The Matrix">Quick View</button>
+            </div>
+          </div>
+          <h3>The Matrix</h3>
+          <p>1999 · Sci-Fi · Keanu Reeves</p>
+        </article>
+
+        <!-- 16. Romance: La La Land -->
+        <article class="movie-card" data-title="La La Land" data-genre="Romance" data-genres="Romance Comedy Musical Drama" data-mood="feel-good rainy" data-tmdb="313369" data-trailer="0pdqf4P9MB8" data-type="movie" data-duration="128">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/uDO8zWDhfWwoFdKS4fzkVJt0Rf0.jpg" alt="La La Land" loading="lazy">
+            <span class="movie-card__score">★ 8.0</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.0 · Romance Musical</p>
+              <button type="button" class="button button--primary quick-view" data-title="La La Land">Quick View</button>
+            </div>
+          </div>
+          <h3>La La Land</h3>
+          <p>2016 · Romance · Emma Stone</p>
+        </article>
+
+        <!-- 17. Romance: Titanic -->
+        <article class="movie-card" data-title="Titanic" data-genre="Romance" data-genres="Romance Drama Classic" data-mood="feel-good" data-tmdb="597" data-trailer="2e-eXJ6HgkQ" data-type="movie" data-duration="194">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/9xjZS2rlVxm8SFx8kPC3aIGCOYQ.jpg" alt="Titanic" loading="lazy">
+            <span class="movie-card__score">★ 7.9</span>
+            <div class="movie-card__overlay">
+              <p>★ 7.9 · Epic Romance</p>
+              <button type="button" class="button button--primary quick-view" data-title="Titanic">Quick View</button>
+            </div>
+          </div>
+          <h3>Titanic</h3>
+          <p>1997 · Romance · James Cameron</p>
+        </article>
+
+        <!-- 18. Animation: Spirited Away -->
+        <article class="movie-card" data-title="Spirited Away" data-genre="Animation" data-genres="Animation Fantasy Adventure Family" data-mood="family feel-good" data-tmdb="129" data-trailer="ByXuk9QqQkk" data-type="movie" data-duration="125">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg" alt="Spirited Away" loading="lazy">
+            <span class="movie-card__score">★ 8.6</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.6 · Studio Ghibli</p>
+              <button type="button" class="button button--primary quick-view" data-title="Spirited Away">Quick View</button>
+            </div>
+          </div>
+          <h3>Spirited Away</h3>
+          <p>2001 · Animation · Hayao Miyazaki</p>
+        </article>
+
+        <!-- 19. Animation: Spider-Man: Across the Spider-Verse -->
+        <article class="movie-card" data-title="Spider-Man: Across the Spider-Verse" data-genre="Animation" data-genres="Animation Action Sci-Fi Adventure" data-mood="family adrenaline" data-tmdb="569094" data-trailer="cqGjhVJWtEg" data-type="movie" data-duration="140">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg" alt="Spider-Man" loading="lazy">
+            <span class="movie-card__score">★ 8.7</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.7 · Sony Animation</p>
+              <button type="button" class="button button--primary quick-view" data-title="Spider-Man: Across the Spider-Verse">Quick View</button>
+            </div>
+          </div>
+          <h3>Spider-Man: Spider-Verse</h3>
+          <p>2023 · Animation · Family Safe</p>
+        </article>
+
+        <!-- 20. AI Cinema: The Trigger -->
+        <article class="movie-card movie-card--ai" data-title="The Trigger" data-genre="AI Cinema" data-genres="AI Cinema Action Sci-Fi" data-mood="ai-cinema adrenaline" data-tmdb="" data-trailer="IAl240xpSGM" data-type="youtube" data-duration="24">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://picsum.photos/seed/trigger/500/750" alt="The Trigger" loading="lazy">
+            <span class="movie-card__score">★ 9.4</span>
+            <span class="badge-studio">Higgsfield AI</span>
+            <div class="movie-card__overlay">
+              <p>★ 9.4 · AI Action</p>
+              <button type="button" class="button button--primary quick-view" data-title="The Trigger">Quick View</button>
+            </div>
+          </div>
+          <h3>The Trigger</h3>
+          <p>2026 · Higgsfield AI Originals</p>
+        </article>
+
+        <!-- 21. AI Cinema: ANERNEQ -->
+        <article class="movie-card movie-card--ai" data-title="ANERNEQ: Arctic Drama" data-genre="AI Cinema" data-genres="AI Cinema Drama Sci-Fi" data-mood="ai-cinema rainy mind-bending" data-tmdb="" data-trailer="UQDM-ZigvGo" data-type="youtube" data-duration="28">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://picsum.photos/seed/anerneq/500/750" alt="ANERNEQ" loading="lazy">
+            <span class="movie-card__score">★ 9.6</span>
+            <span class="badge-studio">Higgsfield AI</span>
+            <div class="movie-card__overlay">
+              <p>★ 9.6 · Arctic Drama</p>
+              <button type="button" class="button button--primary quick-view" data-title="ANERNEQ: Arctic Drama">Quick View</button>
+            </div>
+          </div>
+          <h3>ANERNEQ: Arctic Drama</h3>
+          <p>2026 · Higgsfield AI Originals</p>
+        </article>
+
+        <!-- 22. Short Film: The Red Balloon -->
+        <article class="movie-card" data-title="The Red Balloon" data-genre="Short Film" data-genres="Short Film Fantasy Classic Family" data-mood="family feel-good" data-tmdb="" data-trailer="V_k8oaeHsnc" data-type="youtube" data-duration="34">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=480&q=80" alt="The Red Balloon" loading="lazy">
+            <span class="movie-card__score">★ 8.2</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.2 · Oscar Winning Short</p>
+              <button type="button" class="button button--primary quick-view" data-title="The Red Balloon">Quick View</button>
+            </div>
+          </div>
+          <h3>The Red Balloon</h3>
+          <p>1956 · Classic Short Film</p>
+        </article>
+      </div>
 
       <!-- Load More Action Bar -->
       <div class="load-more-wrap" id="load-more-wrap">
