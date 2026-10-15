@@ -97,6 +97,18 @@ if (menuButton && menu) {
   }));
 }
 
+// Synchronize sticky header height for the sticky genre explorer bar
+function updateStickyHeaderOffset() {
+  const header = document.querySelector(".site-header");
+  if (header) {
+    const h = header.offsetHeight;
+    document.documentElement.style.setProperty("--header-height", `${h}px`);
+  }
+}
+window.addEventListener("resize", updateStickyHeaderOffset, { passive: true });
+window.addEventListener("load", updateStickyHeaderOffset);
+updateStickyHeaderOffset();
+
 // Sign In notice - 100% Free
 const navSignInBtn = document.querySelector(".nav__sign-in");
 if (navSignInBtn) {
