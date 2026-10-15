@@ -1409,6 +1409,38 @@ mark.search-match {
   gap: 8px;
   flex-wrap: wrap;
 }
+.quality-selector-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(245, 197, 24, 0.08);
+  border: 1px solid rgba(245, 197, 24, 0.38);
+  border-radius: 100px;
+  padding: 3px 8px 3px 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.quality-selector-wrap:hover {
+  background: rgba(245, 197, 24, 0.16);
+  border-color: var(--color-accent);
+}
+.quality-picker-select {
+  background: transparent;
+  border: none;
+  color: #ffe071;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+  padding: 1px 2px;
+}
+.quality-picker-select option {
+  background: #12131a;
+  color: #fff;
+  font-weight: 600;
+}
 .stream-badge {
   font-size: 0.7rem;
   font-weight: 700;

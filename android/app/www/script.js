@@ -1339,14 +1339,8 @@ function loadCustomWhitelabelStream(videoId) {
     customYtFrame.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&playsinline=1&enablejsapi=1&origin=${origin}`;
   }
 
-  if (videoStreamStatus) {
-    const activeMovie = BUILTIN_CATALOG.find(m => m.title === activeStream?.title);
-    const initialQuality = activeMovie?.quality || (activeStream?.title?.includes("4K") ? "4K ULTRA HD" : "1080p FULL HD");
-    videoStreamStatus.innerHTML = `
-      <span class="stream-badge stream-badge--live" id="stream-quality-badge"><span class="badge-dot"></span> ${initialQuality}</span>
-      <span class="stream-badge stream-badge--engine">BioscopeBD Cinema Engine</span>
-    `;
-  }
+  const engineBadge = document.querySelector("#stream-engine-badge");
+  if (engineBadge) engineBadge.textContent = "BioscopeBD Cinema Engine";
 }
 
 function stopCustomWhitelabelStream() {
@@ -1410,32 +1404,69 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
-function updateStreamResolutionBadge(quality = "1080p") {
-  const badge = document.querySelector("#stream-quality-badge") || videoStreamStatus?.querySelector(".stream-badge--live");
-  if (!badge) return;
+// Stream Resolution & Quality Selector System
+const playerQualityPicker = document.querySelector("#player-quality-picker");
+const btnQualityTool = document.querySelector("#btn-quality-tool");
+const toolbarQualityLabel = document.querySelector("#toolbar-quality-label");
 
-  let text = "1080p FULL HD";
-  const q = String(quality).toLowerCase();
+const QUALITY_RESOLUTIONS = [
+  { val: "1080p", label: "1080p (Full HD)", yt: "hd1080" },
+  { val: "720p", label: "720p (HD)", yt: "hd720" },
+  { val: "480p", label: "480p (SD)", yt: "large" },
+  { val: "360p", label: "360p (Low)", yt: "medium" },
+  { val: "auto", label: "Auto (Adaptive)", yt: "auto" }
+];
 
-  if (q.includes("2160") || q.includes("4k") || q === "highres") {
-    text = "4K ULTRA HD";
-  } else if (q.includes("1440") || q === "hd1440") {
-    text = "1440p QHD";
-  } else if (q.includes("1080") || q === "hd1080") {
-    text = "1080p FULL HD";
-  } else if (q.includes("720") || q === "hd720") {
-    text = "720p HD";
-  } else if (q.includes("480") || q === "large") {
-    text = "480p SD";
-  } else if (q.includes("360") || q === "medium") {
-    text = "360p SD";
-  } else if (q.includes("240") || q.includes("144") || q === "small" || q === "tiny") {
-    text = "240p SD";
-  } else if (q) {
-    text = quality.toUpperCase();
+let activeStreamQuality = "1080p";
+
+function setStreamQuality(qualityVal, notifyUser = true) {
+  activeStreamQuality = qualityVal;
+  if (playerQualityPicker) playerQualityPicker.value = qualityVal;
+  if (toolbarQualityLabel) toolbarQualityLabel.textContent = qualityVal.toUpperCase();
+
+  const qItem = QUALITY_RESOLUTIONS.find(q => q.val === qualityVal) || QUALITY_RESOLUTIONS[0];
+
+  // If YouTube / Custom Player is active, apply quality range to YouTube API
+  if (customPlayerStage && !customPlayerStage.hidden) {
+    sendYtCommand("setPlaybackQuality", [qItem.yt]);
+    sendYtCommand("setPlaybackQualityRange", [qItem.yt, qItem.yt]);
   }
 
-  badge.innerHTML = `<span class="badge-dot"></span> ${text}`;
+  if (notifyUser) {
+    notify(`⚡ Stream resolution: ${qItem.label}`);
+  }
+}
+
+if (playerQualityPicker) {
+  playerQualityPicker.addEventListener("change", (e) => {
+    setStreamQuality(e.target.value, true);
+  });
+}
+
+if (btnQualityTool) {
+  btnQualityTool.addEventListener("click", () => {
+    // Cycle through: 1080p -> 720p -> 480p -> 360p -> auto -> 1080p
+    const currentIndex = QUALITY_RESOLUTIONS.findIndex(q => q.val === activeStreamQuality);
+    const nextIndex = (currentIndex + 1) % QUALITY_RESOLUTIONS.length;
+    const nextQuality = QUALITY_RESOLUTIONS[nextIndex].val;
+    setStreamQuality(nextQuality, true);
+  });
+}
+
+function updateStreamResolutionBadge(quality = "1080p") {
+  const q = String(quality).toLowerCase();
+  let matched = "1080p";
+  if (q.includes("2160") || q.includes("4k") || q === "highres") matched = "1080p";
+  else if (q.includes("1440") || q === "hd1440") matched = "1080p";
+  else if (q.includes("1080") || q === "hd1080") matched = "1080p";
+  else if (q.includes("720") || q === "hd720") matched = "720p";
+  else if (q.includes("480") || q === "large") matched = "480p";
+  else if (q.includes("360") || q === "medium") matched = "360p";
+  else if (q.includes("240") || q.includes("144") || q === "small" || q === "tiny") matched = "360p";
+
+  if (playerQualityPicker && playerQualityPicker.value === "auto") {
+    if (toolbarQualityLabel) toolbarQualityLabel.textContent = matched.toUpperCase();
+  }
 }
 
 // PostMessage listener from YouTube iframe
@@ -1471,15 +1502,8 @@ function loadSilentStreamEndpoint(failoverIndex = 0) {
     if (streamLoadingText) streamLoadingText.textContent = `Connecting to ${currentProvider.name}...`;
   }
 
-  if (videoStreamStatus) {
-    const activeMovie = BUILTIN_CATALOG.find(m => m.title === activeStream?.title);
-    const initialQuality = activeMovie?.quality || (activeStream?.title?.includes("4K") ? "4K ULTRA HD" : "1080p FULL HD");
-
-    videoStreamStatus.innerHTML = `
-      <span class="stream-badge stream-badge--live" id="stream-quality-badge"><span class="badge-dot"></span> ${initialQuality}</span>
-      <span class="stream-badge stream-badge--engine">Auto-Optimized Stream</span>
-    `;
-  }
+  const engineBadge = document.querySelector("#stream-engine-badge");
+  if (engineBadge) engineBadge.textContent = "Auto-Optimized Stream";
 
   if (videoFrame) {
     videoFrame.hidden = false;
@@ -1757,13 +1781,8 @@ async function streamTorrentMagnet(magnetURI, movieTitle = "") {
   if (torrentStage) torrentStage.hidden = false;
   if (torrentMagnetBar) torrentMagnetBar.hidden = false;
 
-  const is4k = movieTitle.toLowerCase().includes("4k") || magnetURI.toLowerCase().includes("4k");
-  if (videoStreamStatus) {
-    videoStreamStatus.innerHTML = `
-      <span class="stream-badge stream-badge--live" id="stream-quality-badge"><span class="badge-dot"></span> ${is4k ? "4K ULTRA HD" : "1080p FULL HD"}</span>
-      <span class="stream-badge stream-badge--engine">Torrent Swarm Stream</span>
-    `;
-  }
+  const engineBadge = document.querySelector("#stream-engine-badge");
+  if (engineBadge) engineBadge.textContent = "Torrent Swarm Stream";
 
   if (torrentStatusText) torrentStatusText.textContent = "Connecting to P2P swarm...";
 
