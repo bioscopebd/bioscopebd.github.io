@@ -1483,7 +1483,7 @@ function loadSilentStreamEndpoint(failoverIndex = 0) {
 
   if (videoFrame) {
     videoFrame.hidden = false;
-    videoFrame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-presentation");
+    videoFrame.removeAttribute("sandbox");
     videoFrame.src = currentProvider.getUrl(activeStream.tmdbId, activeStream.type);
   }
 
@@ -1493,6 +1493,19 @@ function loadSilentStreamEndpoint(failoverIndex = 0) {
   }, 3800);
 }
 
+async function getTmdbTrailerId(tmdbId, type = "movie") {
+  try {
+    const url = `https://api.themoviedb.org/3/${type}/${tmdbId}/videos?api_key=${CONFIG.TMDB_API_KEY}&language=en-US`;
+    const res = await fetch(url);
+    if (!res.ok) return "";
+    const data = await res.json();
+    const trailer = (data.results || []).find(v => v.site === "YouTube" && (v.type === "Trailer" || v.type === "Teaser")) || data.results?.[0];
+    return trailer?.key || "";
+  } catch (_) {
+    return "";
+  }
+}
+
 function handleStreamErrorOrTimeout() {
   clearTimeout(failoverTimer);
   if (currentFailoverIndex < CONFIG.STREAM_SERVERS.length - 1) {
@@ -1500,20 +1513,34 @@ function handleStreamErrorOrTimeout() {
     console.info(`🔄 Silent failover switched to backup stream index: ${currentFailoverIndex}`);
     loadSilentStreamEndpoint(currentFailoverIndex);
   } else {
-    // If all failover mirrors exhaust, fallback to custom whitelabel trailer/film
+    // If all failover mirrors exhaust, fallback to custom whitelabel trailer/teaser
     if (streamLoadingShield) streamLoadingShield.hidden = true;
     if (activeStream?.trailerId) {
       loadCustomWhitelabelStream(activeStream.trailerId);
+    } else if (activeStream?.tmdbId) {
+      getTmdbTrailerId(activeStream.tmdbId, activeStream.type).then(tKey => {
+        if (tKey) loadCustomWhitelabelStream(tKey);
+        else notify("⚠️ This title is not yet available for full streaming.");
+      });
     }
   }
 }
 
 // Master openStream function
-function openStream(title, tmdbId, type = "movie", trailerId = "") {
+async function openStream(title, tmdbId, type = "movie", trailerId = "") {
   activeStream = { title, tmdbId, type, trailerId };
   currentFailoverIndex = 0;
 
   if (videoTitle) videoTitle.textContent = `Now Streaming: ${title}`;
+
+  // If trailerId is missing but we have a tmdbId, prefetch its trailer in background
+  if (!trailerId && tmdbId) {
+    getTmdbTrailerId(tmdbId, type).then(tKey => {
+      if (tKey && activeStream?.tmdbId === tmdbId) {
+        activeStream.trailerId = tKey;
+      }
+    });
+  }
 
   // Prioritize unified custom BioscopeBD Media Player wrapper with zero external site branding
   if (trailerId) {
