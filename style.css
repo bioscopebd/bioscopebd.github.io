@@ -2341,3 +2341,202 @@ mark.search-match {
   font-size: 1rem;
 }
 
+/* --- High-Performance Instant Rendering (Deferred Painting) --- */
+.section-deferred {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 450px;
+}
+
+/* --- Player Toolbar Download Button --- */
+.player-tool-btn--download {
+  border-color: rgba(0, 210, 255, 0.35);
+  background: rgba(0, 210, 255, 0.08);
+}
+.player-tool-btn--download:hover {
+  background: rgba(0, 210, 255, 0.18);
+  border-color: #00d2ff;
+  color: #00d2ff;
+}
+
+/* --- Offline Cinema Downloader Dialog --- */
+.download-dialog {
+  border: 1px solid rgba(245, 197, 24, 0.28);
+  background: rgba(14, 15, 22, 0.96);
+  backdrop-filter: blur(28px);
+  border-radius: 20px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.88), 0 0 32px rgba(245, 197, 24, 0.12);
+  color: #fff;
+  width: min(94vw, 680px);
+  padding: 0;
+  overflow: hidden;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  z-index: 1000;
+}
+.download-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(10px);
+}
+.download-modal-inner {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.download-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 16px;
+}
+.download-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.download-icon-glow {
+  font-size: 1.8rem;
+  background: rgba(245, 197, 24, 0.14);
+  border: 1px solid rgba(245, 197, 24, 0.3);
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+}
+.download-header-left h3 {
+  font-size: 1.2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.download-movie-name {
+  font-size: 0.84rem;
+  color: var(--color-accent);
+  margin: 2px 0 0;
+  font-weight: 600;
+}
+.download-close-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #fff;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+.download-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+.download-subtitle {
+  font-size: 0.82rem;
+  color: var(--color-muted);
+  margin: 0;
+  line-height: 1.45;
+}
+.download-tiers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
+.download-tier-card {
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+.download-tier-card:hover {
+  border-color: rgba(245, 197, 24, 0.35);
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(-2px);
+}
+.tier-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.tier-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(245, 197, 24, 0.18);
+  color: #ffe071;
+  border: 1px solid rgba(245, 197, 24, 0.35);
+}
+.tier-badge--dim {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ddd;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+.tier-badge--accent {
+  background: rgba(0, 210, 255, 0.15);
+  color: #00d2ff;
+  border-color: rgba(0, 210, 255, 0.35);
+}
+.tier-badge--pwa {
+  background: rgba(138, 43, 226, 0.2);
+  color: #d199ff;
+  border-color: rgba(138, 43, 226, 0.4);
+}
+.tier-speed {
+  font-size: 0.72rem;
+  color: var(--color-muted);
+  font-weight: 600;
+}
+.download-tier-card h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0;
+  color: #fff;
+}
+.download-tier-card p {
+  font-size: 0.76rem;
+  color: var(--color-muted);
+  margin: 0 0 6px;
+  line-height: 1.4;
+  flex: 1;
+}
+.dl-btn-group {
+  display: flex;
+  gap: 8px;
+}
+.download-tip-box {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: rgba(245, 197, 24, 0.06);
+  border: 1px solid rgba(245, 197, 24, 0.22);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.download-tip-box .tip-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+.download-tip-box .tip-content strong {
+  display: block;
+  font-size: 0.78rem;
+  color: #ffe071;
+  margin-bottom: 2px;
+}
+.download-tip-box .tip-content p {
+  font-size: 0.74rem;
+  color: var(--color-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
