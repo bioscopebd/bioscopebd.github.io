@@ -383,47 +383,6 @@ if (dualSubBtn) {
   });
 }
 
-// Watch Party Flagship Hub Actions
-const hubHostPartyBtn = document.querySelector("#hub-host-party-btn");
-const hubJoinPartyBtn = document.querySelector("#hub-join-party-btn");
-const simulatePauseBtn = document.querySelector("#btn-simulate-pause-req");
-const partyChatBox = document.querySelector("#party-chat-box");
-
-if (hubHostPartyBtn) {
-  hubHostPartyBtn.addEventListener("click", () => {
-    if (tabHost && hostView && tabJoin && joinView) {
-      tabHost.classList.add("is-active");
-      tabJoin.classList.remove("is-active");
-      hostView.hidden = false;
-      joinView.hidden = true;
-    }
-    openWatchParty();
-  });
-}
-
-if (hubJoinPartyBtn) {
-  hubJoinPartyBtn.addEventListener("click", () => {
-    if (tabHost && hostView && tabJoin && joinView) {
-      tabJoin.classList.add("is-active");
-      tabHost.classList.remove("is-active");
-      joinView.hidden = false;
-      hostView.hidden = true;
-    }
-    openWatchParty();
-  });
-}
-
-if (simulatePauseBtn && partyChatBox) {
-  simulatePauseBtn.addEventListener("click", () => {
-    const pauseMsg = document.createElement("div");
-    pauseMsg.className = "chat-msg";
-    pauseMsg.style.cssText = "background:rgba(255,132,0,0.15);border-left:3px solid #ff8400;padding:6px 8px;border-radius:4px;";
-    pauseMsg.innerHTML = "<strong>✋ Rahim:</strong> 'Bro, pause 2 minutes please! Getting popcorn 🍿'";
-    partyChatBox.appendChild(pauseMsg);
-    partyChatBox.scrollTop = partyChatBox.scrollHeight;
-    notify("🔔 [Watch Party Alert] Rahim requested a 2-min pause! Only Host has pause authority.");
-  });
-}
 
 // Hero actions
 const heroMovieBtn = document.querySelector("#hero-watch-movie");
@@ -682,6 +641,48 @@ if (submitJoinBtn && joinInput && partyDialog) {
     partyDialog.close();
     openStream("Dune: Part Two", "693134", "movie", "Way9Dexny3w");
     notify(`🍿 Connected to Party Room ${code}! Synced stream started.`);
+  });
+}
+
+// Watch Party Flagship Hub Buttons
+const hubHostPartyBtn = document.querySelector("#hub-host-party-btn");
+const hubJoinPartyBtn = document.querySelector("#hub-join-party-btn");
+const simulatePauseBtn = document.querySelector("#btn-simulate-pause-req");
+const partyChatBox = document.querySelector("#party-chat-box");
+
+if (hubHostPartyBtn) {
+  hubHostPartyBtn.addEventListener("click", () => {
+    if (tabHost && hostView && tabJoin && joinView) {
+      tabHost.classList.add("is-active");
+      tabJoin.classList.remove("is-active");
+      hostView.hidden = false;
+      joinView.hidden = true;
+    }
+    openWatchParty();
+  });
+}
+
+if (hubJoinPartyBtn) {
+  hubJoinPartyBtn.addEventListener("click", () => {
+    if (tabHost && hostView && tabJoin && joinView) {
+      tabJoin.classList.add("is-active");
+      tabHost.classList.remove("is-active");
+      joinView.hidden = false;
+      hostView.hidden = true;
+    }
+    openWatchParty();
+  });
+}
+
+if (simulatePauseBtn && partyChatBox) {
+  simulatePauseBtn.addEventListener("click", () => {
+    const pauseMsg = document.createElement("div");
+    pauseMsg.className = "chat-msg";
+    pauseMsg.style.cssText = "background:rgba(255,132,0,0.15);border-left:3px solid #ff8400;padding:6px 8px;border-radius:4px;";
+    pauseMsg.innerHTML = "<strong>✋ Rahim:</strong> 'Bro, pause 2 minutes please! Getting popcorn 🍿'";
+    partyChatBox.appendChild(pauseMsg);
+    partyChatBox.scrollTop = partyChatBox.scrollHeight;
+    notify("🔔 [Watch Party Alert] Rahim requested a 2-min pause! Only Host has pause authority.");
   });
 }
 
