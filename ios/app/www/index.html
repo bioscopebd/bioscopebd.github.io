@@ -21,6 +21,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <title>BioscopeBD — Movies, AI Cinema & Interactive Streaming</title>
+  <script src="https://cdn.jsdelivr.net/npm/webtorrent@1.9.7/webtorrent.min.js" defer></script>
   <script src="script.js" defer></script>
 </head>
 <body data-theme="dark">
@@ -696,16 +697,32 @@
           <button type="button" class="video-dialog__server-btn" data-server="2">Server 2 (SuperFast HD)</button>
           <button type="button" class="video-dialog__server-btn" data-server="3">Server 3 (VIP Cinema)</button>
           <button type="button" class="video-dialog__server-btn" data-server="4">Server 4 (Cloud Mirror)</button>
-          <button type="button" class="video-dialog__server-btn" data-server="5">Server 5 (Backup Engine)</button>
+          <button type="button" class="video-dialog__server-btn" data-server="torrent">Server 5 (Torrent Stream ⚡)</button>
           <button type="button" class="video-dialog__server-btn" data-server="trailer">Trailer</button>
         </div>
         <button class="video-dialog__close" id="video-dialog-close" type="button" aria-label="Close player">×</button>
       </div>
     </div>
 
-    <!-- Video Stage with X-Ray Overlay -->
+    <!-- Video Stage with X-Ray Overlay & Native Torrent Player -->
     <div class="video-dialog__stage" id="video-stage">
       <iframe id="video-player-frame" src="" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation" allowfullscreen allow="autoplay; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="no-referrer-when-downgrade"></iframe>
+
+      <!-- Native HTML5 Torrent Player with Live Telemetry HUD -->
+      <div class="torrent-stage" id="torrent-stage" hidden>
+        <video id="torrent-video-player" class="torrent-video-player" controls playsinline></video>
+        <div class="torrent-hud" id="torrent-hud">
+          <div class="torrent-hud__status">
+            <span class="hud-pulse"></span>
+            <strong id="torrent-status-text">Connecting to Torrent Swarm & Seeders...</strong>
+          </div>
+          <div class="torrent-hud__stats">
+            <span>⚡ Speed: <strong id="torrent-speed">0 KB/s</strong></span>
+            <span>👥 Peers: <strong id="torrent-peers">0</strong></span>
+            <span>📦 Buffered: <strong id="torrent-progress">0%</strong></span>
+          </div>
+        </div>
+      </div>
 
       <!-- X-Ray Overlay ("Who's on screen?") -->
       <div class="xray-overlay" id="xray-overlay" hidden>
@@ -752,6 +769,10 @@
           <span class="tool-icon">🎧</span>
           <span class="tool-label">Night Audio</span>
         </button>
+        <button type="button" class="player-tool-btn player-tool-btn--torrent" id="btn-toggle-magnet" title="Paste Magnet Link to Stream Torrent Directly">
+          <span class="tool-icon">🧲</span>
+          <span class="tool-label">Torrent Magnet</span>
+        </button>
       </div>
 
       <div class="player-toolbar__group">
@@ -762,6 +783,21 @@
           <button type="button" class="sub-btn" id="btn-sub-plus" title="Advance subtitle by 0.5s">+0.5s</button>
           <button type="button" class="sub-btn sub-btn--lang" id="btn-dual-sub" title="English + Bangla Dual Subtitles">Dual Sub</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Expandable Torrent Magnet Stream Bar -->
+    <div class="torrent-magnet-bar" id="torrent-magnet-bar" hidden>
+      <div class="torrent-input-group">
+        <span class="magnet-icon">🧲</span>
+        <input type="text" id="torrent-magnet-input" placeholder="Paste torrent magnet link here (magnet:?xt=urn:btih:...) or movie info-hash..." autocomplete="off">
+        <button type="button" class="button button--primary button--sm" id="btn-start-magnet-stream">⚡ Stream Torrent</button>
+      </div>
+      <div class="torrent-presets">
+        <span>Instant Samples:</span>
+        <button type="button" class="preset-btn" data-magnet="magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com">🎬 Sintel 4K</button>
+        <button type="button" class="preset-btn" data-magnet="magnet:?xt=urn:btih:dd8255ecdc7ca55fb0bbee81323d87062db1f6d1&dn=Big+Buck+Bunny&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com">🐰 Big Buck Bunny</button>
+        <button type="button" class="preset-btn" data-magnet="magnet:?xt=urn:btih:209c8226b299e3c1d16867352f461f32491323a3&dn=Tears+of+Steel&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com">🚀 Tears of Steel</button>
       </div>
     </div>
   </dialog>

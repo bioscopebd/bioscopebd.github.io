@@ -481,20 +481,206 @@ function openStream(title, tmdbId, type = "movie", trailerId = "") {
   if (videoDialog) videoDialog.showModal();
 }
 
+// WebTorrent Native Streaming Engine & HUD Elements
+const torrentStage = document.querySelector("#torrent-stage");
+const torrentVideoPlayer = document.querySelector("#torrent-video-player");
+const torrentHud = document.querySelector("#torrent-hud");
+const torrentStatusText = document.querySelector("#torrent-status-text");
+const torrentSpeed = document.querySelector("#torrent-speed");
+const torrentPeers = document.querySelector("#torrent-peers");
+const torrentProgress = document.querySelector("#torrent-progress");
+const torrentMagnetBar = document.querySelector("#torrent-magnet-bar");
+const torrentMagnetInput = document.querySelector("#torrent-magnet-input");
+const btnStartMagnetStream = document.querySelector("#btn-start-magnet-stream");
+const btnToggleMagnet = document.querySelector("#btn-toggle-magnet");
+let wtClient = null;
+let currentTorrent = null;
+let wtStatsInterval = null;
+
+const WEBTORRENT_TRACKERS = [
+  "wss://tracker.openwebtorrent.com",
+  "wss://tracker.btorrent.xyz",
+  "wss://tracker.fastcast.nz",
+  "wss://tracker.webtorrent.dev"
+];
+
+function formatBytes(bytes) {
+  if (!bytes || bytes === 0) return "0 KB/s";
+  const k = 1024;
+  const sizes = ["B/s", "KB/s", "MB/s", "GB/s"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+}
+
+function loadWebTorrentScript() {
+  return new Promise((resolve, reject) => {
+    if (window.WebTorrent) {
+      resolve(window.WebTorrent);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/webtorrent@1.9.7/webtorrent.min.js";
+    script.async = true;
+    script.onload = () => resolve(window.WebTorrent);
+    script.onerror = () => reject(new Error("Failed to load WebTorrent engine"));
+    document.head.appendChild(script);
+  });
+}
+
+function stopTorrentStream() {
+  if (wtStatsInterval) {
+    clearInterval(wtStatsInterval);
+    wtStatsInterval = null;
+  }
+  if (torrentVideoPlayer) {
+    torrentVideoPlayer.pause();
+    torrentVideoPlayer.removeAttribute("src");
+    torrentVideoPlayer.load();
+  }
+  if (currentTorrent) {
+    try {
+      currentTorrent.destroy();
+    } catch (_) {}
+    currentTorrent = null;
+  }
+  if (torrentSpeed) torrentSpeed.textContent = "0 KB/s";
+  if (torrentPeers) torrentPeers.textContent = "0";
+  if (torrentProgress) torrentProgress.textContent = "0%";
+}
+
+async function streamTorrentMagnet(magnetURI, movieTitle = "") {
+  if (!magnetURI || !magnetURI.trim()) {
+    notify("⚠️ Please enter or select a valid torrent magnet link.");
+    return;
+  }
+  const magnet = magnetURI.trim();
+  stopTorrentStream();
+
+  if (videoFrame) {
+    videoFrame.hidden = true;
+    videoFrame.src = "";
+  }
+  if (torrentStage) torrentStage.hidden = false;
+  if (torrentMagnetBar) torrentMagnetBar.hidden = false;
+  if (btnToggleMagnet) btnToggleMagnet.classList.add("is-active");
+
+  if (torrentStatusText) {
+    torrentStatusText.textContent = "⚡ Initializing BioscopeBD P2P Torrent Engine...";
+  }
+
+  try {
+    const WT = await loadWebTorrentScript();
+    if (!wtClient) {
+      wtClient = new WT();
+      wtClient.on("error", (err) => console.warn("WebTorrent client warning:", err));
+    }
+
+    if (torrentStatusText) {
+      torrentStatusText.textContent = "Connecting to swarm & discovering WebSocket peers...";
+    }
+
+    wtClient.add(magnet, { announce: WEBTORRENT_TRACKERS }, (torrent) => {
+      currentTorrent = torrent;
+      if (torrentStatusText) {
+        torrentStatusText.textContent = "Connected to swarm! Buffering video stream...";
+      }
+
+      // Find best playable video file
+      const videoExtensions = [".mp4", ".mkv", ".webm", ".avi", ".mov", ".m4v"];
+      let videoFile = torrent.files.find(f => videoExtensions.some(ext => f.name.toLowerCase().endsWith(ext)));
+      if (!videoFile && torrent.files.length > 0) {
+        videoFile = torrent.files.reduce((a, b) => (a.length > b.length ? a : b));
+      }
+
+      if (!videoFile) {
+        if (torrentStatusText) torrentStatusText.textContent = "⚠️ No playable video file detected in torrent.";
+        notify("No video file found in this torrent swarm.");
+        return;
+      }
+
+      const sizeMB = (videoFile.length / (1024 * 1024)).toFixed(1);
+      if (torrentStatusText) {
+        torrentStatusText.textContent = `Streaming: ${videoFile.name} (${sizeMB} MB)`;
+      }
+
+      // Stream directly into the native HTML5 video player
+      videoFile.renderTo(torrentVideoPlayer, { autoplay: true, controls: true }, (err) => {
+        if (err) {
+          console.error("Torrent render error:", err);
+          if (torrentStatusText) torrentStatusText.textContent = "Render error: " + err.message;
+        } else {
+          torrentVideoPlayer.play().catch(() => {});
+        }
+      });
+
+      wtStatsInterval = setInterval(() => {
+        if (!currentTorrent) return;
+        if (torrentSpeed) torrentSpeed.textContent = formatBytes(currentTorrent.downloadSpeed);
+        if (torrentPeers) torrentPeers.textContent = String(currentTorrent.numPeers || 0);
+        const percent = Math.min(100, Math.round(currentTorrent.progress * 100));
+        if (torrentProgress) torrentProgress.textContent = `${percent}%`;
+
+        if (currentTorrent.numPeers === 0 && currentTorrent.progress === 0) {
+          if (torrentStatusText) torrentStatusText.textContent = "Seeking active browser WebRTC seeders in swarm...";
+        }
+      }, 800);
+
+      torrent.on("download", () => {
+        if (torrentSpeed) torrentSpeed.textContent = formatBytes(torrent.downloadSpeed);
+        if (torrentPeers) torrentPeers.textContent = String(torrent.numPeers);
+        const percent = Math.min(100, Math.round(torrent.progress * 100));
+        if (torrentProgress) torrentProgress.textContent = `${percent}%`;
+      });
+
+      torrent.on("done", () => {
+        if (torrentStatusText) torrentStatusText.textContent = "✅ Playback ready (100% buffered).";
+        if (torrentProgress) torrentProgress.textContent = "100%";
+      });
+
+      torrent.on("error", (err) => {
+        console.error("Torrent error:", err);
+        if (torrentStatusText) torrentStatusText.textContent = `Swarm error: ${err.message}`;
+      });
+    });
+
+  } catch (err) {
+    console.error("Failed to start WebTorrent:", err);
+    if (torrentStatusText) torrentStatusText.textContent = "Failed to start torrent engine: " + err.message;
+    notify("Could not initialize Torrent Stream Engine.");
+  }
+}
+
 function setServer(srv) {
   currentServer = srv;
   document.querySelectorAll(".video-dialog__server-btn").forEach(btn => {
     btn.classList.toggle("is-active", btn.dataset.server === srv);
   });
-  if (!activeStream || !videoFrame) return;
+  if (!activeStream) return;
 
-  if (srv === "5") {
-    // VidLink Clean - requires sandbox removed to prevent "Please Disable Sandbox" screen
-    videoFrame.removeAttribute("sandbox");
-    videoFrame.src = activeStream.type === "tv"
-      ? `https://vidlink.pro/tv/${activeStream.tmdbId}/1/1?primaryColor=f5c518`
-      : (activeStream.tmdbId ? `https://vidlink.pro/movie/${activeStream.tmdbId}?primaryColor=f5c518` : `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`);
-  } else {
+  if (srv === "torrent") {
+    // Switch to native Torrent Stage
+    if (videoFrame) {
+      videoFrame.hidden = true;
+      videoFrame.src = "";
+    }
+    if (torrentStage) torrentStage.hidden = false;
+    if (torrentMagnetBar) torrentMagnetBar.hidden = false;
+    if (btnToggleMagnet) btnToggleMagnet.classList.add("is-active");
+
+    const magnet = (torrentMagnetInput && torrentMagnetInput.value.trim()) || "magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com";
+    if (torrentMagnetInput && !torrentMagnetInput.value.trim()) {
+      torrentMagnetInput.value = magnet;
+    }
+    streamTorrentMagnet(magnet, activeStream.title);
+    notify("⚡ Switched to Server 5 (Torrent Stream): P2P Engine Active");
+    return;
+  }
+
+  // If leaving torrent server, clean up active torrent & show videoFrame
+  stopTorrentStream();
+  if (torrentStage) torrentStage.hidden = true;
+  if (videoFrame) {
+    videoFrame.hidden = false;
     // Enforce 100% Zero-Popup Sandbox on MovieBox, AutoEmbed, VidSrc, 2Embed, and YouTube
     // Hard-blocks any window.open, new tabs, and popunders from escaping into the user's browser
     videoFrame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-presentation");
@@ -536,6 +722,7 @@ document.querySelectorAll(".video-dialog__server-btn").forEach(btn => {
 const videoCloseBtn = document.querySelector("#video-dialog-close");
 if (videoCloseBtn && videoDialog) {
   videoCloseBtn.addEventListener("click", () => {
+    stopTorrentStream();
     if (videoFrame) videoFrame.src = "";
     videoDialog.close();
   });
@@ -543,6 +730,7 @@ if (videoCloseBtn && videoDialog) {
 if (videoDialog) {
   videoDialog.addEventListener("click", event => {
     if (event.target === videoDialog) {
+      stopTorrentStream();
       if (videoFrame) videoFrame.src = "";
       videoDialog.close();
     }
@@ -617,6 +805,49 @@ if (dualSubBtn) {
     notify("🌐 Dual-Subtitle Mode: English + বাংলা simultaneously rendered.");
   });
 }
+
+// Toggle Torrent Magnet Stream Bar
+if (btnToggleMagnet && torrentMagnetBar) {
+  btnToggleMagnet.addEventListener("click", () => {
+    const isHidden = torrentMagnetBar.hidden;
+    torrentMagnetBar.hidden = !isHidden;
+    btnToggleMagnet.classList.toggle("is-active", !isHidden);
+    if (!isHidden && currentServer !== "torrent") {
+      setServer("torrent");
+    }
+  });
+}
+
+// Start custom magnet stream
+if (btnStartMagnetStream && torrentMagnetInput) {
+  btnStartMagnetStream.addEventListener("click", () => {
+    const magnet = torrentMagnetInput.value.trim();
+    if (!magnet) {
+      notify("⚠️ Please paste a valid magnet link first.");
+      return;
+    }
+    setServer("torrent");
+    streamTorrentMagnet(magnet, activeStream?.title || "Custom Magnet Stream");
+  });
+
+  torrentMagnetInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      btnStartMagnetStream.click();
+    }
+  });
+}
+
+// Torrent Preset Instant Samples
+document.querySelectorAll(".preset-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const magnet = btn.dataset.magnet;
+    if (torrentMagnetInput) torrentMagnetInput.value = magnet;
+    setServer("torrent");
+    streamTorrentMagnet(magnet, btn.textContent.trim());
+    notify(`⚡ Loading ${btn.textContent.trim()} via P2P Swarm...`);
+  });
+});
 
 // Hero actions
 const heroMovieBtn = document.querySelector("#hero-watch-movie");
@@ -1118,6 +1349,7 @@ window.Capacitor?.Plugins?.App?.addListener("backButton", ({ canGoBack }) => {
   if (reelsDialog?.open) { closeReels(); return; }
   if (partyDialog?.open) { partyDialog.close(); return; }
   if (videoDialog?.open) {
+    stopTorrentStream();
     if (videoFrame) videoFrame.src = "";
     videoDialog.close();
     return;

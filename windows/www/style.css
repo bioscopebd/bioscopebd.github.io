@@ -1050,3 +1050,130 @@ body{padding-inline:env(safe-area-inset-left) env(safe-area-inset-right)}
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
+
+/* Native Torrent Player & HUD */
+.torrent-stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  z-index: 5;
+}
+.torrent-video-player {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+  outline: none;
+}
+.torrent-hud {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  background: rgba(14, 15, 20, 0.9);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(245, 197, 24, 0.35);
+  border-radius: 8px;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  z-index: 15;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.torrent-hud__status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: #fff;
+}
+.hud-pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 10px #10b981;
+  animation: pulse-dot 1.5s infinite;
+}
+.torrent-hud__stats {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 0.74rem;
+  color: var(--color-muted);
+}
+.torrent-hud__stats strong {
+  color: var(--color-accent);
+}
+
+/* Expandable Torrent Magnet Bar */
+.torrent-magnet-bar {
+  background: rgba(20, 21, 28, 0.98);
+  border-top: 1px solid rgba(245, 197, 24, 0.2);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.25s ease;
+}
+.torrent-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.torrent-input-group .magnet-icon {
+  font-size: 1.1rem;
+}
+.torrent-input-group input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: #fff;
+  padding: 8px 12px;
+  font-size: 0.76rem;
+  font-family: monospace;
+  outline: none;
+}
+.torrent-input-group input:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 10px rgba(245, 197, 24, 0.25);
+}
+.torrent-presets {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.7rem;
+  color: var(--color-muted);
+}
+.preset-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e0e0e0;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 0.68rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.preset-btn:hover {
+  background: rgba(245, 197, 24, 0.2);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+.player-tool-btn--torrent.is-active {
+  background: rgba(245, 197, 24, 0.25) !important;
+  border-color: var(--color-accent) !important;
+  color: var(--color-accent) !important;
+}
