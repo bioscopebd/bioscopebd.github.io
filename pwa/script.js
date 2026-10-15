@@ -277,16 +277,20 @@ function setServer(srv) {
 
   if (srv === "1") {
     videoFrame.src = activeStream.type === "tv"
-      ? `https://vidsrc.xyz/embed/tv/${activeStream.tmdbId}/1-1`
-      : (activeStream.tmdbId ? `https://vidsrc.xyz/embed/movie/${activeStream.tmdbId}` : `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`);
+      ? `https://vidlink.pro/tv/${activeStream.tmdbId}/1/1?primaryColor=f5c518`
+      : (activeStream.tmdbId ? `https://vidlink.pro/movie/${activeStream.tmdbId}?primaryColor=f5c518` : `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`);
   } else if (srv === "2") {
     videoFrame.src = activeStream.type === "tv"
-      ? `https://vidsrc.cc/v2/embed/tv/${activeStream.tmdbId}/1/1`
-      : (activeStream.tmdbId ? `https://vidsrc.cc/v2/embed/movie/${activeStream.tmdbId}` : `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`);
+      ? `https://vidsrc.pm/embed/tv/${activeStream.tmdbId}/1-1`
+      : (activeStream.tmdbId ? `https://vidsrc.pm/embed/movie/${activeStream.tmdbId}` : `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`);
   } else if (srv === "3") {
     videoFrame.src = activeStream.type === "tv"
-      ? `https://multiembed.mov/?video_id=${activeStream.tmdbId}&tmdb=1&s=1&e=1`
-      : (activeStream.tmdbId ? `https://multiembed.mov/?video_id=${activeStream.tmdbId}&tmdb=1` : `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`);
+      ? `https://vidsrc.me/embed/tv?tmdb=${activeStream.tmdbId}&season=1&episode=1`
+      : (activeStream.tmdbId ? `https://vidsrc.me/embed/movie?tmdb=${activeStream.tmdbId}` : `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`);
+  } else if (srv === "4") {
+    videoFrame.src = activeStream.type === "tv"
+      ? `https://autoembed.co/tv/tmdb/${activeStream.tmdbId}/1/1`
+      : (activeStream.tmdbId ? `https://autoembed.co/movie/tmdb/${activeStream.tmdbId}` : `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`);
   } else if (srv === "trailer") {
     if (activeStream.trailerId) {
       videoFrame.src = `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`;

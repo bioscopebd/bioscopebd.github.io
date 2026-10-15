@@ -616,9 +616,10 @@
       </div>
       <div class="video-dialog__header-right">
         <div class="video-dialog__servers" id="video-servers">
-          <button type="button" class="video-dialog__server-btn is-active" data-server="1">Server 1 (Fast)</button>
-          <button type="button" class="video-dialog__server-btn" data-server="2">Server 2 (HD)</button>
-          <button type="button" class="video-dialog__server-btn" data-server="3">Server 3 (Backup)</button>
+          <button type="button" class="video-dialog__server-btn is-active" data-server="1">Server 1 (VidLink HD)</button>
+          <button type="button" class="video-dialog__server-btn" data-server="2">Server 2 (VidSrc Prime)</button>
+          <button type="button" class="video-dialog__server-btn" data-server="3">Server 3 (VidSrc VIP)</button>
+          <button type="button" class="video-dialog__server-btn" data-server="4">Server 4 (AutoEmbed)</button>
           <button type="button" class="video-dialog__server-btn" data-server="trailer">Trailer</button>
         </div>
         <button class="video-dialog__close" id="video-dialog-close" type="button" aria-label="Close player">×</button>
@@ -627,7 +628,7 @@
 
     <!-- Video Stage with Floating Danmaku Bullet Comments & X-Ray Overlay -->
     <div class="video-dialog__stage" id="video-stage">
-      <iframe id="video-player-frame" src="" allowfullscreen allow="autoplay; encrypted-media; fullscreen"></iframe>
+      <iframe id="video-player-frame" src="" allowfullscreen allow="autoplay; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="no-referrer-when-downgrade"></iframe>
       
       <!-- Danmaku Live Reactions Overlay (Timestamped bullets) -->
       <div class="danmaku-overlay" id="danmaku-overlay" aria-hidden="true"></div>
