@@ -1,0 +1,8 @@
+{
+  "name": "bioscopebd-workspace",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "sync": "node scripts/sync.mjs"
+  }
+}

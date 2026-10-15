@@ -1,0 +1,9 @@
+**/node_modules/
+**/target/
+**/build/
+**/.gradle/
+android/tools/
+android/keystore/
+android/release/
+ios/release/
+windows/release/
