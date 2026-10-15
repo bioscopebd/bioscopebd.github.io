@@ -161,15 +161,12 @@ document.querySelectorAll("[data-genre-filter]").forEach(chip => chip.addEventLi
 const videoDialog = document.querySelector("#video-dialog");
 const videoFrame = document.querySelector("#video-player-frame");
 const videoTitle = document.querySelector("#video-dialog-title");
-const danmakuOverlay = document.querySelector("#danmaku-overlay");
 const xrayOverlay = document.querySelector("#xray-overlay");
 let activeStream = null;
 let currentServer = "1";
-let danmakuInterval = null;
 let subOffset = 0.0;
 let familyMode = false;
 let dialogueBoost = false;
-let danmakuEnabled = true;
 
 // X-Ray Metadata catalog
 const movieXrayData = {
@@ -210,35 +207,6 @@ const movieXrayData = {
   }
 };
 
-// Simulated Real-Time Danmaku / Bullet Comments
-const sampleDanmakuComments = [
-  "🔥 This scene gives me goosebumps every single time!",
-  "Best cinematography of the decade 👏",
-  "Wait for the plot twist at 15:00 🤯",
-  "Higgsfield AI realism is mind-blowing!",
-  "হাওয়া সিনেমার এই সিনটা অসাধারণ! 🌊",
-  "Watch party squad assemble! 🍿",
-  "Soundtrack in this scene is pure genius 🎵",
-  "Server 1 stream is lightning fast!",
-  "Zero ads! BioscopeBD is the best streaming experience ❤️",
-  "Chanchal Chowdhury's acting is legendary 🔥",
-  "Dual subtitles helped me understand every nuance!",
-  "4K HDR quality is unbelievable on this display ⚡"
-];
-
-function triggerDanmaku() {
-  if (!danmakuOverlay || !danmakuEnabled) return;
-  const bullet = document.createElement("div");
-  bullet.className = "danmaku-bullet";
-  bullet.textContent = sampleDanmakuComments[Math.floor(Math.random() * sampleDanmakuComments.length)];
-  bullet.style.top = `${Math.floor(Math.random() * 70) + 10}%`;
-  danmakuOverlay.appendChild(bullet);
-
-  setTimeout(() => {
-    if (bullet.parentNode) bullet.parentNode.removeChild(bullet);
-  }, 10500);
-}
-
 function openStream(title, tmdbId, type = "movie", trailerId = "") {
   activeStream = { title, tmdbId, type, trailerId };
   if (videoTitle) videoTitle.textContent = `Streaming: ${title}`;
@@ -258,11 +226,6 @@ function openStream(title, tmdbId, type = "movie", trailerId = "") {
   if (castEl) castEl.textContent = xray.cast;
   if (musicEl) musicEl.textContent = xray.music;
   if (triviaEl) triviaEl.textContent = xray.trivia;
-
-  // Start danmaku live stream
-  if (danmakuOverlay) danmakuOverlay.innerHTML = "";
-  clearInterval(danmakuInterval);
-  danmakuInterval = setInterval(triggerDanmaku, 2200);
 
   if (videoDialog) videoDialog.showModal();
 }
@@ -307,7 +270,6 @@ const videoCloseBtn = document.querySelector("#video-dialog-close");
 if (videoCloseBtn && videoDialog) {
   videoCloseBtn.addEventListener("click", () => {
     if (videoFrame) videoFrame.src = "";
-    clearInterval(danmakuInterval);
     videoDialog.close();
   });
 }
@@ -315,13 +277,12 @@ if (videoDialog) {
   videoDialog.addEventListener("click", event => {
     if (event.target === videoDialog) {
       if (videoFrame) videoFrame.src = "";
-      clearInterval(danmakuInterval);
       videoDialog.close();
     }
   });
 }
 
-// Next-Gen Player Controls: Family Mode, X-Ray, Night Audio, Danmaku, Sub Sync, Clip Maker
+// Next-Gen Player Controls: Family Mode, X-Ray, Night Audio, Sub Sync
 const familyBtn = document.querySelector("#btn-family-mode");
 const familyStatus = document.querySelector("#family-status");
 if (familyBtn) {
@@ -361,16 +322,6 @@ if (dialogueBoostBtn) {
     notify(dialogueBoost
       ? "🎧 Dialogue Boost & Night Audio ACTIVE: Vocal frequencies amplified, explosions dampened."
       : "Standard theatrical audio restored.");
-  });
-}
-
-const danmakuToggleBtn = document.querySelector("#btn-danmaku-toggle");
-if (danmakuToggleBtn && danmakuOverlay) {
-  danmakuToggleBtn.addEventListener("click", () => {
-    danmakuEnabled = !danmakuEnabled;
-    danmakuToggleBtn.classList.toggle("is-active", danmakuEnabled);
-    danmakuOverlay.style.display = danmakuEnabled ? "block" : "none";
-    notify(danmakuEnabled ? "💬 Live Danmaku comments visible." : "Live comments hidden.");
   });
 }
 
@@ -833,7 +784,6 @@ window.Capacitor?.Plugins?.App?.addListener("backButton", ({ canGoBack }) => {
   if (partyDialog?.open) { partyDialog.close(); return; }
   if (videoDialog?.open) {
     if (videoFrame) videoFrame.src = "";
-    clearInterval(danmakuInterval);
     videoDialog.close();
     return;
   }
