@@ -274,17 +274,25 @@ function setServer(srv) {
       ? `https://vidlink.pro/tv/${activeStream.tmdbId}/1/1?primaryColor=f5c518`
       : (activeStream.tmdbId ? `https://vidlink.pro/movie/${activeStream.tmdbId}?primaryColor=f5c518` : `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`);
   } else if (srv === "2") {
+    // Server 2: MovieBox Prime
     videoFrame.src = activeStream.type === "tv"
       ? `https://vidsrc.pm/embed/tv/${activeStream.tmdbId}/1-1`
       : (activeStream.tmdbId ? `https://vidsrc.pm/embed/movie/${activeStream.tmdbId}` : `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`);
   } else if (srv === "3") {
+    // Server 3: 2Embed Multi Engine
     videoFrame.src = activeStream.type === "tv"
-      ? `https://vidsrc.me/embed/tv?tmdb=${activeStream.tmdbId}&season=1&episode=1`
-      : (activeStream.tmdbId ? `https://vidsrc.me/embed/movie?tmdb=${activeStream.tmdbId}` : `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`);
+      ? `https://www.2embed.cc/embedtv/${activeStream.tmdbId}&s=1&e=1`
+      : (activeStream.tmdbId ? `https://www.2embed.cc/embed/${activeStream.tmdbId}` : `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`);
   } else if (srv === "4") {
+    // Server 4: AutoEmbed VIP
     videoFrame.src = activeStream.type === "tv"
       ? `https://autoembed.co/tv/tmdb/${activeStream.tmdbId}/1/1`
       : (activeStream.tmdbId ? `https://autoembed.co/movie/tmdb/${activeStream.tmdbId}` : `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`);
+  } else if (srv === "5") {
+    // Server 5: VidSrc VIP
+    videoFrame.src = activeStream.type === "tv"
+      ? `https://vidsrc.me/embed/tv?tmdb=${activeStream.tmdbId}&season=1&episode=1`
+      : (activeStream.tmdbId ? `https://vidsrc.me/embed/movie?tmdb=${activeStream.tmdbId}` : `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`);
   } else if (srv === "trailer") {
     if (activeStream.trailerId) {
       videoFrame.src = `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`;
@@ -383,6 +391,29 @@ if (dualSubBtn) {
   });
 }
 
+// Stremio & CLI Streaming integrations
+const openStremioBtn = document.querySelector("#btn-open-stremio");
+if (openStremioBtn) {
+  openStremioBtn.addEventListener("click", () => {
+    if (!activeStream || !activeStream.title) {
+      notify("Please select a stream first.");
+      return;
+    }
+    const stremioWeb = `https://web.stremio.com/#/search?search=${encodeURIComponent(activeStream.title)}`;
+    window.location.href = stremioWeb;
+    notify(`⚡ Launching "${activeStream.title}" in Stremio!`);
+  });
+}
+
+const copyCliBtn = document.querySelector("#btn-copy-cli");
+if (copyCliBtn) {
+  copyCliBtn.addEventListener("click", () => {
+    if (!activeStream || !activeStream.title) return;
+    const cmd = `mov-cli -s "${activeStream.title}"`;
+    navigator.clipboard?.writeText(cmd);
+    notify(`💻 Command copied: ${cmd} (Paste in terminal to stream via mov-cli / moviebox-tui)`);
+  });
+}
 
 // Hero actions
 const heroMovieBtn = document.querySelector("#hero-watch-movie");
