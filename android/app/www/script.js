@@ -486,10 +486,6 @@ function setServer(srv) {
   document.querySelectorAll(".video-dialog__server-btn").forEach(btn => {
     btn.classList.toggle("is-active", btn.dataset.server === srv);
   });
-  const openStremioBtnEl = document.querySelector("#btn-open-stremio");
-  const copyCliBtnEl = document.querySelector("#btn-copy-cli");
-  if (openStremioBtnEl) openStremioBtnEl.classList.remove("is-active");
-  if (copyCliBtnEl) copyCliBtnEl.classList.toggle("is-active", srv === "1");
   if (!activeStream || !videoFrame) return;
 
   if (srv === "5") {
@@ -619,45 +615,6 @@ if (subPlusBtn) {
 if (dualSubBtn) {
   dualSubBtn.addEventListener("click", () => {
     notify("🌐 Dual-Subtitle Mode: English + বাংলা simultaneously rendered.");
-  });
-}
-
-// Stremio & CLI Streaming integrations (Direct In-Player Playback)
-const openStremioBtn = document.querySelector("#btn-open-stremio");
-if (openStremioBtn) {
-  openStremioBtn.addEventListener("click", () => {
-    if (!activeStream || !activeStream.title || !videoFrame) {
-      notify("Please select a movie/show first.");
-      return;
-    }
-    // Stream directly inside our player frame without navigating away from BioscopeBD
-    videoFrame.removeAttribute("sandbox");
-    videoFrame.src = `https://web.stremio.com/#/search?search=${encodeURIComponent(activeStream.title)}`;
-    
-    // Highlight Stremio as active source
-    openStremioBtn.classList.add("is-active");
-    if (copyCliBtn) copyCliBtn.classList.remove("is-active");
-    document.querySelectorAll(".video-dialog__server-btn").forEach(btn => btn.classList.remove("is-active"));
-
-    notify(`⚡ Stremio Web Engine loaded in player! Playing "${activeStream.title}" directly.`);
-  });
-}
-
-const copyCliBtn = document.querySelector("#btn-copy-cli");
-if (copyCliBtn) {
-  copyCliBtn.addEventListener("click", () => {
-    if (!activeStream || !activeStream.title || !videoFrame) {
-      notify("Please select a movie/show first.");
-      return;
-    }
-    // Stream MovieBox directly inside our player frame without requiring terminal / CLI
-    setServer("1");
-    
-    // Highlight CLI Stream as active source
-    copyCliBtn.classList.add("is-active");
-    if (openStremioBtn) openStremioBtn.classList.remove("is-active");
-
-    notify(`💻 MovieBox Stream loaded in player! Playing "${activeStream.title}" directly.`);
   });
 }
 
