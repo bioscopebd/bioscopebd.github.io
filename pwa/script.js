@@ -177,18 +177,210 @@ function filterMovies() {
   }
 }
 
+// Live Search Recommendations Dropdown (Instant Local + Global TMDB Catalog)
+const searchDropdown = document.querySelector("#search-dropdown");
+const TMDB_SEARCH_KEY = "8265bd1679663a7ea12ac168da84d2e8";
+let searchDebounceTimer;
+let currentHighlightedIndex = -1;
+
+function getLocalMatches(query) {
+  const cleanQ = query.toLowerCase().trim();
+  if (!cleanQ) return [];
+  const results = [];
+  const seenTitles = new Set();
+
+  allMovieCards.forEach(card => {
+    const title = card.dataset.title || "";
+    const cleanTitle = title.toLowerCase();
+    const genre = (card.dataset.genre || "").toLowerCase();
+    const mood = (card.dataset.mood || "").toLowerCase();
+    if (cleanTitle.includes(cleanQ) || genre.includes(cleanQ) || mood.includes(cleanQ)) {
+      if (!seenTitles.has(cleanTitle)) {
+        seenTitles.add(cleanTitle);
+        const img = card.querySelector("img");
+        const score = card.querySelector(".movie-card__score")?.textContent || "★ 8.5";
+        const isAi = card.classList.contains("movie-card--ai");
+        results.push({
+          title,
+          tmdb: card.dataset.tmdb || "",
+          type: card.dataset.type || "movie",
+          trailer: card.dataset.trailer || "",
+          poster: img ? img.src : "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=120&auto=format&fit=crop&q=80",
+          year: isAi ? "2026" : "HD",
+          score,
+          badge: isAi ? "Higgsfield AI" : (card.dataset.type === "tv" ? "TV Series" : "Movie"),
+          isAi
+        });
+      }
+    }
+  });
+  return results.slice(0, 5);
+}
+
+async function fetchTmdbMatches(query) {
+  try {
+    const url = `https://api.themoviedb.org/3/search/multi?api_key=${TMDB_SEARCH_KEY}&query=${encodeURIComponent(query)}&include_adult=false`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.results || [])
+      .filter(item => (item.media_type === "movie" || item.media_type === "tv") && (item.title || item.name))
+      .slice(0, 6)
+      .map(item => ({
+        title: item.title || item.name,
+        tmdb: String(item.id),
+        type: item.media_type,
+        trailer: "",
+        poster: item.poster_path ? `https://image.tmdb.org/t/p/w92${item.poster_path}` : "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=120&auto=format&fit=crop&q=80",
+        year: (item.release_date || item.first_air_date || "").slice(0, 4) || "HD",
+        score: item.vote_average ? `★ ${item.vote_average.toFixed(1)}` : "★ 8.0",
+        badge: item.media_type === "tv" ? "TV Series" : "Movie",
+        isAi: false
+      }));
+  } catch (err) {
+    return [];
+  }
+}
+
+function renderSearchRecommendations(items, query, isLoading = false) {
+  if (!searchDropdown) return;
+  if (!items.length && !isLoading) {
+    searchDropdown.innerHTML = `<div class="search-empty">No results found for "${query}". Try another movie or series name!</div>`;
+    searchDropdown.hidden = false;
+    return;
+  }
+
+  currentHighlightedIndex = -1;
+  let html = `<div class="search-dropdown__header"><span>Recommendations</span><span>${items.length} titles</span></div>`;
+
+  items.forEach((item, idx) => {
+    html += `
+      <div class="search-item" data-index="${idx}" data-title="${encodeURIComponent(item.title)}" data-tmdb="${item.tmdb}" data-type="${item.type}" data-trailer="${item.trailer}">
+        <img class="search-item__thumb" src="${item.poster}" alt="${item.title}" loading="lazy">
+        <div class="search-item__info">
+          <div class="search-item__title">${item.title}</div>
+          <div class="search-item__meta">
+            <span class="search-item__year">${item.year}</span>
+            <span class="search-item__score">${item.score}</span>
+            <span class="search-item__badge ${item.isAi ? 'search-item__badge--ai' : ''}">${item.badge}</span>
+          </div>
+        </div>
+        <div class="search-item__play">▶</div>
+      </div>
+    `;
+  });
+
+  if (isLoading) {
+    html += `<div class="search-loading"><span class="search-spinner"></span> <span>Searching global movies...</span></div>`;
+  }
+
+  searchDropdown.innerHTML = html;
+  searchDropdown.hidden = false;
+
+  // Add click handlers on items to launch built-in player directly
+  searchDropdown.querySelectorAll(".search-item").forEach(el => {
+    el.addEventListener("click", () => {
+      const title = decodeURIComponent(el.dataset.title || "");
+      const tmdb = el.dataset.tmdb || "";
+      const type = el.dataset.type || "movie";
+      const trailer = el.dataset.trailer || "";
+      openStream(title, tmdb, type, trailer);
+      searchDropdown.hidden = true;
+    });
+  });
+}
+
+function handleLiveSearch() {
+  const query = searchInput ? searchInput.value.trim() : "";
+  if (!query) {
+    if (searchDropdown) {
+      searchDropdown.hidden = true;
+      searchDropdown.innerHTML = "";
+    }
+    return;
+  }
+
+  // 1. Instant local matches (0ms delay)
+  const localMatches = getLocalMatches(query);
+  renderSearchRecommendations(localMatches, query, true);
+
+  // 2. Debounced TMDB API search for any movie in the world
+  clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(async () => {
+    const tmdbMatches = await fetchTmdbMatches(query);
+    const combined = [...localMatches];
+    const seenTitles = new Set(localMatches.map(m => m.title.toLowerCase()));
+    tmdbMatches.forEach(t => {
+      const lower = t.title.toLowerCase();
+      if (!seenTitles.has(lower)) {
+        seenTitles.add(lower);
+        combined.push(t);
+      }
+    });
+    renderSearchRecommendations(combined.slice(0, 8), query, false);
+  }, 220);
+}
+
 if (searchInput) {
-  searchInput.addEventListener("input", filterMovies);
+  searchInput.addEventListener("input", () => {
+    filterMovies();
+    handleLiveSearch();
+  });
+
+  searchInput.addEventListener("focus", () => {
+    if (searchInput.value.trim().length > 0) {
+      handleLiveSearch();
+    }
+  });
+
+  searchInput.addEventListener("keydown", (e) => {
+    if (!searchDropdown || searchDropdown.hidden) return;
+    const items = searchDropdown.querySelectorAll(".search-item");
+    if (!items.length) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      currentHighlightedIndex = (currentHighlightedIndex + 1) % items.length;
+      items.forEach((item, idx) => item.classList.toggle("is-selected", idx === currentHighlightedIndex));
+      items[currentHighlightedIndex]?.scrollIntoView({ block: "nearest" });
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      currentHighlightedIndex = (currentHighlightedIndex - 1 + items.length) % items.length;
+      items.forEach((item, idx) => item.classList.toggle("is-selected", idx === currentHighlightedIndex));
+      items[currentHighlightedIndex]?.scrollIntoView({ block: "nearest" });
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      const targetItem = currentHighlightedIndex >= 0 ? items[currentHighlightedIndex] : items[0];
+      if (targetItem) targetItem.click();
+    } else if (e.key === "Escape") {
+      searchDropdown.hidden = true;
+    }
+  });
+
   const searchForm = document.querySelector("#search-form");
   if (searchForm) {
     searchForm.addEventListener("submit", event => {
       event.preventDefault();
       filterMovies();
+      if (searchDropdown && !searchDropdown.hidden) {
+        const first = searchDropdown.querySelector(".search-item");
+        if (first) {
+          first.click();
+          return;
+        }
+      }
       const firstSection = document.querySelector("#trending") || document.querySelector("#ai-cinema");
       if (firstSection) firstSection.scrollIntoView({ behavior: "smooth" });
     });
   }
 }
+
+// Close dropdown on click outside
+document.addEventListener("click", (e) => {
+  if (searchDropdown && !e.target.closest("#search-form")) {
+    searchDropdown.hidden = true;
+  }
+});
 
 // Mood chips click handlers
 document.querySelectorAll(".mood-chip").forEach(chip => {
