@@ -5,7 +5,7 @@ import { join, resolve } from "node:path";
 const root = resolve(import.meta.dirname, "..");
 const source = join(root, "00-shared-web");
 const targets = ["pwa", "android/app/www", "ios/app/www", "windows/www"];
-const files = ["index.html", "style.css", "script.js", "manifest.json", "service-worker.js"];
+const files = ["index.html", "style.css", "script.js", "config.js", "manifest.json", "service-worker.js"];
 
 for (const file of files) {
   if (!existsSync(join(source, file))) throw new Error(`Missing shared file: ${file}`);
