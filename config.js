@@ -4,7 +4,10 @@
  * TMDB API Key pre-configured; optional Firebase/Supabase credentials fallback cleanly to local mock mode.
  */
 
-const CONFIG = {
+(function () {
+  "use strict";
+
+  const CONFIG = {
   // Pre-configured working TMDB API key for live global search & pagination
   TMDB_API_KEY: "8265bd1679663a7ea12ac168da84d2e8",
   
@@ -730,12 +733,13 @@ const CHARACTER_AVATARS = [
   { id: "cyber", name: "AI Cinephile", emoji: "🤖", color: "#bf00ff" }
 ];
 
-if (typeof window !== "undefined") {
-  window.BIOSCOPE_CONFIG = CONFIG;
-  window.BUILTIN_CATALOG = BUILTIN_CATALOG;
-  window.CHARACTER_AVATARS = CHARACTER_AVATARS;
-}
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = { CONFIG, BUILTIN_CATALOG, CHARACTER_AVATARS };
-}
+  if (typeof window !== "undefined") {
+    window.BIOSCOPE_CONFIG = CONFIG;
+    window.BUILTIN_CATALOG = BUILTIN_CATALOG;
+    window.CHARACTER_AVATARS = CHARACTER_AVATARS;
+  }
+  if (typeof module !== "undefined" && module.exports) {
+    module.exports = { CONFIG, BUILTIN_CATALOG, CHARACTER_AVATARS };
+  }
+})();
 

@@ -64,7 +64,7 @@
 // ==========================================================================
 // 1. Global Configuration, Dataset Access & Local State Management
 // ==========================================================================
-const CONFIG = window.BIOSCOPE_CONFIG || {
+var CONFIG = window.BIOSCOPE_CONFIG || {
   TMDB_API_KEY: "8265bd1679663a7ea12ac168da84d2e8",
   STREAM_SERVERS: [
     { id: "1", name: "Primary Cinema Stream", getUrl: (id, type) => type === "tv" ? `https://vidsrc.pm/embed/tv/${id}/1-1` : `https://vidsrc.pm/embed/movie/${id}` },
@@ -74,8 +74,8 @@ const CONFIG = window.BIOSCOPE_CONFIG || {
   ]
 };
 
-const BUILTIN_CATALOG = window.BUILTIN_CATALOG || [];
-const CHARACTER_AVATARS = window.CHARACTER_AVATARS || [
+var BUILTIN_CATALOG = window.BUILTIN_CATALOG || [];
+var CHARACTER_AVATARS = window.CHARACTER_AVATARS || [
   { id: "neo", name: "Neo", emoji: "🕶️", color: "#00ff66" },
   { id: "batman", name: "The Dark Knight", emoji: "🦇", color: "#f5c518" },
   { id: "ripley", name: "Ellen Ripley", emoji: "🚀", color: "#00d2ff" },
@@ -494,7 +494,7 @@ const continueSection = document.querySelector("#continue-watching-section");
 const continueCarousel = document.querySelector("#continue-watching-carousel");
 const banglaCarousel = document.querySelector("#bangla-carousel");
 const thrillersCarousel = document.querySelector("#thrillers-carousel");
-const topRatedGrid = document.querySelector("#top-rated-grid");
+const topRatedGrid = document.querySelector("#main-browse-grid") || document.querySelector("#top-rated-grid");
 const catalogCountBadge = document.querySelector("#catalog-count-badge");
 const btnLoadMore = document.querySelector("#btn-load-more");
 const infiniteScrollToggle = document.querySelector("#infinite-scroll-toggle");
@@ -503,10 +503,20 @@ let catalogPage = 1;
 let isLoadingMore = false;
 let displayedCatalog = [];
 
+function initImageLoading() {
+  document.querySelectorAll(".image-shell img").forEach(img => {
+    const loaded = () => img.parentElement?.classList.add("is-loaded");
+    if (img.complete && img.naturalWidth) loaded();
+    else {
+      img.addEventListener("load", loaded, { once: true });
+      img.addEventListener("error", loaded, { once: true });
+    }
+  });
+}
+
 function createMovieCardHTML(movie) {
   const isAi = movie.genre === "AI Cinema" || (movie.genres && movie.genres.includes("AI Cinema")) || movie.id?.startsWith("higgs");
   const yearText = movie.year || "2024";
-  const durationText = movie.duration ? `${Math.floor(movie.duration / 60)}h ${movie.duration % 60}m` : "2h";
   const scoreText = movie.score ? `★ ${movie.score}` : "★ 8.5";
 
   return `
@@ -519,23 +529,17 @@ function createMovieCardHTML(movie) {
              data-trailer="${movie.trailerId || ''}" 
              data-type="${movie.type || 'movie'}"
              data-year="${yearText}">
-      <div class="image-shell">
+      <div class="movie-card__media image-shell is-loaded">
         <img src="${movie.poster}" alt="${movie.title}" loading="lazy">
         <span class="movie-card__score">${scoreText}</span>
-        ${isAi ? '<span class="movie-card__badge-ai">Higgsfield AI</span>' : ''}
-      </div>
-      <div class="movie-card__body">
-        <h3 class="movie-card__title">${movie.title}</h3>
-        <p class="movie-card__meta">${yearText} · ${movie.genre || 'Feature'} · ${durationText}</p>
-        <div class="movie-card__actions">
-          <button type="button" class="button button--primary button--sm card-play-btn" data-title="${movie.title}" data-tmdb="${movie.tmdbId || ''}" data-type="${movie.type || 'movie'}" data-trailer="${movie.trailerId || ''}">
-            ▶ Stream
-          </button>
-          <button type="button" class="button button--outline button--sm quick-view" data-title="${movie.title}">
-            Details
-          </button>
+        ${isAi ? '<span class="badge-studio">Higgsfield AI</span>' : ''}
+        <div class="movie-card__overlay">
+          <p>${scoreText} · ${movie.genre || 'Cinema'}</p>
+          <button type="button" class="button button--primary quick-view" data-title="${movie.title}">Quick View</button>
         </div>
       </div>
+      <h3>${movie.title}</h3>
+      <p>${yearText} · ${movie.genre || 'Feature'}</p>
     </article>
   `;
 }
@@ -575,6 +579,7 @@ function hydrateBanglaSection() {
   const banglaMovies = BUILTIN_CATALOG.filter(m => m.bangla);
   banglaCarousel.innerHTML = banglaMovies.map(createMovieCardHTML).join("");
   bindCardInteractions(banglaCarousel);
+  initImageLoading();
 }
 
 function hydrateThrillersSection() {
@@ -582,6 +587,7 @@ function hydrateThrillersSection() {
   const thrillerMovies = BUILTIN_CATALOG.filter(m => m.thriller);
   thrillersCarousel.innerHTML = thrillerMovies.map(createMovieCardHTML).join("");
   bindCardInteractions(thrillersCarousel);
+  initImageLoading();
 }
 
 async function fetchTmdbBrowseMovies(page = 1) {
@@ -645,6 +651,7 @@ async function hydrateBrowseGrid(page = 1, append = false) {
   }
 
   bindCardInteractions(topRatedGrid);
+  initImageLoading();
 }
 
 if (btnLoadMore) {
