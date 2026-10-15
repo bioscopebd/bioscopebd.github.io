@@ -1338,6 +1338,15 @@ function loadCustomWhitelabelStream(videoId) {
     const origin = encodeURIComponent(window.location.origin || "*");
     customYtFrame.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&playsinline=1&enablejsapi=1&origin=${origin}`;
   }
+
+  if (videoStreamStatus) {
+    const activeMovie = BUILTIN_CATALOG.find(m => m.title === activeStream?.title);
+    const initialQuality = activeMovie?.quality || (activeStream?.title?.includes("4K") ? "4K ULTRA HD" : "1080p FULL HD");
+    videoStreamStatus.innerHTML = `
+      <span class="stream-badge stream-badge--live" id="stream-quality-badge"><span class="badge-dot"></span> ${initialQuality}</span>
+      <span class="stream-badge stream-badge--engine">BioscopeBD Cinema Engine</span>
+    `;
+  }
 }
 
 function stopCustomWhitelabelStream() {
@@ -1401,6 +1410,34 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
+function updateStreamResolutionBadge(quality = "1080p") {
+  const badge = document.querySelector("#stream-quality-badge") || videoStreamStatus?.querySelector(".stream-badge--live");
+  if (!badge) return;
+
+  let text = "1080p FULL HD";
+  const q = String(quality).toLowerCase();
+
+  if (q.includes("2160") || q.includes("4k") || q === "highres") {
+    text = "4K ULTRA HD";
+  } else if (q.includes("1440") || q === "hd1440") {
+    text = "1440p QHD";
+  } else if (q.includes("1080") || q === "hd1080") {
+    text = "1080p FULL HD";
+  } else if (q.includes("720") || q === "hd720") {
+    text = "720p HD";
+  } else if (q.includes("480") || q === "large") {
+    text = "480p SD";
+  } else if (q.includes("360") || q === "medium") {
+    text = "360p SD";
+  } else if (q.includes("240") || q.includes("144") || q === "small" || q === "tiny") {
+    text = "240p SD";
+  } else if (q) {
+    text = quality.toUpperCase();
+  }
+
+  badge.innerHTML = `<span class="badge-dot"></span> ${text}`;
+}
+
 // PostMessage listener from YouTube iframe
 window.addEventListener("message", (event) => {
   try {
@@ -1414,6 +1451,9 @@ window.addEventListener("message", (event) => {
       }
       if (typeof data.info.videoLoadedFraction === "number" && customTimelineLoaded) {
         customTimelineLoaded.style.width = `${Math.min(100, data.info.videoLoadedFraction * 100)}%`;
+      }
+      if (data.info.playbackQuality) {
+        updateStreamResolutionBadge(data.info.playbackQuality);
       }
       updateCustomProgressUI();
     }
@@ -1432,8 +1472,11 @@ function loadSilentStreamEndpoint(failoverIndex = 0) {
   }
 
   if (videoStreamStatus) {
+    const activeMovie = BUILTIN_CATALOG.find(m => m.title === activeStream?.title);
+    const initialQuality = activeMovie?.quality || (activeStream?.title?.includes("4K") ? "4K ULTRA HD" : "1080p FULL HD");
+
     videoStreamStatus.innerHTML = `
-      <span class="stream-badge stream-badge--live"><span class="badge-dot"></span> ULTRA HD 4K</span>
+      <span class="stream-badge stream-badge--live" id="stream-quality-badge"><span class="badge-dot"></span> ${initialQuality}</span>
       <span class="stream-badge stream-badge--engine">Auto-Optimized Stream</span>
     `;
   }
@@ -1687,6 +1730,14 @@ async function streamTorrentMagnet(magnetURI, movieTitle = "") {
   if (torrentStage) torrentStage.hidden = false;
   if (torrentMagnetBar) torrentMagnetBar.hidden = false;
 
+  const is4k = movieTitle.toLowerCase().includes("4k") || magnetURI.toLowerCase().includes("4k");
+  if (videoStreamStatus) {
+    videoStreamStatus.innerHTML = `
+      <span class="stream-badge stream-badge--live" id="stream-quality-badge"><span class="badge-dot"></span> ${is4k ? "4K ULTRA HD" : "1080p FULL HD"}</span>
+      <span class="stream-badge stream-badge--engine">Torrent Swarm Stream</span>
+    `;
+  }
+
   if (torrentStatusText) torrentStatusText.textContent = "Connecting to P2P swarm...";
 
   try {
@@ -1706,6 +1757,14 @@ async function streamTorrentMagnet(magnetURI, movieTitle = "") {
 
       if (videoFile && torrentVideoPlayer) {
         videoFile.renderTo(torrentVideoPlayer, { autoplay: true, controls: true });
+        torrentVideoPlayer.addEventListener("loadedmetadata", () => {
+          const h = torrentVideoPlayer.videoHeight;
+          if (h >= 2160) updateStreamResolutionBadge("4K ULTRA HD");
+          else if (h >= 1440) updateStreamResolutionBadge("1440p QHD");
+          else if (h >= 1080) updateStreamResolutionBadge("1080p FULL HD");
+          else if (h >= 720) updateStreamResolutionBadge("720p HD");
+          else if (h > 0) updateStreamResolutionBadge(`${h}p SD`);
+        }, { once: true });
       }
 
       wtStatsInterval = setInterval(() => {
