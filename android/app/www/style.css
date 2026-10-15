@@ -1067,6 +1067,187 @@ body{padding-inline:env(safe-area-inset-left) env(safe-area-inset-right)}
   animation: spin 0.8s linear infinite;
 }
 
+/* Whitelabel Custom Cinema Player (Solution 3) */
+.custom-player-stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  overflow: hidden;
+  z-index: 6;
+}
+.custom-player-viewport {
+  position: absolute;
+  top: -12%;
+  bottom: -12%;
+  left: -2%;
+  right: -2%;
+  width: 104%;
+  height: 124%;
+  overflow: hidden;
+  pointer-events: none;
+}
+.custom-player-viewport iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  pointer-events: none;
+}
+.custom-stage-shield {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+.custom-center-play {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: rgba(14, 15, 22, 0.88);
+  border: 2px solid var(--color-accent);
+  color: var(--color-accent);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 30px rgba(245, 197, 24, 0.45);
+  transition: transform 0.2s ease, opacity 0.3s ease, background 0.2s ease;
+  pointer-events: auto;
+}
+.custom-center-play:hover {
+  transform: scale(1.1);
+  background: rgba(245, 197, 24, 0.22);
+}
+.custom-center-play svg {
+  width: 28px;
+  height: 28px;
+}
+.custom-center-play.is-playing {
+  opacity: 0;
+  pointer-events: none;
+}
+.custom-player-controls {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  background: linear-gradient(0deg, rgba(6, 7, 10, 0.96) 0%, rgba(6, 7, 10, 0.6) 75%, transparent 100%);
+  padding: 22px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  opacity: 1;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.custom-player-controls.is-hidden {
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+}
+.custom-timeline {
+  position: relative;
+  width: 100%;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: height 0.15s ease;
+}
+.custom-timeline:hover {
+  height: 8px;
+}
+.custom-timeline__loaded {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0%;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 4px;
+}
+.custom-timeline__current {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0%;
+  background: var(--color-accent);
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(245, 197, 24, 0.6);
+}
+.custom-timeline__range {
+  position: absolute;
+  inset: -6px 0 -6px 0;
+  width: 100%;
+  height: calc(100% + 12px);
+  opacity: 0;
+  cursor: pointer;
+  margin: 0;
+  z-index: 5;
+}
+.custom-ctrls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.custom-ctrls-left, .custom-ctrls-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.custom-ctrl-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+.custom-ctrl-btn:hover {
+  color: var(--color-accent);
+  transform: scale(1.1);
+}
+.custom-ctrl-btn svg {
+  width: 20px;
+  height: 20px;
+}
+.custom-time-box {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.76rem;
+  font-family: monospace;
+  font-weight: 700;
+  color: #ddd;
+}
+.custom-time-box .time-sep {
+  color: #777;
+}
+.custom-brand-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--color-accent);
+  background: rgba(245, 197, 24, 0.12);
+  border: 1px solid rgba(245, 197, 24, 0.3);
+  padding: 3px 9px;
+  border-radius: 100px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
 /* Native Torrent Player & HUD */
 .torrent-stage {
   position: absolute;

@@ -710,6 +710,58 @@
     <div class="video-dialog__stage" id="video-stage">
       <iframe id="video-player-frame" src="" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation" allowfullscreen allow="autoplay; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="no-referrer-when-downgrade"></iframe>
 
+      <!-- Whitelabel Custom Cinema Player for AI Films & Trailers -->
+      <div class="custom-player-stage" id="custom-player-stage" hidden>
+        <div class="custom-player-viewport" id="custom-player-viewport">
+          <iframe id="custom-yt-frame" src="" allow="autoplay; encrypted-media; fullscreen" allowfullscreen referrerpolicy="no-referrer"></iframe>
+        </div>
+
+        <!-- Click Shield & Big Center Play/Pause -->
+        <div class="custom-stage-shield" id="custom-stage-shield">
+          <button type="button" class="custom-center-play" id="custom-center-play" aria-label="Play or Pause">
+            <svg class="center-icon-play" viewBox="0 0 24 24"><path d="m8 5 11 7-11 7V5Z" fill="currentColor"/></svg>
+            <svg class="center-icon-pause" viewBox="0 0 24 24" hidden><path d="M6 5h4v14H6V5Zm8 0h4v14h-4V5Z" fill="currentColor"/></svg>
+          </button>
+        </div>
+
+        <!-- Custom Player Bottom Controls Bar -->
+        <div class="custom-player-controls" id="custom-player-controls">
+          <!-- Seek scrub bar -->
+          <div class="custom-timeline" id="custom-timeline">
+            <div class="custom-timeline__loaded" id="custom-timeline-loaded"></div>
+            <div class="custom-timeline__current" id="custom-timeline-current"></div>
+            <input type="range" class="custom-timeline__range" id="custom-timeline-range" min="0" max="100" value="0" step="0.1" aria-label="Seek video position">
+          </div>
+
+          <div class="custom-ctrls-row">
+            <div class="custom-ctrls-left">
+              <button type="button" class="custom-ctrl-btn" id="custom-play-btn" title="Play / Pause (Space)">
+                <svg class="ctrl-play-svg" viewBox="0 0 24 24"><path d="m8 5 11 7-11 7V5Z" fill="currentColor"/></svg>
+                <svg class="ctrl-pause-svg" viewBox="0 0 24 24" hidden><path d="M6 5h4v14H6V5Zm8 0h4v14h-4V5Z" fill="currentColor"/></svg>
+              </button>
+              <button type="button" class="custom-ctrl-btn" id="custom-mute-btn" title="Mute / Unmute (M)">
+                <svg class="ctrl-vol-svg" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z" fill="currentColor"/></svg>
+                <svg class="ctrl-muted-svg" viewBox="0 0 24 24" hidden><path d="m3.9 2.1 18 18-1.4 1.4-4-4H7l-5-5v-6h4.6L1.1 3.5l1.4-1.4zm10.6 6.9v3.2l2.5 2.5c.3-.8.5-1.7.5-2.7 0-3.3-2.2-6.1-5.3-6.9v2.1c2 .7 3.3 2.6 3.3 4.8zm-5-3.6-2.5 2.5 2.5 2.5V5.4z" fill="currentColor"/></svg>
+              </button>
+              <div class="custom-time-box">
+                <span id="custom-time-curr">00:00</span>
+                <span class="time-sep">/</span>
+                <span id="custom-time-total">00:00</span>
+              </div>
+            </div>
+
+            <div class="custom-ctrls-right">
+              <span class="custom-brand-pill">
+                <span class="brand-pulse-dot"></span> BioscopeBD Cinema Engine
+              </span>
+              <button type="button" class="custom-ctrl-btn" id="custom-fullscreen-btn" title="Fullscreen (F)">
+                <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor;"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Native HTML5 Torrent Player with Live Telemetry HUD -->
       <div class="torrent-stage" id="torrent-stage" hidden>
         <video id="torrent-video-player" class="torrent-video-player" controls playsinline></video>
