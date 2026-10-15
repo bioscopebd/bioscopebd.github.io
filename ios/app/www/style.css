@@ -1409,6 +1409,37 @@ mark.search-match {
   gap: 8px;
   flex-wrap: wrap;
 }
+.stream-source-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  padding: 2px;
+  gap: 2px;
+  margin-left: 12px;
+}
+.source-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1.2;
+}
+.source-toggle-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+}
+.source-toggle-btn.is-active {
+  background: var(--color-accent);
+  color: #0d0e15;
+  box-shadow: 0 0 10px rgba(245, 197, 24, 0.4);
+}
 .quality-selector-wrap {
   display: inline-flex;
   align-items: center;

@@ -67,10 +67,11 @@
 var CONFIG = window.BIOSCOPE_CONFIG || {
   TMDB_API_KEY: "8265bd1679663a7ea12ac168da84d2e8",
   STREAM_SERVERS: [
-    { id: "1", name: "Primary Cinema Stream", getUrl: (id, type) => type === "tv" ? `https://vidsrc.pm/embed/tv/${id}/1-1` : `https://vidsrc.pm/embed/movie/${id}` },
-    { id: "2", name: "Fast Mirror Stream", getUrl: (id, type) => type === "tv" ? `https://autoembed.co/tv/tmdb/${id}/1/1` : `https://autoembed.co/movie/tmdb/${id}` },
-    { id: "3", name: "Ultra HD Mirror", getUrl: (id, type) => type === "tv" ? `https://vidsrc.sh/embed/tv?tmdb=${id}&season=1&episode=1` : `https://vidsrc.sh/embed/movie?tmdb=${id}` },
-    { id: "4", name: "Cloud Backup Stream", getUrl: (id, type) => type === "tv" ? `https://www.2embed.cc/embedtv/${id}&s=1&e=1` : `https://www.2embed.cc/embed/${id}` }
+    { id: "1", name: "Bioscope Primary", getUrl: (id, type) => type === "tv" ? `https://vidlink.pro/tv/${id}/1/1` : `https://vidlink.pro/movie/${id}` },
+    { id: "2", name: "Bioscope Ultra Mirror", getUrl: (id, type) => type === "tv" ? `https://vidsrc.pm/embed/tv/${id}/1-1` : `https://vidsrc.pm/embed/movie/${id}` },
+    { id: "3", name: "Bioscope Fast Mirror", getUrl: (id, type) => type === "tv" ? `https://autoembed.co/tv/tmdb/${id}/1/1` : `https://autoembed.co/movie/tmdb/${id}` },
+    { id: "4", name: "Bioscope Cloud Backup", getUrl: (id, type) => type === "tv" ? `https://vidsrc.cc/v2/embed/tv/${id}/1/1` : `https://vidsrc.cc/v2/embed/movie/${id}` },
+    { id: "5", name: "Bioscope Alternative", getUrl: (id, type) => type === "tv" ? `https://vidsrc.sh/embed/tv?tmdb=${id}&season=1&episode=1` : `https://vidsrc.sh/embed/movie?tmdb=${id}` }
   ]
 };
 
@@ -518,11 +519,13 @@ function createMovieCardHTML(movie) {
   const isAi = movie.genre === "AI Cinema" || (movie.genres && movie.genres.includes("AI Cinema")) || movie.id?.startsWith("higgs");
   const yearText = movie.year || "2024";
   const scoreText = movie.score ? `★ ${movie.score}` : "★ 8.5";
+  const genresList = (movie.genres || [movie.genre || 'Cinema']).join(',');
 
   return `
     <article class="movie-card ${isAi ? 'movie-card--ai' : ''}" 
              data-title="${movie.title}" 
              data-genre="${movie.genre || 'Cinema'}" 
+             data-genres="${genresList}"
              data-mood="${movie.moods ? movie.moods.join(' ') : 'all'}" 
              data-duration="${movie.duration || 120}"
              data-tmdb="${movie.tmdbId || ''}" 
@@ -536,6 +539,7 @@ function createMovieCardHTML(movie) {
         <div class="movie-card__overlay">
           <p>${scoreText} · ${movie.genre || 'Cinema'}</p>
           <button type="button" class="button button--primary quick-view" data-title="${movie.title}">Quick View</button>
+          <button type="button" class="button button--glass card-play-btn" data-title="${movie.title}" data-tmdb="${movie.tmdbId || ''}" data-type="${movie.type || 'movie'}" data-trailer="${movie.trailerId || ''}">▶ Play</button>
         </div>
       </div>
       <h3>${movie.title}</h3>
@@ -1375,6 +1379,12 @@ function setStreamQuality(qualityVal, notifyUser = true) {
   if (playerQualityPicker) playerQualityPicker.value = qualityVal;
   if (toolbarQualityLabel) toolbarQualityLabel.textContent = qualityVal.toUpperCase();
 
+  const engineBadge = document.querySelector("#stream-engine-badge");
+  if (engineBadge) {
+    if (qualityVal === "auto") engineBadge.textContent = "Auto-Optimized Stream (1080p)";
+    else engineBadge.textContent = `Stream Resolution (${qualityVal})`;
+  }
+
   const qItem = QUALITY_RESOLUTIONS.find(q => q.val === qualityVal) || QUALITY_RESOLUTIONS[0];
 
   // If YouTube / Custom Player is active, apply quality range to YouTube API
@@ -1417,6 +1427,8 @@ function updateStreamResolutionBadge(quality = "1080p") {
 
   if (playerQualityPicker && playerQualityPicker.value === "auto") {
     if (toolbarQualityLabel) toolbarQualityLabel.textContent = matched.toUpperCase();
+    const engineBadge = document.querySelector("#stream-engine-badge");
+    if (engineBadge) engineBadge.textContent = `Auto-Optimized Stream (${matched})`;
   }
 }
 
@@ -1450,11 +1462,11 @@ function loadSilentStreamEndpoint(failoverIndex = 0) {
 
   if (streamLoadingShield) {
     streamLoadingShield.hidden = false;
-    if (streamLoadingText) streamLoadingText.textContent = `Connecting to ${currentProvider.name}...`;
+    if (streamLoadingText) streamLoadingText.textContent = "Connecting to BioscopeBD Cinema Engine...";
   }
 
   const engineBadge = document.querySelector("#stream-engine-badge");
-  if (engineBadge) engineBadge.textContent = "Auto-Optimized Stream";
+  if (engineBadge) engineBadge.textContent = "Auto-Optimized Stream (1080p)";
 
   if (videoFrame) {
     videoFrame.hidden = false;
@@ -1462,10 +1474,26 @@ function loadSilentStreamEndpoint(failoverIndex = 0) {
     videoFrame.src = currentProvider.getUrl(activeStream.tmdbId, activeStream.type);
   }
 
-  // 4.5s Smart Failover Timer: If current source stalls or errors, switch silently to backup
+  // 4.0s Smart Failover Timer: If current source stalls or errors, switch silently to backup
   failoverTimer = setTimeout(() => {
     if (streamLoadingShield) streamLoadingShield.hidden = true;
-  }, 3800);
+  }, 3500);
+}
+
+function updateSourceToggleUI(isTrailerActive) {
+  const toggleWrap = document.querySelector("#stream-source-toggle");
+  const btnMovie = document.querySelector("#btn-toggle-movie");
+  const btnTrailer = document.querySelector("#btn-toggle-trailer");
+  if (!toggleWrap || !btnMovie || !btnTrailer) return;
+
+  if (!activeStream?.tmdbId && activeStream?.type === "youtube") {
+    toggleWrap.hidden = true;
+    return;
+  }
+
+  toggleWrap.hidden = false;
+  btnMovie.classList.toggle("is-active", !isTrailerActive);
+  btnTrailer.classList.toggle("is-active", isTrailerActive);
 }
 
 async function getTmdbTrailerId(tmdbId, type = "movie") {
@@ -1485,25 +1513,25 @@ function handleStreamErrorOrTimeout() {
   clearTimeout(failoverTimer);
   if (currentFailoverIndex < CONFIG.STREAM_SERVERS.length - 1) {
     currentFailoverIndex++;
-    console.info(`🔄 Silent failover switched to backup stream index: ${currentFailoverIndex}`);
     loadSilentStreamEndpoint(currentFailoverIndex);
   } else {
     // If all failover mirrors exhaust, fallback to custom whitelabel trailer/teaser
     if (streamLoadingShield) streamLoadingShield.hidden = true;
+    updateSourceToggleUI(true);
     if (activeStream?.trailerId) {
       loadCustomWhitelabelStream(activeStream.trailerId);
     } else if (activeStream?.tmdbId) {
       getTmdbTrailerId(activeStream.tmdbId, activeStream.type).then(tKey => {
         if (tKey) loadCustomWhitelabelStream(tKey);
-        else notify("⚠️ This title is not yet available for full streaming.");
+        else notify("⚠️ This title is not yet available for streaming.");
       });
     }
   }
 }
 
 // Master openStream function
-async function openStream(title, tmdbId, type = "movie", trailerId = "") {
-  activeStream = { title, tmdbId, type, trailerId };
+async function openStream(title, tmdbId, type = "movie", trailerId = "", isTrailer = false) {
+  activeStream = { title, tmdbId, type, trailerId, isTrailer };
   currentFailoverIndex = 0;
 
   if (videoTitle) videoTitle.textContent = `Now Streaming: ${title}`;
@@ -1517,10 +1545,10 @@ async function openStream(title, tmdbId, type = "movie", trailerId = "") {
     });
   }
 
-  // Prioritize unified custom BioscopeBD Media Player wrapper with zero external site branding
-  if (trailerId) {
-    loadCustomWhitelabelStream(trailerId);
-  } else if (type === "youtube" || !tmdbId) {
+  const isTrailerMode = isTrailer || type === "youtube" || !tmdbId;
+  updateSourceToggleUI(isTrailerMode);
+
+  if (isTrailerMode) {
     loadCustomWhitelabelStream(trailerId || "Way9Dexny3w");
   } else {
     stopCustomWhitelabelStream();
@@ -1534,6 +1562,43 @@ async function openStream(title, tmdbId, type = "movie", trailerId = "") {
   populateXrayData(title);
 
   if (videoDialog) videoDialog.showModal();
+}
+
+// In-Player Stream Source Switcher (Movie Stream <-> Official Teaser)
+const btnToggleMovie = document.querySelector("#btn-toggle-movie");
+const btnToggleTrailer = document.querySelector("#btn-toggle-trailer");
+
+if (btnToggleMovie) {
+  btnToggleMovie.addEventListener("click", () => {
+    if (!activeStream?.tmdbId) return;
+    activeStream.isTrailer = false;
+    updateSourceToggleUI(false);
+    stopCustomWhitelabelStream();
+    loadSilentStreamEndpoint(0);
+    notify("🎬 Switched to Full Movie Stream");
+  });
+}
+
+if (btnToggleTrailer) {
+  btnToggleTrailer.addEventListener("click", () => {
+    activeStream.isTrailer = true;
+    updateSourceToggleUI(true);
+    if (activeStream?.trailerId) {
+      loadCustomWhitelabelStream(activeStream.trailerId);
+    } else if (activeStream?.tmdbId) {
+      getTmdbTrailerId(activeStream.tmdbId, activeStream.type).then(tKey => {
+        if (tKey) {
+          activeStream.trailerId = tKey;
+          loadCustomWhitelabelStream(tKey);
+        } else {
+          loadCustomWhitelabelStream("Way9Dexny3w");
+        }
+      });
+    } else {
+      loadCustomWhitelabelStream("Way9Dexny3w");
+    }
+    notify("🎞️ Switched to Official High-Definition Teaser");
+  });
 }
 
 function startProgressTracking(title, tmdbId, type, trailerId) {
@@ -1756,11 +1821,10 @@ async function streamTorrentMagnet(magnetURI, movieTitle = "") {
         videoFile.renderTo(torrentVideoPlayer, { autoplay: true, controls: true });
         torrentVideoPlayer.addEventListener("loadedmetadata", () => {
           const h = torrentVideoPlayer.videoHeight;
-          if (h >= 2160) updateStreamResolutionBadge("4K ULTRA HD");
-          else if (h >= 1440) updateStreamResolutionBadge("1440p QHD");
-          else if (h >= 1080) updateStreamResolutionBadge("1080p FULL HD");
-          else if (h >= 720) updateStreamResolutionBadge("720p HD");
-          else if (h > 0) updateStreamResolutionBadge(`${h}p SD`);
+          if (h >= 1080) updateStreamResolutionBadge("1080p");
+          else if (h >= 720) updateStreamResolutionBadge("720p");
+          else if (h >= 480) updateStreamResolutionBadge("480p");
+          else if (h > 0) updateStreamResolutionBadge("360p");
         }, { once: true });
       }
 
@@ -1872,23 +1936,30 @@ function setAdvisoryBadge(el, level) {
   el.className = `advisory-badge advisory-badge--${level.toLowerCase()}`;
 }
 
-function openQuickView(movieTitle) {
-  const m = BUILTIN_CATALOG.find(item => item.title === movieTitle) || {
-    title: movieTitle,
-    genre: "Cinema",
-    duration: 135,
-    score: "8.6",
-    synopsis: "Critically acclaimed cinema selection with outstanding cinematography and narrative depth.",
-    cast: "Leading ensemble cast.",
-    parentsGuide: { nudity: "None", violence: "Mild", profanity: "Mild" },
-    tmdbId: "693134",
-    trailerId: "Way9Dexny3w",
-    type: "movie"
-  };
+function openQuickView(movieTitle, movieData = null) {
+  let m = BUILTIN_CATALOG.find(item => item.title === movieTitle);
+  if (!m) {
+    m = {
+      title: movieTitle,
+      genre: movieData?.genre || "Cinema",
+      duration: 135,
+      score: movieData?.score ? movieData.score.replace("★ ", "") : "8.6",
+      synopsis: "Critically acclaimed cinema selection with outstanding cinematography and narrative depth.",
+      cast: "Leading ensemble cast.",
+      parentsGuide: { nudity: "None", violence: "Mild", profanity: "Mild" },
+      tmdbId: movieData?.tmdbId || "693134",
+      trailerId: movieData?.trailerId || "",
+      type: movieData?.type || "movie"
+    };
+  } else if (movieData) {
+    if (movieData.tmdbId) m.tmdbId = movieData.tmdbId;
+    if (movieData.trailerId) m.trailerId = movieData.trailerId;
+    if (movieData.type) m.type = movieData.type;
+  }
 
   currentQuickMovie = m;
   if (quickDialogTitle) quickDialogTitle.textContent = m.title;
-  if (quickDialogCopy) quickDialogCopy.textContent = m.synopsis || "Available to stream in 4K Ultra HD on BioscopeBD.";
+  if (quickDialogCopy) quickDialogCopy.textContent = m.synopsis || "Available to stream in 1080p Full HD on BioscopeBD.";
   if (quickDialogCast) quickDialogCast.innerHTML = `<strong>Cast:</strong> ${m.cast || 'Ensemble cast'}`;
   if (quickDuration) quickDuration.textContent = m.duration ? `${Math.floor(m.duration / 60)}h ${m.duration % 60}m` : "2h 15m";
   if (quickRating) quickRating.textContent = `★ ${m.score || '8.5'}`;
@@ -1975,7 +2046,7 @@ if (dialogPlayBtn && quickDialog) {
   dialogPlayBtn.addEventListener("click", () => {
     quickDialog.close();
     if (currentQuickMovie) {
-      openStream(currentQuickMovie.title, currentQuickMovie.tmdbId, currentQuickMovie.type, currentQuickMovie.trailerId);
+      openStream(currentQuickMovie.title, currentQuickMovie.tmdbId, currentQuickMovie.type, currentQuickMovie.trailerId, false);
     }
   });
 }
@@ -1984,7 +2055,7 @@ if (dialogTrailerBtn && quickDialog) {
   dialogTrailerBtn.addEventListener("click", () => {
     quickDialog.close();
     if (currentQuickMovie) {
-      openStream(currentQuickMovie.title, "", "youtube", currentQuickMovie.trailerId);
+      openStream(currentQuickMovie.title, currentQuickMovie.tmdbId, "youtube", currentQuickMovie.trailerId, true);
     }
   });
 }
@@ -2020,7 +2091,14 @@ function bindCardInteractions(container) {
     btn.dataset.bound = "true";
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
-      openQuickView(btn.dataset.title || btn.closest(".movie-card")?.dataset.title);
+      const card = btn.closest(".movie-card");
+      openQuickView(btn.dataset.title || card?.dataset.title, {
+        tmdbId: card?.dataset.tmdb,
+        type: card?.dataset.type,
+        trailerId: card?.dataset.trailer,
+        genre: card?.dataset.genre,
+        score: card?.dataset.score
+      });
     });
   });
 
@@ -2029,7 +2107,8 @@ function bindCardInteractions(container) {
     btn.dataset.bound = "true";
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
-      openStream(btn.dataset.title, btn.dataset.tmdb, btn.dataset.type, btn.dataset.trailer);
+      const isAi = btn.dataset.type === "youtube" || !btn.dataset.tmdb;
+      openStream(btn.dataset.title, btn.dataset.tmdb, btn.dataset.type, btn.dataset.trailer, isAi);
     });
   });
 
@@ -2037,7 +2116,8 @@ function bindCardInteractions(container) {
     if (card.dataset.bound) return;
     card.dataset.bound = "true";
     card.addEventListener("click", () => {
-      openStream(card.dataset.title, card.dataset.tmdb, card.dataset.type, card.dataset.trailer);
+      const isAi = card.dataset.type === "youtube" || !card.dataset.tmdb;
+      openStream(card.dataset.title, card.dataset.tmdb, card.dataset.type, card.dataset.trailer, isAi);
     });
   });
 }
@@ -2048,12 +2128,12 @@ const heroWatchMovieBtn = document.querySelector("#hero-watch-movie");
 const heroWatchTrailerBtn = document.querySelector("#hero-watch-trailer");
 if (heroWatchMovieBtn) {
   heroWatchMovieBtn.addEventListener("click", () => {
-    openStream("Dune: Part Two", "693134", "movie", "Way9Dexny3w");
+    openStream("Dune: Part Two", "693134", "movie", "Way9Dexny3w", false);
   });
 }
 if (heroWatchTrailerBtn) {
   heroWatchTrailerBtn.addEventListener("click", () => {
-    openStream("Dune: Part Two", "", "youtube", "Way9Dexny3w");
+    openStream("Dune: Part Two", "693134", "youtube", "Way9Dexny3w", true);
   });
 }
 
@@ -2267,7 +2347,7 @@ function drawMovieTicketCanvas() {
   ctx.font = "13px 'Inter', sans-serif";
   ctx.fillText("HOST: " + (currentUser.name || "Tanjir Rahman") + " (VIP)", 30, 120);
   ctx.fillText("TIME: Tonight at 9:00 PM (BST)", 30, 145);
-  ctx.fillText("STREAM: 4K Ultra HD · Synced Watch Party", 30, 170);
+  ctx.fillText("STREAM: 1080p Full HD · Synced Watch Party", 30, 170);
   ctx.fillText("ROOM CODE: " + (partyRoomCodeEl?.textContent || "BIOSCOPE-7892"), 30, 195);
 
   // Gold Footer
