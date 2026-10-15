@@ -95,8 +95,8 @@
             <button class="button button--glass" id="hero-watch-trailer" type="button" data-title="Dune: Part Two" data-tmdb="693134" data-type="movie" data-trailer="Way9Dexny3w">
               <svg viewBox="0 0 24 24" aria-hidden="true" style="width:18px;height:18px;margin-right:6px;fill:currentColor;"><path d="M10 9v6l5-3-5-3z"/></svg>Watch Trailer
             </button>
-            <button class="button button--glass" id="hero-party-btn" type="button" data-title="Dune: Part Two" data-tmdb="693134">
-              <span aria-hidden="true">🍿</span> Watch Party
+            <button class="button button--primary" id="hero-party-btn" type="button" data-title="Dune: Part Two" data-tmdb="693134">
+              <span aria-hidden="true">🍿</span> Host Watch Party
             </button>
             <button class="button button--glass" id="hero-watchlist" type="button" aria-pressed="false">
               <span aria-hidden="true">＋</span> Watchlist
@@ -106,6 +106,50 @@
         </div>
       </div>
       <span class="hero__index" aria-hidden="true">01 / 04</span>
+    </section>
+
+    <!-- 2.5 Watch Party Flagship Hub -->
+    <section class="section container reveal" id="watch-party-hub" aria-labelledby="party-hub-title">
+      <div class="party-hub-card">
+        <div class="party-hub-content">
+          <div class="party-badge-glow">🍿 BioscopeBD Flagship · Live Cinema Experience</div>
+          <h2 id="party-hub-title">Watch Party with Friends.<br><span>Zero Delay. Host-Controlled Playback.</span></h2>
+          <p class="party-hub-lead">Stream movies together in real-time. No browser extensions needed, zero buffering chaos, and a unified cinema experience.</p>
+          
+          <div class="party-rules-grid">
+            <div class="party-rule">
+              <span class="party-rule__icon">👑</span>
+              <div>
+                <strong>Host Authority</strong>
+                <p>Only the room host can Play, Pause, or Seek so nobody interrupts the movie flow.</p>
+              </div>
+            </div>
+            <div class="party-rule">
+              <span class="party-rule__icon">📺</span>
+              <div>
+                <strong>Live TV Sync</strong>
+                <p>Friends watch synchronized like a live TV broadcast with real-time video alignment.</p>
+              </div>
+            </div>
+            <div class="party-rule">
+              <span class="party-rule__icon">✋</span>
+              <div>
+                <strong>Request to Pause</strong>
+                <p>Need a snack or washroom break? Friends click "Request Pause" to alert the host!</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="party-hub-actions">
+            <button class="button button--primary button--large" id="hub-host-party-btn" type="button">
+              🍿 Create Watch Party Room
+            </button>
+            <button class="button button--glass button--large" id="hub-join-party-btn" type="button">
+              🔗 Join with Room Code
+            </button>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- 3. Smart Discovery: Mood & Vibe Search -->
@@ -657,27 +701,15 @@
         </div>
       </div>
 
-      <!-- 1-Click Clip & Meme Overlay -->
-      <div class="clip-overlay" id="clip-overlay" hidden>
-        <div class="clip-card">
-          <h4>✂️ 1-Click Scene Clip & Meme Maker</h4>
-          <p>Created a 15-second high-definition clip with verified BioscopeBD watermark.</p>
-          <div class="clip-preview">
-            <span class="clip-badge">BioscopeBD Clip · 1080p</span>
-            <p id="clip-preview-title">Movie Scene</p>
-          </div>
-          <div class="clip-actions">
-            <button type="button" class="button button--primary" id="btn-copy-clip">📋 Copy Clip Link</button>
-            <button type="button" class="button button--outline" id="btn-share-social">🚀 Share to Social</button>
-            <button type="button" class="button button--glass" id="btn-close-clip">Close</button>
-          </div>
-        </div>
-      </div>
     </div>
 
-    <!-- Next-Level Player Features Toolbar -->
+    <!-- Clean Player Features Toolbar -->
     <div class="player-toolbar" id="player-toolbar">
       <div class="player-toolbar__group">
+        <button type="button" class="player-tool-btn player-tool-btn--accent" id="btn-player-party" title="Invite Friends to Watch Party">
+          <span class="tool-icon">🍿</span>
+          <span class="tool-label">Host Watch Party</span>
+        </button>
         <button type="button" class="player-tool-btn" id="btn-family-mode" aria-pressed="false" title="Family-Friendly Filter">
           <span class="tool-icon">🛡️</span>
           <span class="tool-label">Family Safe: <strong id="family-status">OFF</strong></span>
@@ -690,10 +722,6 @@
           <span class="tool-icon">🎧</span>
           <span class="tool-label">Night Audio</span>
         </button>
-        <button type="button" class="player-tool-btn is-active" id="btn-danmaku-toggle" aria-pressed="true" title="Toggle Live Reactions">
-          <span class="tool-icon">💬</span>
-          <span class="tool-label">Live Danmaku</span>
-        </button>
       </div>
 
       <div class="player-toolbar__group">
@@ -704,14 +732,6 @@
           <button type="button" class="sub-btn" id="btn-sub-plus" title="Advance subtitle by 0.5s">+0.5s</button>
           <button type="button" class="sub-btn sub-btn--lang" id="btn-dual-sub" title="English + Bangla Dual Subtitles">Dual Sub</button>
         </div>
-        <button type="button" class="player-tool-btn" id="btn-open-clip" title="1-Click Clip & Meme">
-          <span class="tool-icon">✂️</span>
-          <span class="tool-label">Clip & Meme</span>
-        </button>
-        <button type="button" class="player-tool-btn player-tool-btn--accent" id="btn-player-party" title="Invite Friends to Watch Party">
-          <span class="tool-icon">🍿</span>
-          <span class="tool-label">Watch Party</span>
-        </button>
       </div>
     </div>
   </dialog>
@@ -876,7 +896,10 @@
         </div>
 
         <div class="party-chat-preview">
-          <h5>Live Party Chat Stream:</h5>
+          <h5>Live Party Chat & Controls:</h5>
+          <div style="background:rgba(245,197,24,0.1);border:1px solid rgba(245,197,24,0.3);border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:0.75rem;">
+            👑 <strong>Host Authority Active:</strong> Only you control Play & Pause for the room. Friends watch in sync and send ✋ Pause Requests when they need a break.
+          </div>
           <div class="party-chat-messages" id="party-chat-box">
             <div class="chat-msg system"><span>System:</span> Room BIOSCOPE-7892 ready. Synced multi-server enabled.</div>
             <div class="chat-msg"><span class="avatar">T</span> <strong>Tanjir (Host):</strong> Welcome everyone! Getting popcorn ready 🍿</div>
@@ -884,6 +907,10 @@
             <div class="chat-msg"><span class="avatar">S</span> <strong>Sarah:</strong> Waiting for the worm scene in Dune 2! 🚀</div>
           </div>
         </div>
+
+        <button type="button" class="button button--outline button--full" id="btn-simulate-pause-req" style="margin-bottom:10px;">
+          ✋ Test Friend's Pause Request (Rahim)
+        </button>
 
         <button type="button" class="button button--primary button--full" id="btn-start-party">
           🚀 Launch Watch Party Now

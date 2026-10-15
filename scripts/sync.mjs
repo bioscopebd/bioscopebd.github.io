@@ -19,3 +19,15 @@ for (const target of targets) {
   }
   console.log(`Synced ${target}`);
 }
+
+// Also sync to root for GitHub Pages deployment
+for (const file of files) {
+  cpSync(join(source, file), join(root, file), { force: true });
+}
+if (existsSync(join(source, "icons"))) {
+  mkdirSync(join(root, "icons"), { recursive: true });
+  for (const icon of readdirSync(join(source, "icons"))) {
+    cpSync(join(source, "icons", icon), join(root, "icons", icon), { force: true });
+  }
+}
+console.log("Synced root (GitHub Pages)");

@@ -163,7 +163,6 @@ const videoFrame = document.querySelector("#video-player-frame");
 const videoTitle = document.querySelector("#video-dialog-title");
 const danmakuOverlay = document.querySelector("#danmaku-overlay");
 const xrayOverlay = document.querySelector("#xray-overlay");
-const clipOverlay = document.querySelector("#clip-overlay");
 let activeStream = null;
 let currentServer = "1";
 let danmakuInterval = null;
@@ -401,33 +400,45 @@ if (dualSubBtn) {
   });
 }
 
-// 1-Click Clip & Meme Maker
-const openClipBtn = document.querySelector("#btn-open-clip");
-const closeClipBtn = document.querySelector("#btn-close-clip");
-const copyClipBtn = document.querySelector("#btn-copy-clip");
-const shareSocialBtn = document.querySelector("#btn-share-social");
-const clipTitle = document.querySelector("#clip-preview-title");
+// Watch Party Flagship Hub Actions
+const hubHostPartyBtn = document.querySelector("#hub-host-party-btn");
+const hubJoinPartyBtn = document.querySelector("#hub-join-party-btn");
+const simulatePauseBtn = document.querySelector("#btn-simulate-pause-req");
+const partyChatBox = document.querySelector("#party-chat-box");
 
-if (openClipBtn && clipOverlay) {
-  openClipBtn.addEventListener("click", () => {
-    clipOverlay.hidden = false;
-    if (clipTitle && activeStream) clipTitle.textContent = `${activeStream.title} · Scene Clip (01:24)`;
+if (hubHostPartyBtn) {
+  hubHostPartyBtn.addEventListener("click", () => {
+    if (tabHost && hostView && tabJoin && joinView) {
+      tabHost.classList.add("is-active");
+      tabJoin.classList.remove("is-active");
+      hostView.hidden = false;
+      joinView.hidden = true;
+    }
+    openWatchParty();
   });
 }
-if (closeClipBtn && clipOverlay) {
-  closeClipBtn.addEventListener("click", () => { clipOverlay.hidden = true; });
-}
-if (copyClipBtn) {
-  copyClipBtn.addEventListener("click", () => {
-    navigator.clipboard?.writeText(window.location.href);
-    notify("📋 Clip link with BioscopeBD watermark copied to clipboard!");
-    if (clipOverlay) clipOverlay.hidden = true;
+
+if (hubJoinPartyBtn) {
+  hubJoinPartyBtn.addEventListener("click", () => {
+    if (tabHost && hostView && tabJoin && joinView) {
+      tabJoin.classList.add("is-active");
+      tabHost.classList.remove("is-active");
+      joinView.hidden = false;
+      hostView.hidden = true;
+    }
+    openWatchParty();
   });
 }
-if (shareSocialBtn) {
-  shareSocialBtn.addEventListener("click", () => {
-    notify("🚀 Shared clip snippet to social preview!");
-    if (clipOverlay) clipOverlay.hidden = true;
+
+if (simulatePauseBtn && partyChatBox) {
+  simulatePauseBtn.addEventListener("click", () => {
+    const pauseMsg = document.createElement("div");
+    pauseMsg.className = "chat-msg";
+    pauseMsg.style.cssText = "background:rgba(255,132,0,0.15);border-left:3px solid #ff8400;padding:6px 8px;border-radius:4px;";
+    pauseMsg.innerHTML = "<strong>✋ Rahim:</strong> 'Bro, pause 2 minutes please! Getting popcorn 🍿'";
+    partyChatBox.appendChild(pauseMsg);
+    partyChatBox.scrollTop = partyChatBox.scrollHeight;
+    notify("🔔 [Watch Party Alert] Rahim requested a 2-min pause! Only Host has pause authority.");
   });
 }
 
@@ -634,7 +645,7 @@ if (dialogPartyBtn) {
     openWatchParty();
   });
 }
-if (playerPartyBtn) openPartyBtn && playerPartyBtn.addEventListener("click", openWatchParty);
+if (playerPartyBtn) playerPartyBtn.addEventListener("click", openWatchParty);
 
 if (partyCloseBtn && partyDialog) {
   partyCloseBtn.addEventListener("click", () => partyDialog.close());
