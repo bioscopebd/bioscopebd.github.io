@@ -1290,8 +1290,8 @@ function loadCustomWhitelabelStream(videoId) {
   setCustomPlayingState(true);
 
   if (customYtFrame) {
-    const origin = encodeURIComponent(window.location.origin || "*");
-    customYtFrame.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&playsinline=1&enablejsapi=1&origin=${origin}`;
+    const originParam = window.location.origin && window.location.origin.startsWith("http") ? `&origin=${window.location.origin}` : "";
+    customYtFrame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&playsinline=1&enablejsapi=1${originParam}`;
   }
 
   const engineBadge = document.querySelector("#stream-engine-badge");
@@ -1365,6 +1365,8 @@ const btnQualityTool = document.querySelector("#btn-quality-tool");
 const toolbarQualityLabel = document.querySelector("#toolbar-quality-label");
 
 const QUALITY_RESOLUTIONS = [
+  { val: "4k", label: "4K (Ultra HD)", yt: "highres" },
+  { val: "1440p", label: "1440p (QHD)", yt: "hd1440" },
   { val: "1080p", label: "1080p (Full HD)", yt: "hd1080" },
   { val: "720p", label: "720p (HD)", yt: "hd720" },
   { val: "480p", label: "480p (SD)", yt: "large" },
@@ -1382,7 +1384,7 @@ function setStreamQuality(qualityVal, notifyUser = true) {
   const engineBadge = document.querySelector("#stream-engine-badge");
   if (engineBadge) {
     if (qualityVal === "auto") engineBadge.textContent = "Auto-Optimized Stream (1080p)";
-    else engineBadge.textContent = `Stream Resolution (${qualityVal})`;
+    else engineBadge.textContent = `Stream Resolution (${qualityVal.toUpperCase()})`;
   }
 
   const qItem = QUALITY_RESOLUTIONS.find(q => q.val === qualityVal) || QUALITY_RESOLUTIONS[0];
@@ -1406,7 +1408,7 @@ if (playerQualityPicker) {
 
 if (btnQualityTool) {
   btnQualityTool.addEventListener("click", () => {
-    // Cycle through: 1080p -> 720p -> 480p -> 360p -> auto -> 1080p
+    // Cycle through: 4k -> 1440p -> 1080p -> 720p -> 480p -> 360p -> auto -> 4k
     const currentIndex = QUALITY_RESOLUTIONS.findIndex(q => q.val === activeStreamQuality);
     const nextIndex = (currentIndex + 1) % QUALITY_RESOLUTIONS.length;
     const nextQuality = QUALITY_RESOLUTIONS[nextIndex].val;
@@ -1417,8 +1419,8 @@ if (btnQualityTool) {
 function updateStreamResolutionBadge(quality = "1080p") {
   const q = String(quality).toLowerCase();
   let matched = "1080p";
-  if (q.includes("2160") || q.includes("4k") || q === "highres") matched = "1080p";
-  else if (q.includes("1440") || q === "hd1440") matched = "1080p";
+  if (q.includes("2160") || q.includes("4k") || q === "highres") matched = "4k";
+  else if (q.includes("1440") || q === "hd1440") matched = "1440p";
   else if (q.includes("1080") || q === "hd1080") matched = "1080p";
   else if (q.includes("720") || q === "hd720") matched = "720p";
   else if (q.includes("480") || q === "large") matched = "480p";
@@ -1428,7 +1430,7 @@ function updateStreamResolutionBadge(quality = "1080p") {
   if (playerQualityPicker && playerQualityPicker.value === "auto") {
     if (toolbarQualityLabel) toolbarQualityLabel.textContent = matched.toUpperCase();
     const engineBadge = document.querySelector("#stream-engine-badge");
-    if (engineBadge) engineBadge.textContent = `Auto-Optimized Stream (${matched})`;
+    if (engineBadge) engineBadge.textContent = `Auto-Optimized Stream (${matched.toUpperCase()})`;
   }
 }
 
@@ -1457,16 +1459,20 @@ window.addEventListener("message", (event) => {
 // Silent Auto-Server Engine with Failover
 function loadSilentStreamEndpoint(failoverIndex = 0) {
   clearTimeout(failoverTimer);
+  currentFailoverIndex = failoverIndex;
   const servers = CONFIG.STREAM_SERVERS;
   const currentProvider = servers[failoverIndex] || servers[0];
 
   if (streamLoadingShield) {
     streamLoadingShield.hidden = false;
-    if (streamLoadingText) streamLoadingText.textContent = "Connecting to BioscopeBD Cinema Engine...";
+    if (streamLoadingText) streamLoadingText.textContent = `Connecting to ${currentProvider.name}...`;
   }
 
   const engineBadge = document.querySelector("#stream-engine-badge");
   if (engineBadge) engineBadge.textContent = "Auto-Optimized Stream (1080p)";
+
+  const toolbarServerLabel = document.querySelector("#toolbar-server-label");
+  if (toolbarServerLabel) toolbarServerLabel.textContent = `Mirror ${failoverIndex + 1}`;
 
   if (videoFrame) {
     videoFrame.hidden = false;
@@ -1474,7 +1480,7 @@ function loadSilentStreamEndpoint(failoverIndex = 0) {
     videoFrame.src = currentProvider.getUrl(activeStream.tmdbId, activeStream.type);
   }
 
-  // 4.0s Smart Failover Timer: If current source stalls or errors, switch silently to backup
+  // 3.5s Smart Failover Timer: remove loading shield once connection handshakes
   failoverTimer = setTimeout(() => {
     if (streamLoadingShield) streamLoadingShield.hidden = true;
   }, 3500);
@@ -1598,6 +1604,21 @@ if (btnToggleTrailer) {
       loadCustomWhitelabelStream("Way9Dexny3w");
     }
     notify("🎞️ Switched to Official High-Definition Teaser");
+  });
+}
+
+const btnServerTool = document.querySelector("#btn-server-tool");
+if (btnServerTool) {
+  btnServerTool.addEventListener("click", () => {
+    if (!activeStream || !activeStream.tmdbId) {
+      notify("ℹ️ Stream mirroring is optimized for full cinema titles.");
+      return;
+    }
+    const servers = CONFIG.STREAM_SERVERS;
+    currentFailoverIndex = (currentFailoverIndex + 1) % servers.length;
+    const nextServer = servers[currentFailoverIndex];
+    loadSilentStreamEndpoint(currentFailoverIndex);
+    notify(`⚡ Switched to ${nextServer.name} (Mirror ${currentFailoverIndex + 1})`);
   });
 }
 
@@ -1787,6 +1808,17 @@ function stopTorrentStream() {
   }
 }
 
+function ensureWebTorrentLoaded() {
+  if (window.WebTorrent) return Promise.resolve(window.WebTorrent);
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/webtorrent@1.9.7/webtorrent.min.js";
+    s.onload = () => resolve(window.WebTorrent);
+    s.onerror = () => reject(new Error("WebTorrent library failed to load"));
+    document.head.appendChild(s);
+  });
+}
+
 async function streamTorrentMagnet(magnetURI, movieTitle = "") {
   if (!magnetURI || !magnetURI.trim()) {
     notify("⚠️ Please enter a valid magnet link.");
@@ -1803,7 +1835,12 @@ async function streamTorrentMagnet(magnetURI, movieTitle = "") {
   if (torrentStatusText) torrentStatusText.textContent = "Connecting to P2P swarm...";
 
   try {
-    const WT = window.WebTorrent;
+    let WT = window.WebTorrent;
+    if (!WT) {
+      if (torrentStatusText) torrentStatusText.textContent = "Initializing torrent engine...";
+      await ensureWebTorrentLoaded();
+      WT = window.WebTorrent;
+    }
     if (!WT) throw new Error("WebTorrent library not loaded");
     if (!wtClient) wtClient = new WT();
 
