@@ -405,12 +405,28 @@ if (openStremioBtn) {
   });
 }
 
+let copyCliTimer;
 const copyCliBtn = document.querySelector("#btn-copy-cli");
 if (copyCliBtn) {
-  copyCliBtn.addEventListener("click", () => {
+  copyCliBtn.addEventListener("click", async () => {
     if (!activeStream || !activeStream.title) return;
     const cmd = `mov-cli -s "${activeStream.title}"`;
-    navigator.clipboard?.writeText(cmd);
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(cmd);
+      }
+    } catch (e) {}
+
+    const originalText = copyCliBtn.innerHTML;
+    copyCliBtn.innerHTML = `✓ Copied!`;
+    copyCliBtn.classList.add("is-copied");
+
+    clearTimeout(copyCliTimer);
+    copyCliTimer = setTimeout(() => {
+      copyCliBtn.innerHTML = originalText;
+      copyCliBtn.classList.remove("is-copied");
+    }, 2200);
+
     notify(`💻 Command copied: ${cmd} (Paste in terminal to stream via mov-cli / moviebox-tui)`);
   });
 }
@@ -640,11 +656,64 @@ if (tabHost && tabJoin && hostView && joinView) {
   });
 }
 
+let copyRoomTimer;
 if (copyRoomBtn && partyCodeEl) {
-  copyRoomBtn.addEventListener("click", () => {
-    const link = `${window.location.origin}${window.location.pathname}?room=${partyCodeEl.textContent}`;
-    navigator.clipboard?.writeText(link);
-    notify(`📋 Watch Party room link copied: ${partyCodeEl.textContent}`);
+  copyRoomBtn.addEventListener("click", async () => {
+    const code = partyCodeEl.textContent.trim();
+    const link = `${window.location.origin}${window.location.pathname}?room=${encodeURIComponent(code)}`;
+    
+    let copied = false;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(link);
+        copied = true;
+      } catch (err) {
+        console.warn("Clipboard API writeText failed, trying fallback:", err);
+      }
+    }
+    
+    if (!copied) {
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = link;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        copied = document.execCommand("copy");
+        document.body.removeChild(ta);
+      } catch (err) {
+        console.error("Fallback execCommand copy failed:", err);
+      }
+    }
+
+    // Direct visual feedback on the button
+    const origHtml = "📋 Copy Link";
+    copyRoomBtn.classList.add("is-copied");
+    copyRoomBtn.innerHTML = `✓ Link Copied!`;
+
+    // Visual feedback on the dashed container box
+    const codeBox = document.querySelector("#party-code-box");
+    if (codeBox) codeBox.classList.add("is-copied-highlight");
+
+    // Clear inline status notification under the box
+    const copyStatusEl = document.querySelector("#party-copy-status");
+    if (copyStatusEl) {
+      copyStatusEl.innerHTML = `✓ Room link copied to clipboard! Send to friends to join.`;
+      copyStatusEl.classList.add("is-visible");
+    }
+
+    clearTimeout(copyRoomTimer);
+    copyRoomTimer = setTimeout(() => {
+      copyRoomBtn.classList.remove("is-copied");
+      copyRoomBtn.innerHTML = origHtml;
+      if (codeBox) codeBox.classList.remove("is-copied-highlight");
+      if (copyStatusEl) copyStatusEl.classList.remove("is-visible");
+    }, 2800);
+
+    notify(`📋 Watch Party room link copied: ${code}`);
   });
 }
 
@@ -716,6 +785,21 @@ if (simulatePauseBtn && partyChatBox) {
     notify("🔔 [Watch Party Alert] Rahim requested a 2-min pause! Only Host has pause authority.");
   });
 }
+
+// Auto-open Watch Party dialog in Join mode if shared URL has ?room=
+try {
+  const urlParams = new URLSearchParams(window.location.search);
+  const roomParam = urlParams.get("room");
+  if (roomParam && partyDialog && tabJoin && tabHost && joinView && hostView && joinInput) {
+    tabJoin.classList.add("is-active");
+    tabHost.classList.remove("is-active");
+    joinView.hidden = false;
+    hostView.hidden = true;
+    joinInput.value = roomParam;
+    partyDialog.showModal();
+    notify(`🍿 Watch Party invite detected for room ${roomParam}!`);
+  }
+} catch (e) {}
 
 // 9. Language Switcher (EN / BN) with comprehensive translations
 const translations = {
