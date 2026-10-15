@@ -113,9 +113,13 @@ function setServer(srv) {
   if (!activeStream) return;
   if (srv === "1") {
     videoFrame.src = activeStream.type === "tv"
+      ? `https://vidsrc.xyz/embed/tv/${activeStream.tmdbId}/1-1`
+      : `https://vidsrc.xyz/embed/movie/${activeStream.tmdbId}`;
+  } else if (srv === "2") {
+    videoFrame.src = activeStream.type === "tv"
       ? `https://vidsrc.cc/v2/embed/tv/${activeStream.tmdbId}/1/1`
       : `https://vidsrc.cc/v2/embed/movie/${activeStream.tmdbId}`;
-  } else if (srv === "2") {
+  } else if (srv === "3") {
     videoFrame.src = activeStream.type === "tv"
       ? `https://multiembed.mov/?video_id=${activeStream.tmdbId}&tmdb=1&s=1&e=1`
       : `https://multiembed.mov/?video_id=${activeStream.tmdbId}&tmdb=1`;
