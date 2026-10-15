@@ -7,3 +7,4 @@ android/keystore/
 android/release/
 ios/release/
 windows/release/
+.github/

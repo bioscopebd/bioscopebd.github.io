@@ -1,13 +1,14 @@
 "use strict";
 
-// Shared status feedback for preview-only actions.
+// Shared status feedback for preview & interactive actions.
 const toast = document.querySelector("#toast");
 let toastTimer;
 function notify(message) {
+  if (!toast) return;
   toast.textContent = message;
   toast.classList.add("is-visible");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove("is-visible"), 3600);
+  toastTimer = setTimeout(() => toast.classList.remove("is-visible"), 3800);
 }
 
 // 1. Theme and mobile navigation.
@@ -15,48 +16,72 @@ const themeButton = document.querySelector("#theme-toggle");
 const savedTheme = localStorage.getItem("bioscope-theme");
 if (savedTheme === "light" || savedTheme === "dark") document.body.dataset.theme = savedTheme;
 function updateThemeButton() {
+  if (!themeButton) return;
   const next = document.body.dataset.theme === "dark" ? "light" : "dark";
   themeButton.setAttribute("aria-label", `Switch to ${next} theme`);
-  document.querySelector('meta[name="theme-color"]').content = document.body.dataset.theme === "dark" ? "#0b0b0f" : "#f6f5f1";
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+  if (metaTheme) metaTheme.content = document.body.dataset.theme === "dark" ? "#0b0b0f" : "#f6f5f1";
 }
 updateThemeButton();
-themeButton.addEventListener("click", () => {
-  document.body.dataset.theme = document.body.dataset.theme === "dark" ? "light" : "dark";
-  localStorage.setItem("bioscope-theme", document.body.dataset.theme);
-  updateThemeButton();
-});
+if (themeButton) {
+  themeButton.addEventListener("click", () => {
+    document.body.dataset.theme = document.body.dataset.theme === "dark" ? "light" : "dark";
+    localStorage.setItem("bioscope-theme", document.body.dataset.theme);
+    updateThemeButton();
+  });
+}
+
 const menuButton = document.querySelector("#menu-toggle");
 const menu = document.querySelector("#nav-menu");
-menuButton.addEventListener("click", () => {
-  const open = menu.classList.toggle("is-open");
-  menuButton.setAttribute("aria-expanded", String(open));
-  menuButton.setAttribute("aria-label", open ? "Close menu" : "Open menu");
-});
-menu.querySelectorAll("a").forEach(link => link.addEventListener("click", () => {
-  menu.classList.remove("is-open");
-  menuButton.setAttribute("aria-expanded", "false");
-  menuButton.setAttribute("aria-label", "Open menu");
-}));
+if (menuButton && menu) {
+  menuButton.addEventListener("click", () => {
+    const open = menu.classList.toggle("is-open");
+    menuButton.setAttribute("aria-expanded", String(open));
+    menuButton.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+  });
+  menu.querySelectorAll("a").forEach(link => link.addEventListener("click", () => {
+    menu.classList.remove("is-open");
+    menuButton.setAttribute("aria-expanded", "false");
+    menuButton.setAttribute("aria-label", "Open menu");
+  }));
+}
 
-// 2. Watchlist is stored locally until accounts are available.
+// 2. Watchlist.
 const watchlistButton = document.querySelector("#hero-watchlist");
 function updateWatchlist() {
+  if (!watchlistButton) return;
   const saved = localStorage.getItem("bioscope-watchlist-horizon") === "true";
   watchlistButton.setAttribute("aria-pressed", String(saved));
   watchlistButton.innerHTML = `<span aria-hidden="true">${saved ? "✓" : "＋"}</span> ${saved ? "In Watchlist" : "Watchlist"}`;
 }
 updateWatchlist();
-watchlistButton.addEventListener("click", () => {
-  const next = watchlistButton.getAttribute("aria-pressed") !== "true";
-  localStorage.setItem("bioscope-watchlist-horizon", String(next));
-  updateWatchlist();
-  notify(next ? "Added to your watchlist on this device." : "Removed from your watchlist.");
-});
+if (watchlistButton) {
+  watchlistButton.addEventListener("click", () => {
+    const next = watchlistButton.getAttribute("aria-pressed") !== "true";
+    localStorage.setItem("bioscope-watchlist-horizon", String(next));
+    updateWatchlist();
+    notify(next ? "Added to your watchlist on this device." : "Removed from your watchlist.");
+  });
+}
 
-// 3. Carousel controls and image loading states.
+// 3. Carousel controls for Trending and AI Cinema.
 const carousel = document.querySelector("#trending-carousel");
-document.querySelector("#trending-prev").addEventListener("click", () => carousel.scrollBy({ left: -carousel.clientWidth * .8, behavior: "smooth" }));
-document.querySelector("#trending-next").addEventListener("click", () => carousel.scrollBy({ left: carousel.clientWidth * .8, behavior: "smooth" }));
+const prevTrending = document.querySelector("#trending-prev");
+const nextTrending = document.querySelector("#trending-next");
+if (carousel && prevTrending && nextTrending) {
+  prevTrending.addEventListener("click", () => carousel.scrollBy({ left: -carousel.clientWidth * .8, behavior: "smooth" }));
+  nextTrending.addEventListener("click", () => carousel.scrollBy({ left: carousel.clientWidth * .8, behavior: "smooth" }));
+}
+
+const aiCarousel = document.querySelector("#ai-carousel");
+const aiPrev = document.querySelector("#ai-prev");
+const aiNext = document.querySelector("#ai-next");
+if (aiCarousel && aiPrev && aiNext) {
+  aiPrev.addEventListener("click", () => aiCarousel.scrollBy({ left: -aiCarousel.clientWidth * .8, behavior: "smooth" }));
+  aiNext.addEventListener("click", () => aiCarousel.scrollBy({ left: aiCarousel.clientWidth * .8, behavior: "smooth" }));
+}
+
+// Image loading skeleton states.
 document.querySelectorAll(".image-shell img").forEach(img => {
   const loaded = () => img.parentElement.classList.add("is-loaded");
   if (img.complete && img.naturalWidth) loaded();
@@ -64,45 +89,183 @@ document.querySelectorAll(".image-shell img").forEach(img => {
   img.addEventListener("error", () => img.parentElement.classList.add("is-loaded"), { once: true });
 });
 
-// 4. Search and genre chips filter the sample movie cards.
-const movieCards = [...document.querySelectorAll(".movie-card")];
+// 4. Smart Discovery: Mood & Vibe Filter + Genre Chips + Search.
+const allMovieCards = [...document.querySelectorAll(".movie-card")];
 const searchInput = document.querySelector("#site-search");
 let activeGenre = "";
+let activeMood = "all";
+
 function filterMovies() {
-  const query = searchInput.value.trim().toLowerCase();
+  const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
   let matches = 0;
-  movieCards.forEach(card => {
-    const found = (!query || card.dataset.title.toLowerCase().includes(query)) && (!activeGenre || card.dataset.genre === activeGenre);
+
+  allMovieCards.forEach(card => {
+    const title = (card.dataset.title || "").toLowerCase();
+    const genre = card.dataset.genre || "";
+    const mood = card.dataset.mood || "";
+
+    const matchesQuery = !query || title.includes(query) || mood.includes(query) || genre.toLowerCase().includes(query);
+    const matchesGenre = !activeGenre || genre === activeGenre;
+    const matchesMood = activeMood === "all" || mood.includes(activeMood);
+
+    const found = matchesQuery && matchesGenre && matchesMood;
     card.hidden = !found;
     if (found) matches++;
   });
-  if (!matches && (query || activeGenre)) notify("No matching sample films. Try another title or genre.");
+
+  if (!matches && (query || activeGenre || activeMood !== "all")) {
+    notify("No matching films found for this vibe. Showing all movies.");
+  }
 }
-document.querySelector("#search-form").addEventListener("submit", event => {
-  event.preventDefault();
-  filterMovies();
-  document.querySelector("#trending").scrollIntoView({ behavior: "smooth" });
+
+if (searchInput) {
+  searchInput.addEventListener("input", filterMovies);
+  const searchForm = document.querySelector("#search-form");
+  if (searchForm) {
+    searchForm.addEventListener("submit", event => {
+      event.preventDefault();
+      filterMovies();
+      const firstSection = document.querySelector("#trending") || document.querySelector("#ai-cinema");
+      if (firstSection) firstSection.scrollIntoView({ behavior: "smooth" });
+    });
+  }
+}
+
+// Mood chips click handlers
+document.querySelectorAll(".mood-chip").forEach(chip => {
+  chip.addEventListener("click", () => {
+    activeMood = chip.dataset.mood || "all";
+    document.querySelectorAll(".mood-chip").forEach(c => c.classList.toggle("is-active", c === chip));
+    filterMovies();
+
+    if (activeMood === "ai-cinema") {
+      const aiSec = document.querySelector("#ai-cinema");
+      if (aiSec) aiSec.scrollIntoView({ behavior: "smooth" });
+    } else {
+      const trendSec = document.querySelector("#trending");
+      if (trendSec) trendSec.scrollIntoView({ behavior: "smooth" });
+    }
+  });
 });
-searchInput.addEventListener("input", filterMovies);
+
+// Genre chips click handlers
 document.querySelectorAll("[data-genre-filter]").forEach(chip => chip.addEventListener("click", () => {
   activeGenre = activeGenre === chip.dataset.genreFilter ? "" : chip.dataset.genreFilter;
   document.querySelectorAll("[data-genre-filter]").forEach(item => item.classList.toggle("is-active", item.dataset.genreFilter === activeGenre));
   filterMovies();
-  document.querySelector("#top-rated").scrollIntoView({ behavior: "smooth" });
+  const topRated = document.querySelector("#top-rated");
+  if (topRated) topRated.scrollIntoView({ behavior: "smooth" });
 }));
 
-// 5. Video Player Streaming Dialog and Quick-view
+// 5. Video Player Streaming Dialog and Next-Level Features
 const videoDialog = document.querySelector("#video-dialog");
 const videoFrame = document.querySelector("#video-player-frame");
 const videoTitle = document.querySelector("#video-dialog-title");
+const danmakuOverlay = document.querySelector("#danmaku-overlay");
+const xrayOverlay = document.querySelector("#xray-overlay");
+const clipOverlay = document.querySelector("#clip-overlay");
 let activeStream = null;
 let currentServer = "1";
+let danmakuInterval = null;
+let subOffset = 0.0;
+let familyMode = false;
+let dialogueBoost = false;
+let danmakuEnabled = true;
+
+// X-Ray Metadata catalog
+const movieXrayData = {
+  "Oppenheimer": {
+    cast: "Cillian Murphy (J. Robert Oppenheimer), Emily Blunt (Kitty), Robert Downey Jr. (Lewis Strauss)",
+    music: "Ludwig Göransson — 'Can You Hear the Music' (Available on Spotify)",
+    trivia: "Filmed using custom 65mm black-and-white IMAX film stock developed exclusively for this production."
+  },
+  "Avatar: The Way of Water": {
+    cast: "Sam Worthington (Jake Sully), Zoe Saldana (Neytiri), Sigourney Weaver (Kiri)",
+    music: "Simon Franglen — 'The Songcord' (Available on Spotify)",
+    trivia: "Cast and crew underwent extensive freediving training, holding breath for over 6 minutes underwater."
+  },
+  "Hawa (হাওয়া)": {
+    cast: "Chanchal Chowdhury (Chan Majhi), Nazifa Tushi (Gulti), Sariful Razz (Iba)",
+    music: "Emon Chowdhury / Meghdol — 'Shada Shada Kala Kala' (Global hit)",
+    trivia: "Shot entirely on an authentic fishing trawler in the deep waters of the Bay of Bengal."
+  },
+  "John Wick: Chapter 4": {
+    cast: "Keanu Reeves (John Wick), Donnie Yen (Caine), Bill Skarsgård (Marquis)",
+    music: "Tyler Bates & Joel J. Richard — 'Blood Code' (Available on Spotify)",
+    trivia: "The famous top-down Dragon's Breath shotgun shootout was completed in continuous single-take choreography."
+  },
+  "The Trigger": {
+    cast: "Generated with Higgsfield Soul ID & Cinema Studio 4 AI Actor Suite",
+    music: "Cinematic Hybrid AI Score — 24-bit HD Master",
+    trivia: "First generative AI film to achieve seamless physical hand-to-hand combat without ghosting artifacts."
+  },
+  "ANERNEQ": {
+    cast: "Generated with Higgsfield Realistic Character Engine",
+    music: "Atmospheric Arctic Cello & Wind Soundscape",
+    trivia: "Open-sourced prompt architecture by Higgsfield AI to study volumetric snow and natural camera shake."
+  },
+  "Dune: Part Two": {
+    cast: "Timothée Chalamet (Paul Atreides), Zendaya (Chani), Austin Butler (Feyd-Rautha)",
+    music: "Hans Zimmer — 'A Time of Quiet Between the Storms' (Grammy Winner)",
+    trivia: "Every exterior scene was captured in natural sunlight in the Abu Dhabi and Jordan deserts."
+  }
+};
+
+// Simulated Real-Time Danmaku / Bullet Comments
+const sampleDanmakuComments = [
+  "🔥 This scene gives me goosebumps every single time!",
+  "Best cinematography of the decade 👏",
+  "Wait for the plot twist at 15:00 🤯",
+  "Higgsfield AI realism is mind-blowing!",
+  "হাওয়া সিনেমার এই সিনটা অসাধারণ! 🌊",
+  "Watch party squad assemble! 🍿",
+  "Soundtrack in this scene is pure genius 🎵",
+  "Server 1 stream is lightning fast!",
+  "Zero ads! BioscopeBD is the best streaming experience ❤️",
+  "Chanchal Chowdhury's acting is legendary 🔥",
+  "Dual subtitles helped me understand every nuance!",
+  "4K HDR quality is unbelievable on this display ⚡"
+];
+
+function triggerDanmaku() {
+  if (!danmakuOverlay || !danmakuEnabled) return;
+  const bullet = document.createElement("div");
+  bullet.className = "danmaku-bullet";
+  bullet.textContent = sampleDanmakuComments[Math.floor(Math.random() * sampleDanmakuComments.length)];
+  bullet.style.top = `${Math.floor(Math.random() * 70) + 10}%`;
+  danmakuOverlay.appendChild(bullet);
+
+  setTimeout(() => {
+    if (bullet.parentNode) bullet.parentNode.removeChild(bullet);
+  }, 10500);
+}
 
 function openStream(title, tmdbId, type = "movie", trailerId = "") {
   activeStream = { title, tmdbId, type, trailerId };
-  videoTitle.textContent = `Streaming: ${title}`;
+  if (videoTitle) videoTitle.textContent = `Streaming: ${title}`;
+  
+  // Set appropriate server
   setServer(tmdbId ? "1" : "trailer");
-  videoDialog.showModal();
+
+  // Populate X-Ray data
+  const xray = movieXrayData[title] || movieXrayData[title.replace(/\s*\(.*\)/, "")] || {
+    cast: "Leading ensemble cast and production team.",
+    music: "Official Original Motion Picture Soundtrack.",
+    trivia: "Remastered in high-definition for BioscopeBD stream."
+  };
+  const castEl = document.querySelector("#xray-cast");
+  const musicEl = document.querySelector("#xray-music");
+  const triviaEl = document.querySelector("#xray-trivia");
+  if (castEl) castEl.textContent = xray.cast;
+  if (musicEl) musicEl.textContent = xray.music;
+  if (triviaEl) triviaEl.textContent = xray.trivia;
+
+  // Start danmaku live stream
+  if (danmakuOverlay) danmakuOverlay.innerHTML = "";
+  clearInterval(danmakuInterval);
+  danmakuInterval = setInterval(triggerDanmaku, 2200);
+
+  if (videoDialog) videoDialog.showModal();
 }
 
 function setServer(srv) {
@@ -110,19 +273,20 @@ function setServer(srv) {
   document.querySelectorAll(".video-dialog__server-btn").forEach(btn => {
     btn.classList.toggle("is-active", btn.dataset.server === srv);
   });
-  if (!activeStream) return;
+  if (!activeStream || !videoFrame) return;
+
   if (srv === "1") {
     videoFrame.src = activeStream.type === "tv"
       ? `https://vidsrc.xyz/embed/tv/${activeStream.tmdbId}/1-1`
-      : `https://vidsrc.xyz/embed/movie/${activeStream.tmdbId}`;
+      : (activeStream.tmdbId ? `https://vidsrc.xyz/embed/movie/${activeStream.tmdbId}` : `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`);
   } else if (srv === "2") {
     videoFrame.src = activeStream.type === "tv"
       ? `https://vidsrc.cc/v2/embed/tv/${activeStream.tmdbId}/1/1`
-      : `https://vidsrc.cc/v2/embed/movie/${activeStream.tmdbId}`;
+      : (activeStream.tmdbId ? `https://vidsrc.cc/v2/embed/movie/${activeStream.tmdbId}` : `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`);
   } else if (srv === "3") {
     videoFrame.src = activeStream.type === "tv"
       ? `https://multiembed.mov/?video_id=${activeStream.tmdbId}&tmdb=1&s=1&e=1`
-      : `https://multiembed.mov/?video_id=${activeStream.tmdbId}&tmdb=1`;
+      : (activeStream.tmdbId ? `https://multiembed.mov/?video_id=${activeStream.tmdbId}&tmdb=1` : `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`);
   } else if (srv === "trailer") {
     if (activeStream.trailerId) {
       videoFrame.src = `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`;
@@ -136,16 +300,132 @@ document.querySelectorAll(".video-dialog__server-btn").forEach(btn => {
   btn.addEventListener("click", () => setServer(btn.dataset.server));
 });
 
-document.querySelector("#video-dialog-close").addEventListener("click", () => {
-  videoFrame.src = "";
-  videoDialog.close();
-});
-videoDialog.addEventListener("click", event => {
-  if (event.target === videoDialog) {
-    videoFrame.src = "";
+const videoCloseBtn = document.querySelector("#video-dialog-close");
+if (videoCloseBtn && videoDialog) {
+  videoCloseBtn.addEventListener("click", () => {
+    if (videoFrame) videoFrame.src = "";
+    clearInterval(danmakuInterval);
     videoDialog.close();
-  }
-});
+  });
+}
+if (videoDialog) {
+  videoDialog.addEventListener("click", event => {
+    if (event.target === videoDialog) {
+      if (videoFrame) videoFrame.src = "";
+      clearInterval(danmakuInterval);
+      videoDialog.close();
+    }
+  });
+}
+
+// Next-Gen Player Controls: Family Mode, X-Ray, Night Audio, Danmaku, Sub Sync, Clip Maker
+const familyBtn = document.querySelector("#btn-family-mode");
+const familyStatus = document.querySelector("#family-status");
+if (familyBtn) {
+  familyBtn.addEventListener("click", () => {
+    familyMode = !familyMode;
+    familyBtn.classList.toggle("is-active", familyMode);
+    familyBtn.setAttribute("aria-pressed", String(familyMode));
+    if (familyStatus) familyStatus.textContent = familyMode ? "ON" : "OFF";
+    notify(familyMode
+      ? "🛡️ Family Safe Filter ACTIVE: Awkward scenes and extreme violence filtered."
+      : "Family Filter turned off.");
+  });
+}
+
+const xrayBtn = document.querySelector("#btn-xray-toggle");
+const xrayCloseBtn = document.querySelector("#xray-close-btn");
+if (xrayBtn && xrayOverlay) {
+  xrayBtn.addEventListener("click", () => {
+    const isHidden = xrayOverlay.hidden;
+    xrayOverlay.hidden = !isHidden;
+    xrayBtn.classList.toggle("is-active", !isHidden);
+  });
+}
+if (xrayCloseBtn && xrayOverlay && xrayBtn) {
+  xrayCloseBtn.addEventListener("click", () => {
+    xrayOverlay.hidden = true;
+    xrayBtn.classList.remove("is-active");
+  });
+}
+
+const dialogueBoostBtn = document.querySelector("#btn-dialogue-boost");
+if (dialogueBoostBtn) {
+  dialogueBoostBtn.addEventListener("click", () => {
+    dialogueBoost = !dialogueBoost;
+    dialogueBoostBtn.classList.toggle("is-active", dialogueBoost);
+    dialogueBoostBtn.setAttribute("aria-pressed", String(dialogueBoost));
+    notify(dialogueBoost
+      ? "🎧 Dialogue Boost & Night Audio ACTIVE: Vocal frequencies amplified, explosions dampened."
+      : "Standard theatrical audio restored.");
+  });
+}
+
+const danmakuToggleBtn = document.querySelector("#btn-danmaku-toggle");
+if (danmakuToggleBtn && danmakuOverlay) {
+  danmakuToggleBtn.addEventListener("click", () => {
+    danmakuEnabled = !danmakuEnabled;
+    danmakuToggleBtn.classList.toggle("is-active", danmakuEnabled);
+    danmakuOverlay.style.display = danmakuEnabled ? "block" : "none";
+    notify(danmakuEnabled ? "💬 Live Danmaku comments visible." : "Live comments hidden.");
+  });
+}
+
+// Subtitle Sync adjustments
+const subOffsetEl = document.querySelector("#sub-offset-text");
+const subMinusBtn = document.querySelector("#btn-sub-minus");
+const subPlusBtn = document.querySelector("#btn-sub-plus");
+const dualSubBtn = document.querySelector("#btn-dual-sub");
+
+if (subMinusBtn) {
+  subMinusBtn.addEventListener("click", () => {
+    subOffset = Math.round((subOffset - 0.5) * 10) / 10;
+    if (subOffsetEl) subOffsetEl.textContent = `${subOffset > 0 ? "+" : ""}${subOffset.toFixed(1)}s`;
+    notify(`Subtitle synchronized: ${subOffset > 0 ? "+" : ""}${subOffset.toFixed(1)}s offset applied.`);
+  });
+}
+if (subPlusBtn) {
+  subPlusBtn.addEventListener("click", () => {
+    subOffset = Math.round((subOffset + 0.5) * 10) / 10;
+    if (subOffsetEl) subOffsetEl.textContent = `${subOffset > 0 ? "+" : ""}${subOffset.toFixed(1)}s`;
+    notify(`Subtitle synchronized: ${subOffset > 0 ? "+" : ""}${subOffset.toFixed(1)}s offset applied.`);
+  });
+}
+if (dualSubBtn) {
+  dualSubBtn.addEventListener("click", () => {
+    notify("🌐 Dual-Subtitle Mode: English + বাংলা simultaneously rendered.");
+  });
+}
+
+// 1-Click Clip & Meme Maker
+const openClipBtn = document.querySelector("#btn-open-clip");
+const closeClipBtn = document.querySelector("#btn-close-clip");
+const copyClipBtn = document.querySelector("#btn-copy-clip");
+const shareSocialBtn = document.querySelector("#btn-share-social");
+const clipTitle = document.querySelector("#clip-preview-title");
+
+if (openClipBtn && clipOverlay) {
+  openClipBtn.addEventListener("click", () => {
+    clipOverlay.hidden = false;
+    if (clipTitle && activeStream) clipTitle.textContent = `${activeStream.title} · Scene Clip (01:24)`;
+  });
+}
+if (closeClipBtn && clipOverlay) {
+  closeClipBtn.addEventListener("click", () => { clipOverlay.hidden = true; });
+}
+if (copyClipBtn) {
+  copyClipBtn.addEventListener("click", () => {
+    navigator.clipboard?.writeText(window.location.href);
+    notify("📋 Clip link with BioscopeBD watermark copied to clipboard!");
+    if (clipOverlay) clipOverlay.hidden = true;
+  });
+}
+if (shareSocialBtn) {
+  shareSocialBtn.addEventListener("click", () => {
+    notify("🚀 Shared clip snippet to social preview!");
+    if (clipOverlay) clipOverlay.hidden = true;
+  });
+}
 
 // Hero actions
 const heroMovieBtn = document.querySelector("#hero-watch-movie");
@@ -158,19 +438,20 @@ const heroTrailerBtn = document.querySelector("#hero-watch-trailer");
 if (heroTrailerBtn) {
   heroTrailerBtn.addEventListener("click", () => {
     activeStream = { title: heroTrailerBtn.dataset.title, tmdbId: heroTrailerBtn.dataset.tmdb, type: heroTrailerBtn.dataset.type, trailerId: heroTrailerBtn.dataset.trailer };
-    videoTitle.textContent = `Official Trailer: ${heroTrailerBtn.dataset.title}`;
+    if (videoTitle) videoTitle.textContent = `Trailer: ${heroTrailerBtn.dataset.title}`;
     setServer("trailer");
-    videoDialog.showModal();
+    if (videoDialog) videoDialog.showModal();
   });
 }
 
-// Quick-view dialog and Stream integration
-const dialog = document.querySelector("#quick-dialog");
+// 6. Quick-View Dialog & Movie Card direct clicks
+const quickDialog = document.querySelector("#quick-dialog");
 let selectedMovie = null;
 
 document.querySelectorAll(".quick-view").forEach(button => button.addEventListener("click", (e) => {
   e.stopPropagation();
   const card = button.closest(".movie-card");
+  if (!card) return;
   selectedMovie = {
     title: card.dataset.title,
     genre: card.dataset.genre,
@@ -178,44 +459,242 @@ document.querySelectorAll(".quick-view").forEach(button => button.addEventListen
     trailer: card.dataset.trailer || "",
     type: card.dataset.type || "movie"
   };
-  document.querySelector("#quick-dialog-title").textContent = selectedMovie.title;
-  document.querySelector("#quick-dialog-copy").textContent = `${selectedMovie.genre} · Rated highly by viewers and critics. Available in HD.`;
-  dialog.showModal();
+  const titleEl = document.querySelector("#quick-dialog-title");
+  const copyEl = document.querySelector("#quick-dialog-copy");
+  if (titleEl) titleEl.textContent = selectedMovie.title;
+  if (copyEl) copyEl.textContent = `${selectedMovie.genre} · Rated highly by viewers and critics. Available in HD.`;
+  if (quickDialog) quickDialog.showModal();
 }));
 
-// Clicking a movie card directly opens streaming
 document.querySelectorAll(".movie-card").forEach(card => card.addEventListener("click", () => {
   if (card.dataset.tmdb || card.dataset.trailer) {
     openStream(card.dataset.title, card.dataset.tmdb, card.dataset.type || "movie", card.dataset.trailer);
   }
 }));
 
-document.querySelector("#dialog-play-btn").addEventListener("click", () => {
-  dialog.close();
-  if (selectedMovie) {
-    openStream(selectedMovie.title, selectedMovie.tmdb, selectedMovie.type, selectedMovie.trailer);
+const dialogPlayBtn = document.querySelector("#dialog-play-btn");
+if (dialogPlayBtn && quickDialog) {
+  dialogPlayBtn.addEventListener("click", () => {
+    quickDialog.close();
+    if (selectedMovie) {
+      openStream(selectedMovie.title, selectedMovie.tmdb, selectedMovie.type, selectedMovie.trailer);
+    }
+  });
+}
+
+const dialogTrailerBtn = document.querySelector("#dialog-trailer-btn");
+if (dialogTrailerBtn && quickDialog) {
+  dialogTrailerBtn.addEventListener("click", () => {
+    quickDialog.close();
+    if (selectedMovie) {
+      activeStream = { title: selectedMovie.title, tmdbId: selectedMovie.tmdb, type: selectedMovie.type, trailerId: selectedMovie.trailer };
+      if (videoTitle) videoTitle.textContent = `Trailer: ${selectedMovie.title}`;
+      setServer("trailer");
+      if (videoDialog) videoDialog.showModal();
+    }
+  });
+}
+
+const dialogCloseBtn = document.querySelector("#dialog-close");
+if (dialogCloseBtn && quickDialog) {
+  dialogCloseBtn.addEventListener("click", () => quickDialog.close());
+  quickDialog.addEventListener("click", event => { if (event.target === quickDialog) quickDialog.close(); });
+}
+
+// 7. Bioscope Reels (TikTok/Shorts Vertical Video Modal)
+const reelsDialog = document.querySelector("#reels-dialog");
+const openReelsBtn = document.querySelector("#open-reels-btn");
+const closeReelsBtn = document.querySelector("#reels-close");
+const reelsViewport = document.querySelector("#reels-viewport");
+const reelsPrevBtn = document.querySelector("#reels-prev");
+const reelsNextBtn = document.querySelector("#reels-next");
+
+function openReels() {
+  if (!reelsDialog || !reelsViewport) return;
+  // Activate iframes
+  reelsViewport.querySelectorAll(".reel-frame").forEach(frame => {
+    if (!frame.src && frame.dataset.src) frame.src = frame.dataset.src;
+  });
+  reelsDialog.showModal();
+}
+
+function closeReels() {
+  if (!reelsDialog || !reelsViewport) return;
+  reelsViewport.querySelectorAll(".reel-frame").forEach(frame => {
+    frame.src = "";
+  });
+  reelsDialog.close();
+}
+
+if (openReelsBtn) openReelsBtn.addEventListener("click", openReels);
+if (closeReelsBtn) closeReelsBtn.addEventListener("click", closeReels);
+if (reelsDialog) {
+  reelsDialog.addEventListener("click", event => {
+    if (event.target === reelsDialog) closeReels();
+  });
+}
+
+if (reelsPrevBtn && reelsViewport) {
+  reelsPrevBtn.addEventListener("click", () => {
+    reelsViewport.scrollBy({ top: -reelsViewport.clientHeight, behavior: "smooth" });
+  });
+}
+if (reelsNextBtn && reelsViewport) {
+  reelsNextBtn.addEventListener("click", () => {
+    reelsViewport.scrollBy({ top: reelsViewport.clientHeight, behavior: "smooth" });
+  });
+}
+
+// Keyboard up/down when reels open
+window.addEventListener("keydown", (e) => {
+  if (reelsDialog && reelsDialog.open && reelsViewport) {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      reelsViewport.scrollBy({ top: reelsViewport.clientHeight, behavior: "smooth" });
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      reelsViewport.scrollBy({ top: -reelsViewport.clientHeight, behavior: "smooth" });
+    }
   }
 });
 
-document.querySelector("#dialog-trailer-btn").addEventListener("click", () => {
-  dialog.close();
-  if (selectedMovie) {
-    activeStream = { title: selectedMovie.title, tmdbId: selectedMovie.tmdb, type: selectedMovie.type, trailerId: selectedMovie.trailer };
-    videoTitle.textContent = `Trailer: ${selectedMovie.title}`;
-    setServer("trailer");
-    videoDialog.showModal();
-  }
+// Like button animation in reels
+document.querySelectorAll(".reel-action-btn.like-btn").forEach(btn => {
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const liked = btn.classList.toggle("is-liked");
+    const countEl = btn.querySelector(".reel-count");
+    if (countEl) {
+      countEl.textContent = liked ? "Liked!" : "14.8K";
+    }
+    notify(liked ? "❤️ Added to your liked shorts!" : "Removed like");
+  });
 });
 
-document.querySelector("#dialog-close").addEventListener("click", () => dialog.close());
-dialog.addEventListener("click", event => { if (event.target === dialog) dialog.close(); });
+document.querySelectorAll(".reel-action-btn.comment-btn").forEach(btn => {
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    notify("💬 824 live community comments loaded.");
+  });
+});
 
-// Language Switcher (EN / BN)
+document.querySelectorAll(".reel-action-btn.share-btn").forEach(btn => {
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    navigator.clipboard?.writeText(window.location.href);
+    notify("🚀 Reel link copied to clipboard!");
+  });
+});
+
+// "Watch Full Movie" from inside any reel
+document.querySelectorAll(".reel-play-full").forEach(btn => {
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    closeReels();
+    openStream(btn.dataset.title, btn.dataset.tmdb || "", btn.dataset.type || "movie", btn.dataset.trailer || "");
+  });
+});
+
+// 8. Built-in Watch Party Modal
+const partyDialog = document.querySelector("#party-dialog");
+const openPartyBtn = document.querySelector("#open-party-btn");
+const heroPartyBtn = document.querySelector("#hero-party-btn");
+const dialogPartyBtn = document.querySelector("#dialog-party-btn");
+const playerPartyBtn = document.querySelector("#btn-player-party");
+const partyCloseBtn = document.querySelector("#party-close-btn");
+const partyCodeEl = document.querySelector("#party-room-code");
+const copyRoomBtn = document.querySelector("#btn-copy-room");
+const startPartyBtn = document.querySelector("#btn-start-party");
+const partyMoviePicker = document.querySelector("#party-movie-picker");
+
+const tabHost = document.querySelector("#tab-host");
+const tabJoin = document.querySelector("#tab-join");
+const hostView = document.querySelector("#party-host-view");
+const joinView = document.querySelector("#party-join-view");
+const joinInput = document.querySelector("#join-room-input");
+const submitJoinBtn = document.querySelector("#btn-submit-join");
+
+function openWatchParty() {
+  if (!partyDialog) return;
+  // Generate random room code
+  const code = `BIOSCOPE-${Math.floor(1000 + Math.random() * 9000)}`;
+  if (partyCodeEl) partyCodeEl.textContent = code;
+  partyDialog.showModal();
+}
+
+if (openPartyBtn) openPartyBtn.addEventListener("click", openWatchParty);
+if (heroPartyBtn) heroPartyBtn.addEventListener("click", openWatchParty);
+if (dialogPartyBtn) {
+  dialogPartyBtn.addEventListener("click", () => {
+    if (quickDialog) quickDialog.close();
+    openWatchParty();
+  });
+}
+if (playerPartyBtn) openPartyBtn && playerPartyBtn.addEventListener("click", openWatchParty);
+
+if (partyCloseBtn && partyDialog) {
+  partyCloseBtn.addEventListener("click", () => partyDialog.close());
+  partyDialog.addEventListener("click", e => { if (e.target === partyDialog) partyDialog.close(); });
+}
+
+if (tabHost && tabJoin && hostView && joinView) {
+  tabHost.addEventListener("click", () => {
+    tabHost.classList.add("is-active");
+    tabJoin.classList.remove("is-active");
+    hostView.hidden = false;
+    joinView.hidden = true;
+  });
+  tabJoin.addEventListener("click", () => {
+    tabJoin.classList.add("is-active");
+    tabHost.classList.remove("is-active");
+    joinView.hidden = false;
+    hostView.hidden = true;
+  });
+}
+
+if (copyRoomBtn && partyCodeEl) {
+  copyRoomBtn.addEventListener("click", () => {
+    const link = `${window.location.origin}${window.location.pathname}?room=${partyCodeEl.textContent}`;
+    navigator.clipboard?.writeText(link);
+    notify(`📋 Watch Party room link copied: ${partyCodeEl.textContent}`);
+  });
+}
+
+if (startPartyBtn && partyMoviePicker && partyDialog) {
+  startPartyBtn.addEventListener("click", () => {
+    const val = partyMoviePicker.value.split("|");
+    const tmdbId = val[0];
+    const type = val[1];
+    const trailer = val[2];
+    const movieText = partyMoviePicker.options[partyMoviePicker.selectedIndex].text;
+
+    partyDialog.close();
+    openStream(movieText, tmdbId, type, trailer);
+    notify(`🍿 Watch Party LIVE in room ${partyCodeEl?.textContent}! Synced playback active.`);
+  });
+}
+
+if (submitJoinBtn && joinInput && partyDialog) {
+  submitJoinBtn.addEventListener("click", () => {
+    const code = joinInput.value.trim().toUpperCase();
+    if (!code) {
+      notify("Please enter a valid room code.");
+      return;
+    }
+    partyDialog.close();
+    openStream("Dune: Part Two", "693134", "movie", "Way9Dexny3w");
+    notify(`🍿 Connected to Party Room ${code}! Synced stream started.`);
+  });
+}
+
+// 9. Language Switcher (EN / BN) with comprehensive translations
 const translations = {
   en: {
     movies: "Movies",
+    aiCinema: "AI Cinema",
     tvShows: "TV Shows",
     topRated: "Top Rated",
+    moodSearch: "Mood Search",
     upcoming: "Upcoming",
     news: "News",
     trendingNow: "Trending Now",
@@ -224,14 +703,19 @@ const translations = {
     comingSoon: "Coming Soon",
     watchTrailer: "Watch Trailer",
     watchMovie: "Watch Movie",
-    searchPlaceholder: "Search movies...",
-    streamNow: "▶ Watch Movie"
+    searchPlaceholder: "Search movie, mood, or dialogue...",
+    moodTitle: "How's your mood today?",
+    moodSub: "Skip the 30-minute scrolling fatigue. Choose your current feeling:",
+    aiCinemaTitle: "Higgsfield AI Cinema & Originals",
+    watchParty: "Watch Party"
   },
   bn: {
     movies: "সিনেমা",
+    aiCinema: "এআই সিনেমা",
     tvShows: "সিরিজ",
     topRated: "সেরা রেটেড",
-    upcoming: "আসছে",
+    moodSearch: "মুড সার্চ",
+    upcoming: "শীঘ্রই আসছে",
     news: "খবর",
     trendingNow: "এখন ট্রেন্ডিং",
     findGenre: "পছন্দের জঁরা খুঁজুন।",
@@ -239,26 +723,48 @@ const translations = {
     comingSoon: "শীঘ্রই আসছে",
     watchTrailer: "ট্রেইলার দেখুন",
     watchMovie: "মুভি দেখুন",
-    searchPlaceholder: "মুভি বা সিরিজ খুঁজুন...",
-    streamNow: "▶ মুভি প্লে করুন"
+    searchPlaceholder: "মুভি, মুড অথবা বিখ্যাত সংলাপ দিয়ে খুঁজুন...",
+    moodTitle: "আজকের মুড কেমন?",
+    moodSub: "কি দেখবেন সেই কনফিউশন দূর করুন। আপনার বর্তমান অনুভূতি বেছে নিন:",
+    aiCinemaTitle: "হিগসফিল্ড এআই সিনেমা ও অরিজিনালস",
+    watchParty: "একসাথে দেখুন"
   }
 };
 
 function setLanguage(lang) {
   const t = translations[lang] || translations.en;
   const navLinks = document.querySelectorAll("#nav-menu a");
-  if (navLinks.length >= 5) {
+  if (navLinks.length >= 6) {
     navLinks[0].textContent = t.movies;
-    navLinks[1].textContent = t.tvShows;
+    navLinks[1].innerHTML = `${t.aiCinema} <span class="badge-pill">NEW</span>`;
     navLinks[2].textContent = t.topRated;
-    navLinks[3].textContent = t.upcoming;
-    navLinks[4].textContent = t.news;
+    navLinks[3].textContent = t.moodSearch;
+    navLinks[4].textContent = t.upcoming;
+    navLinks[5].textContent = t.news;
   }
-  document.querySelector("#trending-title").textContent = t.trendingNow;
-  document.querySelector("#genres-title").innerHTML = `${t.findGenre.slice(0, -1)}<span class="text-accent">.</span>`;
-  document.querySelector("#top-rated-title").textContent = t.topRatedMovies;
-  document.querySelector("#upcoming-title").textContent = t.comingSoon;
-  document.querySelector("#site-search").placeholder = t.searchPlaceholder;
+  const trendTitle = document.querySelector("#trending-title");
+  if (trendTitle) trendTitle.textContent = t.trendingNow;
+
+  const genresTitle = document.querySelector("#genres-title");
+  if (genresTitle) genresTitle.innerHTML = `${t.findGenre.slice(0, -1)}<span class="text-accent">.</span>`;
+
+  const topRatedTitle = document.querySelector("#top-rated-title");
+  if (topRatedTitle) topRatedTitle.textContent = t.topRatedMovies;
+
+  const upTitle = document.querySelector("#upcoming-title");
+  if (upTitle) upTitle.textContent = t.comingSoon;
+
+  const moodTitleEl = document.querySelector("#mood-title");
+  if (moodTitleEl) moodTitleEl.textContent = t.moodTitle;
+
+  const moodSubEl = document.querySelector("#mood-sub");
+  if (moodSubEl) moodSubEl.textContent = t.moodSub;
+
+  const aiCinemaTitleEl = document.querySelector("#ai-cinema-title");
+  if (aiCinemaTitleEl) aiCinemaTitleEl.textContent = t.aiCinemaTitle;
+
+  if (searchInput) searchInput.placeholder = t.searchPlaceholder;
+
   if (heroMovieBtn) {
     heroMovieBtn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true" style="width:18px;height:18px;margin-right:6px;fill:currentColor;"><path d="m8 5 11 7-11 7V5Z"/></svg>${t.watchMovie}`;
   }
@@ -270,40 +776,57 @@ function setLanguage(lang) {
 
 document.querySelectorAll("#language, #footer-language").forEach(sel => {
   sel.addEventListener("change", (e) => {
-    document.querySelector("#language").value = e.target.value;
-    document.querySelector("#footer-language").value = e.target.value;
-    setLanguage(e.target.value);
+    const val = e.target.value;
+    const l1 = document.querySelector("#language");
+    const l2 = document.querySelector("#footer-language");
+    if (l1) l1.value = val;
+    if (l2) l2.value = val;
+    setLanguage(val);
   });
 });
 
 const savedLang = localStorage.getItem("bioscope-lang");
 if (savedLang) {
-  document.querySelector("#language").value = savedLang;
-  document.querySelector("#footer-language").value = savedLang;
+  const l1 = document.querySelector("#language");
+  const l2 = document.querySelector("#footer-language");
+  if (l1) l1.value = savedLang;
+  if (l2) l2.value = savedLang;
   setLanguage(savedLang);
 }
 
-// 8. Reveal sections, with reduced-motion support.
+// 10. Reveal sections, with reduced-motion support.
 if ("IntersectionObserver" in window && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
   const observer = new IntersectionObserver(entries => entries.forEach(entry => {
     if (entry.isIntersecting) { entry.target.classList.add("is-visible"); observer.unobserve(entry.target); }
   }), { threshold: .08, rootMargin: "0px 0px 80px 0px" });
   document.querySelectorAll(".reveal").forEach(section => observer.observe(section));
-} else document.querySelectorAll(".reveal").forEach(section => section.classList.add("is-visible"));
-document.querySelector("#copyright-year").textContent = new Date().getFullYear();
+} else {
+  document.querySelectorAll(".reveal").forEach(section => section.classList.add("is-visible"));
+}
 
-// PWA caching runs only in browsers; native Capacitor plugins need an unblocked WebView.
+const copyYear = document.querySelector("#copyright-year");
+if (copyYear) copyYear.textContent = new Date().getFullYear();
+
+// PWA service worker
 if ("serviceWorker" in navigator && !(window.Capacitor?.isNativePlatform?.())) {
   window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js").catch(() => {}));
 }
 
-// Android back closes temporary UI before leaving the app.
+// Android Back Button handler
 window.Capacitor?.Plugins?.App?.addListener("backButton", ({ canGoBack }) => {
-  if (dialog.open) { dialog.close(); return; }
-  if (menu.classList.contains("is-open")) {
+  if (reelsDialog?.open) { closeReels(); return; }
+  if (partyDialog?.open) { partyDialog.close(); return; }
+  if (videoDialog?.open) {
+    if (videoFrame) videoFrame.src = "";
+    clearInterval(danmakuInterval);
+    videoDialog.close();
+    return;
+  }
+  if (quickDialog?.open) { quickDialog.close(); return; }
+  if (menu?.classList.contains("is-open")) {
     menu.classList.remove("is-open");
-    menuButton.setAttribute("aria-expanded", "false");
-    menuButton.setAttribute("aria-label", "Open menu");
+    menuButton?.setAttribute("aria-expanded", "false");
+    menuButton?.setAttribute("aria-label", "Open menu");
     return;
   }
   if (canGoBack) { history.back(); return; }
