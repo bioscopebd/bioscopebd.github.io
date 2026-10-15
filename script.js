@@ -264,6 +264,10 @@ function setServer(srv) {
   document.querySelectorAll(".video-dialog__server-btn").forEach(btn => {
     btn.classList.toggle("is-active", btn.dataset.server === srv);
   });
+  const openStremioBtnEl = document.querySelector("#btn-open-stremio");
+  const copyCliBtnEl = document.querySelector("#btn-copy-cli");
+  if (openStremioBtnEl) openStremioBtnEl.classList.remove("is-active");
+  if (copyCliBtnEl) copyCliBtnEl.classList.toggle("is-active", srv === "2");
   if (!activeStream || !videoFrame) return;
 
   // Remove sandbox attribute so modern embed providers (VidLink, MovieBox, VidSrc) stream without "Please Disable Sandbox" errors
@@ -391,43 +395,42 @@ if (dualSubBtn) {
   });
 }
 
-// Stremio & CLI Streaming integrations
+// Stremio & CLI Streaming integrations (Direct In-Player Playback)
 const openStremioBtn = document.querySelector("#btn-open-stremio");
 if (openStremioBtn) {
   openStremioBtn.addEventListener("click", () => {
-    if (!activeStream || !activeStream.title) {
-      notify("Please select a stream first.");
+    if (!activeStream || !activeStream.title || !videoFrame) {
+      notify("Please select a movie/show first.");
       return;
     }
-    const stremioWeb = `https://web.stremio.com/#/search?search=${encodeURIComponent(activeStream.title)}`;
-    window.location.href = stremioWeb;
-    notify(`⚡ Launching "${activeStream.title}" in Stremio!`);
+    // Stream directly inside our player frame without navigating away from BioscopeBD
+    videoFrame.removeAttribute("sandbox");
+    videoFrame.src = `https://web.stremio.com/#/search?search=${encodeURIComponent(activeStream.title)}`;
+    
+    // Highlight Stremio as active source
+    openStremioBtn.classList.add("is-active");
+    if (copyCliBtn) copyCliBtn.classList.remove("is-active");
+    document.querySelectorAll(".video-dialog__server-btn").forEach(btn => btn.classList.remove("is-active"));
+
+    notify(`⚡ Stremio Web Engine loaded in player! Playing "${activeStream.title}" directly.`);
   });
 }
 
-let copyCliTimer;
 const copyCliBtn = document.querySelector("#btn-copy-cli");
 if (copyCliBtn) {
-  copyCliBtn.addEventListener("click", async () => {
-    if (!activeStream || !activeStream.title) return;
-    const cmd = `mov-cli -s "${activeStream.title}"`;
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(cmd);
-      }
-    } catch (e) {}
+  copyCliBtn.addEventListener("click", () => {
+    if (!activeStream || !activeStream.title || !videoFrame) {
+      notify("Please select a movie/show first.");
+      return;
+    }
+    // Stream MovieBox directly inside our player frame without requiring terminal / CLI
+    setServer("2");
+    
+    // Highlight CLI Stream as active source
+    copyCliBtn.classList.add("is-active");
+    if (openStremioBtn) openStremioBtn.classList.remove("is-active");
 
-    const originalText = copyCliBtn.innerHTML;
-    copyCliBtn.innerHTML = `✓ Copied!`;
-    copyCliBtn.classList.add("is-copied");
-
-    clearTimeout(copyCliTimer);
-    copyCliTimer = setTimeout(() => {
-      copyCliBtn.innerHTML = originalText;
-      copyCliBtn.classList.remove("is-copied");
-    }, 2200);
-
-    notify(`💻 Command copied: ${cmd} (Paste in terminal to stream via mov-cli / moviebox-tui)`);
+    notify(`💻 MovieBox Stream loaded in player! Playing "${activeStream.title}" directly.`);
   });
 }
 
