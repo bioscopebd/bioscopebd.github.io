@@ -266,8 +266,8 @@ function setServer(srv) {
   });
   if (!activeStream || !videoFrame) return;
 
-  // Always enforce strict anti-popup sandbox (blocks all window.open, new tabs, and popup ads)
-  videoFrame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-presentation");
+  // Remove sandbox attribute so modern embed providers (VidLink, MovieBox, VidSrc) stream without "Please Disable Sandbox" errors
+  videoFrame.removeAttribute("sandbox");
 
   if (srv === "1") {
     videoFrame.src = activeStream.type === "tv"
