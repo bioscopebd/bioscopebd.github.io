@@ -2237,7 +2237,8 @@ if (heroWatchTrailerBtn) {
 }
 
 // ==========================================================================
-// 9. Watch Party "Swipe to Match" & Digital Canvas Movie Ticket Generator
+// ==========================================================================
+// 9. Dedicated Virtual Cinema Theatre Room & Live Box Office System
 // ==========================================================================
 const partyDialog = document.querySelector("#party-dialog");
 const partyCloseBtn = document.querySelector("#party-close-btn");
@@ -2251,12 +2252,109 @@ const partyRoomCodeEl = document.querySelector("#party-room-code");
 const btnCopyRoom = document.querySelector("#btn-copy-room");
 const btnStartParty = document.querySelector("#btn-start-party");
 const partyMoviePicker = document.querySelector("#party-movie-picker");
+const partyHallNameInput = document.querySelector("#party-hall-name-input");
+const partyIsPublicChk = document.querySelector("#party-is-public-chk");
+const partyExistingAlert = document.querySelector("#party-existing-alert");
+const partyExistingCode = document.querySelector("#party-existing-code");
+const btnModalDismissRoom = document.querySelector("#btn-modal-dismiss-room");
 const btnGenerateTicket = document.querySelector("#btn-generate-ticket");
 
+// Homepage Active Hall Banner & Box Office Elements
+const activeHallBanner = document.querySelector("#active-hall-banner");
+const activeHallBannerTitle = document.querySelector("#active-hall-banner-title");
+const btnResumeActiveHall = document.querySelector("#btn-resume-active-hall");
+const btnDismissActiveHall = document.querySelector("#btn-dismiss-active-hall");
+const boxOfficeGrid = document.querySelector("#box-office-grid");
+const joinRoomInput = document.querySelector("#join-room-input");
+const btnSubmitJoin = document.querySelector("#btn-submit-join");
+
+// Dedicated Virtual Cinema Theatre Elements
+const theatreRoomView = document.querySelector("#theatre-room-view");
+const theatreCurtain = document.querySelector("#theatre-curtain");
+const theatreHallBadge = document.querySelector("#theatre-hall-badge");
+const theatreMovieTitle = document.querySelector("#theatre-movie-title");
+const theatreCurrentCode = document.querySelector("#theatre-current-code");
+const theatreCodePill = document.querySelector("#theatre-code-pill");
+const btnTheatreShare = document.querySelector("#btn-theatre-share");
+const btnTheatreLeave = document.querySelector("#btn-theatre-leave");
+const btnTheatreDismiss = document.querySelector("#btn-theatre-dismiss");
+const theatrePlayerFrame = document.querySelector("#theatre-player-frame");
+const theatreProjectorShield = document.querySelector("#theatre-projector-shield");
+const theatreFloatingReactions = document.querySelector("#theatre-floating-reactions");
+const theatreCornerChat = document.querySelector("#theatre-corner-chat");
+const theatreRosterCount = document.querySelector("#theatre-roster-count");
+const btnMinCornerChat = document.querySelector("#btn-min-corner-chat");
+const btnToggleRoster = document.querySelector("#btn-toggle-roster");
+const theatreRosterPopover = document.querySelector("#theatre-roster-popover");
+const rosterPopoverCount = document.querySelector("#roster-popover-count");
+const theatreRosterList = document.querySelector("#theatre-roster-list");
+const theatreChatBody = document.querySelector("#theatre-chat-body");
+const theatreChatForm = document.querySelector("#theatre-chat-form");
+const theatreChatInput = document.querySelector("#theatre-chat-input");
+const theatreSeatsTrack = document.querySelector("#theatre-seats-track");
+const theatreHostDeck = document.querySelector("#theatre-host-deck");
+const theatreSwitchMovie = document.querySelector("#theatre-switch-movie");
+const btnHostResync = document.querySelector("#btn-host-resync");
+const btnHostDismissBar = document.querySelector("#btn-host-dismiss-bar");
+
+// Persistent Room State
+let activeHall = null;
+let currentHallSession = null;
+let hallAudience = [];
+const hallChannel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("bioscope_theatre_sync") : null;
+
+function loadActiveHallState() {
+  try {
+    const saved = localStorage.getItem("bioscope_active_hall");
+    if (saved) activeHall = JSON.parse(saved);
+  } catch (_) {
+    activeHall = null;
+  }
+  updateActiveHallUI();
+}
+
+function saveActiveHallState() {
+  try {
+    if (activeHall) {
+      localStorage.setItem("bioscope_active_hall", JSON.stringify(activeHall));
+    } else {
+      localStorage.removeItem("bioscope_active_hall");
+    }
+  } catch (_) {}
+  updateActiveHallUI();
+  renderBoxOfficeHalls();
+}
+
+function updateActiveHallUI() {
+  if (activeHall && activeHallBanner && activeHallBannerTitle) {
+    activeHallBanner.hidden = false;
+    activeHallBannerTitle.textContent = `${activeHall.movieTitle} · Room: ${activeHall.roomCode}`;
+  } else if (activeHallBanner) {
+    activeHallBanner.hidden = true;
+  }
+
+  if (activeHall && partyExistingAlert && partyExistingCode) {
+    partyExistingAlert.hidden = false;
+    partyExistingCode.textContent = activeHall.roomCode;
+    if (partyRoomCodeEl) partyRoomCodeEl.textContent = activeHall.roomCode;
+  } else if (partyExistingAlert) {
+    partyExistingAlert.hidden = true;
+  }
+}
+
+// Open Watch Party Setup Launcher
 function openWatchParty() {
   if (!partyDialog) return;
-  const code = `BIOSCOPE-${Math.floor(1000 + Math.random() * 9000)}`;
-  if (partyRoomCodeEl) partyRoomCodeEl.textContent = code;
+  loadActiveHallState();
+  if (activeHall) {
+    if (partyRoomCodeEl) partyRoomCodeEl.textContent = activeHall.roomCode;
+    if (partyHallNameInput) partyHallNameInput.value = activeHall.hallName || "";
+    if (partyIsPublicChk) partyIsPublicChk.checked = activeHall.isPublic ?? true;
+  } else {
+    const code = `BIOSCOPE-${Math.floor(1000 + Math.random() * 9000)}`;
+    if (partyRoomCodeEl) partyRoomCodeEl.textContent = code;
+    if (partyHallNameInput) partyHallNameInput.value = `${currentUser.name ? currentUser.name.split(" ")[0] : "VIP"}'s Grand Cinema`;
+  }
   partyDialog.showModal();
 }
 
@@ -2269,6 +2367,7 @@ if (partyCloseBtn && partyDialog) {
   partyDialog.addEventListener("click", (e) => { if (e.target === partyDialog) partyDialog.close(); });
 }
 
+// Setup Dialog Tabs
 if (tabHost && tabJoin && tabSwipe) {
   tabHost.addEventListener("click", () => {
     tabHost.classList.add("is-active");
@@ -2299,21 +2398,23 @@ if (tabHost && tabJoin && tabSwipe) {
   });
 }
 
-if (btnCopyRoom && partyRoomCodeEl) {
-  btnCopyRoom.addEventListener("click", async () => {
-    const code = partyRoomCodeEl.textContent.trim();
-    const link = `${window.location.origin}${window.location.pathname}?room=${encodeURIComponent(code)}`;
-    try {
-      await navigator.clipboard.writeText(link);
-      btnCopyRoom.textContent = "✓ Copied!";
-      setTimeout(() => { btnCopyRoom.textContent = "📋 Copy Link"; }, 2400);
-      notify(`Watch Party link copied: ${code}`);
-    } catch (_) {
-      notify(`Party room code: ${code}`);
-    }
-  });
+// Copy Invite Link
+async function copyHallInviteLink(code) {
+  const roomCode = code || partyRoomCodeEl?.textContent?.trim() || activeHall?.roomCode || "BIOSCOPE-7892";
+  const link = `${window.location.origin}${window.location.pathname}?room=${encodeURIComponent(roomCode)}`;
+  try {
+    await navigator.clipboard.writeText(link);
+    notify(`🎟️ Cinema Hall invite link copied: ${roomCode}`);
+  } catch (_) {
+    notify(`🎟️ Hall invite code: ${roomCode}`);
+  }
 }
 
+if (btnCopyRoom) btnCopyRoom.addEventListener("click", () => copyHallInviteLink());
+if (theatreCodePill) theatreCodePill.addEventListener("click", () => copyHallInviteLink(theatreCurrentCode?.textContent));
+if (btnTheatreShare) btnTheatreShare.addEventListener("click", () => copyHallInviteLink(theatreCurrentCode?.textContent));
+
+// Launch Grand Theatre Room as Host
 if (btnStartParty && partyMoviePicker && partyDialog) {
   btnStartParty.addEventListener("click", () => {
     const val = partyMoviePicker.value.split("|");
@@ -2321,11 +2422,607 @@ if (btnStartParty && partyMoviePicker && partyDialog) {
     const type = val[1];
     const trailer = val[2];
     const title = partyMoviePicker.options[partyMoviePicker.selectedIndex].text;
+    const roomCode = (activeHall ? activeHall.roomCode : partyRoomCodeEl?.textContent?.trim()) || `BIOSCOPE-${Math.floor(1000 + Math.random() * 9000)}`;
+    const hallName = partyHallNameInput?.value?.trim() || `${currentUser.name ? currentUser.name.split(" ")[0] : "VIP"}'s Grand Cinema`;
+    const isPublic = partyIsPublicChk ? partyIsPublicChk.checked : true;
+
+    activeHall = {
+      roomCode,
+      isHost: true,
+      hallName,
+      movieTitle: title,
+      tmdbId,
+      type,
+      trailerId: trailer,
+      isPublic,
+      hostName: currentUser.name || "VIP Host",
+      hostAvatar: currentUser.avatar || "👑",
+      createdAt: Date.now()
+    };
+    saveActiveHallState();
     partyDialog.close();
-    openStream(title, tmdbId, type, trailer);
-    notify(`🍿 Watch Party LIVE! Room ${partyRoomCodeEl?.textContent}`);
+    enterTheatreHall(activeHall);
+    notify(`🎬 Welcome to ${hallName}! Projector online.`);
   });
 }
+
+// Dismiss Hall from Dialog Alert or Banner
+function dismissActiveHall() {
+  if (!activeHall) return;
+  const dismissedCode = activeHall.roomCode;
+  
+  // Broadcast dismissal to all peers in the auditorium
+  if (hallChannel) {
+    hallChannel.postMessage({
+      type: "dismiss",
+      roomCode: dismissedCode
+    });
+  }
+
+  activeHall = null;
+  saveActiveHallState();
+  leaveTheatreHall();
+  notify("🛑 Cinema Hall has been dismissed and ended.");
+}
+
+if (btnModalDismissRoom) btnModalDismissRoom.addEventListener("click", dismissActiveHall);
+if (btnDismissActiveHall) btnDismissActiveHall.addEventListener("click", dismissActiveHall);
+if (btnTheatreDismiss) btnTheatreDismiss.addEventListener("click", dismissActiveHall);
+if (btnHostDismissBar) btnHostDismissBar.addEventListener("click", dismissActiveHall);
+
+// Re-Enter Active Hall from Homepage Banner
+if (btnResumeActiveHall) {
+  btnResumeActiveHall.addEventListener("click", () => {
+    if (activeHall) enterTheatreHall(activeHall);
+  });
+}
+
+// Join Hall by Code
+function joinTheatreHallByCode(code) {
+  const cleanCode = (code || "").trim().toUpperCase();
+  if (!cleanCode) {
+    notify("⚠️ Please enter a valid Hall Code (e.g. BIOSCOPE-7892)");
+    return;
+  }
+  if (partyDialog?.open) partyDialog.close();
+
+  // If host joins their own room
+  if (activeHall && activeHall.roomCode.toUpperCase() === cleanCode) {
+    enterTheatreHall(activeHall);
+    return;
+  }
+
+  // Join as audience member
+  const guestHall = {
+    roomCode: cleanCode,
+    isHost: false,
+    hallName: `Auditorium · ${cleanCode}`,
+    movieTitle: "Dune: Part Two",
+    tmdbId: "693134",
+    type: "movie",
+    trailerId: "Way9Dexny3w",
+    isPublic: false,
+    hostName: "Grand Host",
+    hostAvatar: "👑"
+  };
+  enterTheatreHall(guestHall);
+  notify(`🍿 Entering Cinema Hall ${cleanCode}... Taking seat!`);
+}
+
+if (btnSubmitJoin && joinRoomInput) {
+  btnSubmitJoin.addEventListener("click", () => joinTheatreHallByCode(joinRoomInput.value));
+  joinRoomInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      joinTheatreHallByCode(joinRoomInput.value);
+    }
+  });
+}
+
+// ==========================================================================
+// Virtual Cinema Theatre Hall Controller
+// ==========================================================================
+function enterTheatreHall(hallData) {
+  if (!theatreRoomView) return;
+  currentHallSession = hallData;
+
+  // Close other player modals if open
+  if (videoDialog?.open) closeVideoPlayer();
+  if (partyDialog?.open) partyDialog.close();
+
+  // Activate theatre viewport
+  document.body.classList.add("theatre-mode-active");
+  theatreRoomView.hidden = false;
+
+  // Cinematic dimming lights transition
+  if (theatreCurtain) {
+    theatreCurtain.classList.add("is-dimming");
+    setTimeout(() => theatreCurtain.classList.remove("is-dimming"), 700);
+  }
+
+  // Update Marquee & Badges
+  if (theatreHallBadge) theatreHallBadge.textContent = hallData.hallName ? `🎬 ${hallData.hallName.toUpperCase()}` : "🎬 BIOSCOPE GRAND HALL";
+  if (theatreMovieTitle) theatreMovieTitle.textContent = hallData.movieTitle || "Feature Film";
+  if (theatreCurrentCode) theatreCurrentCode.textContent = hallData.roomCode;
+
+  // Update URL without reloading
+  try {
+    const newUrl = `${window.location.pathname}?room=${encodeURIComponent(hallData.roomCode)}`;
+    window.history.replaceState({ room: hallData.roomCode }, "", newUrl);
+  } catch (_) {}
+
+  // Host Controls vs Audience View
+  if (hallData.isHost) {
+    if (btnTheatreDismiss) btnTheatreDismiss.hidden = false;
+    if (theatreHostDeck) theatreHostDeck.hidden = false;
+    populateTheatreMovieSwitcher(hallData.movieTitle);
+  } else {
+    if (btnTheatreDismiss) btnTheatreDismiss.hidden = true;
+    if (theatreHostDeck) theatreHostDeck.hidden = true;
+  }
+
+  // Initialize Audience Seating
+  initHallAudience(hallData);
+
+  // Load Stream onto Big Cinema Screen
+  loadTheatreScreen(hallData.title || hallData.movieTitle, hallData.tmdbId, hallData.type, hallData.trailerId);
+
+  // Broadcast presence
+  broadcastHallEvent({
+    type: "presence",
+    roomCode: hallData.roomCode,
+    user: {
+      id: currentUser.id || "usr_me",
+      name: currentUser.name || "Cinephile Guest",
+      avatar: currentUser.avatar || (hallData.isHost ? "👑" : "🍿"),
+      isHost: !!hallData.isHost
+    }
+  });
+
+  // Post Welcome in Lounge Chat
+  appendTheatreChatMessage("system", "🎬 Welcome to the Grand Virtual Theatre! Whisper in chat or tap emojis to react live on screen.");
+}
+
+function leaveTheatreHall() {
+  if (!theatreRoomView) return;
+  document.body.classList.remove("theatre-mode-active");
+  theatreRoomView.hidden = true;
+  if (theatrePlayerFrame) theatrePlayerFrame.src = "";
+  currentHallSession = null;
+
+  try {
+    window.history.replaceState({}, "", window.location.pathname);
+  } catch (_) {}
+}
+
+if (btnTheatreLeave) btnTheatreLeave.addEventListener("click", leaveTheatreHall);
+
+// Load Cinema Screen Video Stream
+function loadTheatreScreen(title, tmdbId, type = "movie", trailerId = "") {
+  if (!theatrePlayerFrame) return;
+  if (theatreProjectorShield) theatreProjectorShield.hidden = false;
+
+  const isYoutube = type === "youtube" || !tmdbId;
+  let url = "";
+
+  if (isYoutube) {
+    const yId = trailerId || "Way9Dexny3w";
+    url = `https://www.youtube-nocookie.com/embed/${yId}?autoplay=1&controls=1&rel=0&modestbranding=1&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`;
+  } else {
+    url = CONFIG.STREAM_SERVERS[0].getUrl(tmdbId, type);
+  }
+
+  theatrePlayerFrame.src = url;
+  theatrePlayerFrame.onload = () => {
+    if (theatreProjectorShield) theatreProjectorShield.hidden = true;
+  };
+  setTimeout(() => {
+    if (theatreProjectorShield) theatreProjectorShield.hidden = true;
+  }, 2400);
+}
+
+// Populate Host Movie Switcher Dropdown
+function populateTheatreMovieSwitcher(currentTitle) {
+  if (!theatreSwitchMovie) return;
+  theatreSwitchMovie.innerHTML = BUILTIN_CATALOG.slice(0, 24).map(m => `
+    <option value="${m.tmdbId}|${m.type || 'movie'}|${m.trailerId || ''}" ${m.title === currentTitle ? 'selected' : ''}>
+      ${m.title} (${m.year || '2024'})
+    </option>
+  `).join("");
+
+  theatreSwitchMovie.onchange = () => {
+    const val = theatreSwitchMovie.value.split("|");
+    const tmdbId = val[0];
+    const type = val[1];
+    const trailerId = val[2];
+    const newTitle = theatreSwitchMovie.options[theatreSwitchMovie.selectedIndex].text.split("(")[0].trim();
+
+    if (activeHall) {
+      activeHall.movieTitle = newTitle;
+      activeHall.tmdbId = tmdbId;
+      activeHall.type = type;
+      activeHall.trailerId = trailerId;
+      saveActiveHallState();
+    }
+
+    if (theatreMovieTitle) theatreMovieTitle.textContent = newTitle;
+    loadTheatreScreen(newTitle, tmdbId, type, trailerId);
+
+    broadcastHallEvent({
+      type: "sync_movie",
+      roomCode: currentHallSession?.roomCode,
+      movieTitle: newTitle,
+      tmdbId,
+      type,
+      trailerId
+    });
+
+    appendTheatreChatMessage("system", `👑 Host changed the feature presentation to: ${newTitle}`);
+    notify(`🎬 Cinema Projector tuned to: ${newTitle}`);
+  };
+}
+
+if (btnHostResync) {
+  btnHostResync.addEventListener("click", () => {
+    if (!currentHallSession) return;
+    broadcastHallEvent({
+      type: "sync_movie",
+      roomCode: currentHallSession.roomCode,
+      movieTitle: currentHallSession.movieTitle,
+      tmdbId: currentHallSession.tmdbId,
+      type: currentHallSession.type,
+      trailerId: currentHallSession.trailerId
+    });
+    notify("⚡ Re-synced stream broadcast sent to all auditorium seats!");
+  });
+}
+
+// ==========================================================================
+// Virtual Auditorium Seating & Audience Management
+// ==========================================================================
+function initHallAudience(hall) {
+  hallAudience = [];
+  
+  // Host always gets Seat A1
+  const hostUser = {
+    id: hall.isHost ? (currentUser.id || "host_me") : "host_primary",
+    name: hall.hostName || "VIP Host",
+    avatar: hall.hostAvatar || "👑",
+    isHost: true,
+    seat: "A1"
+  };
+  hallAudience.push(hostUser);
+
+  // If user is guest, assign Seat A2
+  if (!hall.isHost) {
+    hallAudience.push({
+      id: currentUser.id || "guest_me",
+      name: currentUser.name || "Cinephile Guest",
+      avatar: currentUser.avatar || "🍿",
+      isHost: false,
+      seat: "A2"
+    });
+  }
+
+  // Pre-seed 2-3 friendly simulated cinephile attendees for public halls
+  if (hall.isPublic !== false) {
+    const companions = [
+      { id: "comp_1", name: "Rahim", avatar: "🕶️", isHost: false, seat: "A3" },
+      { id: "comp_2", name: "Sarah K.", avatar: "🐱", isHost: false, seat: "A4" },
+      { id: "comp_3", name: "Tanvir", avatar: "🤖", isHost: false, seat: "A5" }
+    ];
+    companions.forEach(c => {
+      if (!hallAudience.some(m => m.id === c.id)) hallAudience.push(c);
+    });
+  }
+
+  renderHallAudienceSeats();
+}
+
+function renderHallAudienceSeats() {
+  if (!theatreSeatsTrack) return;
+  theatreSeatsTrack.innerHTML = hallAudience.map(member => `
+    <div class="cinema-seat" id="seat-${member.id}" title="${member.name} (${member.isHost ? 'Host' : 'Audience'} · Seat ${member.seat})">
+      <div class="cinema-seat__chair">
+        ${member.isHost ? '<span class="cinema-seat__crown">👑</span>' : ''}
+        <span class="cinema-seat__avatar">${member.avatar || '🍿'}</span>
+      </div>
+      <span class="cinema-seat__tag">${member.seat}</span>
+      <span class="cinema-seat__name">${member.name.split(" ")[0]}</span>
+    </div>
+  `).join("");
+
+  // Update Roster Counts
+  const count = hallAudience.length;
+  if (theatreRosterCount) theatreRosterCount.textContent = `${count} Watching`;
+  if (rosterPopoverCount) rosterPopoverCount.textContent = count;
+
+  // Update Roster Popover List
+  if (theatreRosterList) {
+    theatreRosterList.innerHTML = hallAudience.map(m => `
+      <li class="roster-user-item">
+        <span class="roster-avatar">${m.avatar || '🍿'}</span>
+        <span class="roster-name">${m.name}</span>
+        ${m.isHost ? '<span class="roster-role-badge">HOST</span>' : '<span style="font-size:0.65rem;color:#888;">Seat ' + m.seat + '</span>'}
+      </li>
+    `).join("");
+  }
+}
+
+// ==========================================================================
+// In-Player Transparent Lounge Chat & Reactions
+// ==========================================================================
+// Minimize / Expand Corner Chat
+if (btnMinCornerChat && theatreCornerChat) {
+  btnMinCornerChat.addEventListener("click", () => {
+    theatreCornerChat.classList.toggle("is-minimized");
+    btnMinCornerChat.textContent = theatreCornerChat.classList.contains("is-minimized") ? "▴" : "▾";
+  });
+}
+
+// Toggle Audience Roster Popover
+if (btnToggleRoster && theatreRosterPopover) {
+  btnToggleRoster.addEventListener("click", () => {
+    theatreRosterPopover.hidden = !theatreRosterPopover.hidden;
+  });
+}
+
+function appendTheatreChatMessage(type, text, author = "", avatar = "") {
+  if (!theatreChatBody) return;
+  const msgEl = document.createElement("div");
+
+  if (type === "system") {
+    msgEl.className = "c-msg c-msg--system";
+    msgEl.innerHTML = text;
+  } else {
+    msgEl.className = "c-msg";
+    msgEl.innerHTML = `
+      <span class="c-msg__avatar">${avatar || '🍿'}</span>
+      <span class="c-msg__author">${author}:</span>
+      <span class="c-msg__text">${escapeHTML(text)}</span>
+    `;
+  }
+
+  theatreChatBody.appendChild(msgEl);
+  theatreChatBody.scrollTop = theatreChatBody.scrollHeight;
+}
+
+function escapeHTML(str) {
+  const p = document.createElement("p");
+  p.textContent = str;
+  return p.innerHTML;
+}
+
+// Send Chat Message Form
+if (theatreChatForm && theatreChatInput) {
+  theatreChatForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const text = theatreChatInput.value.trim();
+    if (!text || !currentHallSession) return;
+
+    const myName = currentUser.name || "Cinephile Guest";
+    const myAvatar = currentUser.avatar || (currentHallSession.isHost ? "👑" : "🍿");
+
+    appendTheatreChatMessage("user", text, myName, myAvatar);
+    broadcastHallEvent({
+      type: "chat",
+      roomCode: currentHallSession.roomCode,
+      author: myName,
+      avatar: myAvatar,
+      text: text,
+      timestamp: Date.now()
+    });
+
+    theatreChatInput.value = "";
+  });
+}
+
+// Floating Reactions & Seat Bubble Trigger
+function triggerSeatReaction(emoji, userId) {
+  // 1. Floating Screen Reaction
+  if (theatreFloatingReactions) {
+    const floatEl = document.createElement("span");
+    floatEl.className = "theatre-floating-emoji";
+    floatEl.textContent = emoji;
+    floatEl.style.left = `${15 + Math.random() * 70}%`;
+    floatEl.style.bottom = "20px";
+    theatreFloatingReactions.appendChild(floatEl);
+    setTimeout(() => floatEl.remove(), 3200);
+  }
+
+  // 2. Seat Bubble Animation
+  const targetSeat = document.querySelector(`#seat-${userId}`);
+  if (targetSeat) {
+    const bubble = document.createElement("span");
+    bubble.className = "cinema-seat__bubble";
+    bubble.textContent = emoji;
+    targetSeat.appendChild(bubble);
+    setTimeout(() => bubble.remove(), 2400);
+  }
+}
+
+document.querySelectorAll(".quick-emoji-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const emoji = btn.dataset.emoji || "🍿";
+    const myId = currentHallSession?.isHost ? (currentUser.id || "host_me") : (currentUser.id || "guest_me");
+    triggerSeatReaction(emoji, myId);
+
+    if (currentHallSession) {
+      broadcastHallEvent({
+        type: "reaction",
+        roomCode: currentHallSession.roomCode,
+        userId: myId,
+        emoji: emoji
+      });
+    }
+  });
+});
+
+// Broadcast Multi-Client Signaling Helper
+function broadcastHallEvent(data) {
+  if (hallChannel) {
+    try {
+      hallChannel.postMessage(data);
+    } catch (_) {}
+  }
+}
+
+// Handle Incoming Multi-Client Events
+if (hallChannel) {
+  hallChannel.onmessage = (e) => {
+    const data = e.data;
+    if (!data || !currentHallSession) return;
+    if (data.roomCode && data.roomCode !== currentHallSession.roomCode) return;
+
+    if (data.type === "chat") {
+      appendTheatreChatMessage("user", data.text, data.author, data.avatar);
+    } else if (data.type === "reaction") {
+      triggerSeatReaction(data.emoji, data.userId);
+    } else if (data.type === "presence" && data.user) {
+      if (!hallAudience.some(m => m.id === data.user.id)) {
+        data.user.seat = `A${hallAudience.length + 1}`;
+        hallAudience.push(data.user);
+        renderHallAudienceSeats();
+        appendTheatreChatMessage("system", `👥 ${data.user.name} took seat ${data.user.seat} in the hall.`);
+      }
+    } else if (data.type === "sync_movie") {
+      if (theatreMovieTitle) theatreMovieTitle.textContent = data.movieTitle;
+      loadTheatreScreen(data.movieTitle, data.tmdbId, data.type, data.trailerId);
+      appendTheatreChatMessage("system", `👑 Host changed feature presentation to: ${data.movieTitle}`);
+    } else if (data.type === "dismiss") {
+      notify("🛑 The Host has ended this Cinema Hall. Returning to Lobby...");
+      leaveTheatreHall();
+    }
+  };
+}
+
+// ==========================================================================
+// Bioscope Box Office: Live Public Halls Directory
+// ==========================================================================
+const DEFAULT_BOX_OFFICE_HALLS = [
+  {
+    roomCode: "BIOSCOPE-4K01",
+    hallName: "IMAX Laser Cinema Hall #1",
+    movieTitle: "Dune: Part Two",
+    poster: "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
+    hostName: "Tanjir (VIP)",
+    hostAvatar: "👑",
+    viewers: 8,
+    tmdbId: "693134",
+    type: "movie",
+    trailerId: "Way9Dexny3w"
+  },
+  {
+    roomCode: "BIOSCOPE-8820",
+    hallName: "Christopher Nolan Retro Hall",
+    movieTitle: "Oppenheimer",
+    poster: "https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
+    hostName: "CinephileBD",
+    hostAvatar: "🍿",
+    viewers: 14,
+    tmdbId: "872585",
+    type: "movie",
+    trailerId: "uYPbbksJxIg"
+  },
+  {
+    roomCode: "BIOSCOPE-AI09",
+    hallName: "Higgsfield AI Originals Hall",
+    movieTitle: "The Trigger (AI Action Cinema)",
+    poster: "https://picsum.photos/seed/trigger/500/750",
+    hostName: "Higgsfield AI",
+    hostAvatar: "🤖",
+    viewers: 6,
+    tmdbId: "",
+    type: "youtube",
+    trailerId: "IAl240xpSGM"
+  }
+];
+
+function renderBoxOfficeHalls() {
+  if (!boxOfficeGrid) return;
+  const list = [];
+
+  // Add user's active hall if marked public
+  if (activeHall && activeHall.isPublic) {
+    list.push({
+      roomCode: activeHall.roomCode,
+      hallName: activeHall.hallName || "Your Live Cinema Hall",
+      movieTitle: activeHall.movieTitle,
+      poster: "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
+      hostName: `${currentUser.name || 'You'} (Host)`,
+      hostAvatar: currentUser.avatar || "👑",
+      viewers: hallAudience.length || 1,
+      tmdbId: activeHall.tmdbId,
+      type: activeHall.type,
+      trailerId: activeHall.trailerId,
+      isMyHall: true
+    });
+  }
+
+  // Add default public halls
+  DEFAULT_BOX_OFFICE_HALLS.forEach(h => {
+    if (!list.some(item => item.roomCode === h.roomCode)) {
+      list.push(h);
+    }
+  });
+
+  boxOfficeGrid.innerHTML = list.map(hall => `
+    <div class="box-office-card" id="card-${hall.roomCode}">
+      <img class="box-office-card__poster" src="${hall.poster}" alt="${hall.movieTitle}" loading="lazy">
+      <div class="box-office-card__info">
+        <h4 class="box-office-card__title">${hall.movieTitle}</h4>
+        <div class="box-office-card__host">
+          <span>${hall.hostAvatar}</span>
+          <span>${hall.hostName}</span>
+        </div>
+        <div class="box-office-card__badge">
+          <span class="pulse-dot"></span>
+          <span>${hall.viewers} Watching · ${hall.roomCode}</span>
+        </div>
+      </div>
+      <div class="box-office-card__btn">
+        <button type="button" class="button button--primary button--sm btn-enter-public-hall" data-code="${hall.roomCode}">
+          🎬 Enter Hall
+        </button>
+      </div>
+    </div>
+  `).join("");
+
+  boxOfficeGrid.querySelectorAll(".btn-enter-public-hall").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const code = btn.dataset.code;
+      const targetHall = list.find(h => h.roomCode === code);
+      if (targetHall) {
+        if (targetHall.isMyHall && activeHall) {
+          enterTheatreHall(activeHall);
+        } else {
+          enterTheatreHall(targetHall);
+        }
+      } else {
+        joinTheatreHallByCode(code);
+      }
+    });
+  });
+}
+
+// Startup Initialization: Check Active Room and URL Query Param
+loadActiveHallState();
+renderBoxOfficeHalls();
+
+// Check if visiting directly via link like ?room=BIOSCOPE-7892
+window.addEventListener("DOMContentLoaded", () => {
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomParam = urlParams.get("room");
+    if (roomParam) {
+      if (activeHall && activeHall.roomCode.toUpperCase() === roomParam.toUpperCase()) {
+        enterTheatreHall(activeHall);
+      } else {
+        joinTheatreHallByCode(roomParam);
+      }
+    }
+  } catch (_) {}
+});
 
 // Swipe to Match Group Movie Picker
 const swipeCardImg = document.querySelector("#swipe-card-img");
