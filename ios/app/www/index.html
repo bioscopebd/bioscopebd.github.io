@@ -72,6 +72,27 @@
         </button>
       </div>
     </nav>
+
+    <!-- Quick Genre Explorer Bar (Permanently Sticky Sub-Header) -->
+    <div class="genres-sticky-wrapper" id="genres-sticky-bar">
+      <div class="genres container" id="genres" role="region" aria-label="Browse genres">
+        <div class="genres__intro">
+          <p class="eyebrow">Explore by mood</p>
+          <h2 id="genres-title">Find your genre<span class="text-accent">.</span></h2>
+        </div>
+        <div class="genres__list" aria-label="Filter movies by genre">
+          <button type="button" data-genre-filter="Action">Action</button>
+          <button type="button" data-genre-filter="Drama">Drama</button>
+          <button type="button" data-genre-filter="Sci-Fi">Sci-Fi</button>
+          <button type="button" data-genre-filter="Horror">Horror</button>
+          <button type="button" data-genre-filter="Comedy">Comedy</button>
+          <button type="button" data-genre-filter="Romance">Romance</button>
+          <button type="button" data-genre-filter="Animation">Animation</button>
+          <button type="button" data-genre-filter="AI Cinema">AI Cinema</button>
+          <button type="button" data-genre-filter="Short Film">Short Film</button>
+        </div>
+      </div>
+    </div>
   </header>
 
   <main id="main">
@@ -110,27 +131,6 @@
       </div>
       <span class="hero__index" aria-hidden="true">01 / 04</span>
     </section>
-
-    <!-- 2.5 Quick Genre Explorer Bar (Sticky) -->
-    <div class="genres-sticky-wrapper" id="genres-sticky-bar">
-      <section class="genres container" id="genres" aria-labelledby="genres-title">
-        <div class="genres__intro">
-          <p class="eyebrow">Explore by mood</p>
-          <h2 id="genres-title">Find your genre<span class="text-accent">.</span></h2>
-        </div>
-        <div class="genres__list" aria-label="Browse genres">
-          <button type="button" data-genre-filter="Action">Action</button>
-          <button type="button" data-genre-filter="Drama">Drama</button>
-          <button type="button" data-genre-filter="Sci-Fi">Sci-Fi</button>
-          <button type="button" data-genre-filter="Horror">Horror</button>
-          <button type="button" data-genre-filter="Comedy">Comedy</button>
-          <button type="button" data-genre-filter="Romance">Romance</button>
-          <button type="button" data-genre-filter="Animation">Animation</button>
-          <button type="button" data-genre-filter="AI Cinema">AI Cinema</button>
-          <button type="button" data-genre-filter="Short Film">Short Film</button>
-        </div>
-      </section>
-    </div>
 
     <!-- 2.5 Watch Party Flagship Hub -->
     <section class="section container reveal" id="watch-party-hub" aria-labelledby="party-hub-title">
