@@ -1,5 +1,26 @@
 "use strict";
 
+// 0. Anti-Popup & Anti-Redirect Shield
+// Completely block any third-party script from spawning ad windows or new tabs
+try {
+  window.open = function(url) {
+    console.warn("🛡️ BioscopeBD Shield: Blocked popup window to:", url);
+    return null;
+  };
+} catch (_) {}
+
+window.addEventListener("click", function(event) {
+  const link = event.target.closest("a");
+  if (link && link.target === "_blank") {
+    const href = link.getAttribute("href") || "";
+    if (href.startsWith("http") && !href.startsWith(window.location.origin)) {
+      event.preventDefault();
+      event.stopPropagation();
+      console.warn("🛡️ BioscopeBD Shield: Blocked unauthorized new window link:", href);
+    }
+  }
+}, true);
+
 // Shared status feedback for preview & interactive actions.
 const toast = document.querySelector("#toast");
 let toastTimer;
@@ -44,6 +65,14 @@ if (menuButton && menu) {
     menuButton.setAttribute("aria-expanded", "false");
     menuButton.setAttribute("aria-label", "Open menu");
   }));
+}
+
+// Sign In notice - 100% Free
+const navSignInBtn = document.querySelector(".nav__sign-in");
+if (navSignInBtn) {
+  navSignInBtn.addEventListener("click", () => {
+    notify("🎉 BioscopeBD is 100% FREE! All movies, Watch Parties, and features are completely unlocked without any payment.");
+  });
 }
 
 // 2. Watchlist.
@@ -236,6 +265,9 @@ function setServer(srv) {
     btn.classList.toggle("is-active", btn.dataset.server === srv);
   });
   if (!activeStream || !videoFrame) return;
+
+  // Always enforce strict anti-popup sandbox (blocks all window.open, new tabs, and popup ads)
+  videoFrame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-presentation");
 
   if (srv === "1") {
     videoFrame.src = activeStream.type === "tv"
