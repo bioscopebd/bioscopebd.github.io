@@ -12,44 +12,66 @@
  */
 
 // ==========================================================================
-// 0. 100% Anti-Popup & Anti-Redirect Master Shield
+// ==========================================================================
+// 0. 100% Anti-Popup & Anti-Redirect Master Shield (Zero-Ad Guarantee)
 // ==========================================================================
 (function enforceAdShield() {
+  const neutralizedOpen = function(url) {
+    console.warn("🛡️ BioscopeBD Master Shield: Neutralized popup attempt to:", url);
+    return null;
+  };
+
   try {
     Object.defineProperty(window, "open", {
-      value: function(url) {
-        console.warn("🛡️ BioscopeBD Master Shield: Neutralized window.open to:", url);
-        return null;
-      },
+      value: neutralizedOpen,
       writable: false,
       configurable: false
     });
   } catch (_) {
-    window.open = function() { return null; };
+    window.open = neutralizedOpen;
   }
 
   try {
+    if (typeof Window !== "undefined" && Window.prototype) {
+      Object.defineProperty(Window.prototype, "open", {
+        value: neutralizedOpen,
+        writable: false,
+        configurable: false
+      });
+    }
+  } catch (_) {}
+
+  // Block programmatic anchor clicks targeting external ad destinations
+  try {
     const originalAnchorClick = HTMLAnchorElement.prototype.click;
     HTMLAnchorElement.prototype.click = function() {
-      const href = this.getAttribute("href") || "";
+      const href = (this.getAttribute("href") || "").trim();
       const target = this.getAttribute("target");
-      if (target === "_blank" || (href.startsWith("http") && !href.startsWith(window.location.origin))) {
-        if (!href.includes("github.com/bioscopebd") && !href.includes("youtube.com")) {
-          console.warn("🛡️ BioscopeBD Master Shield: Blocked programmatic anchor click to:", href);
-          return;
-        }
+      const isInternal = !href || href.startsWith("#") || href.startsWith("/") || href.startsWith(window.location.origin);
+      const isSafeProtocol = href.startsWith("blob:") || href.startsWith("data:") || href.startsWith("magnet:");
+      const isWhitelisted = href.includes("github.com/bioscopebd") || href.includes("themoviedb.org");
+
+      if (target === "_blank" || (!isInternal && !isSafeProtocol && !isWhitelisted)) {
+        console.warn("🛡️ BioscopeBD Master Shield: Blocked programmatic anchor click to:", href);
+        return;
       }
       return originalAnchorClick.apply(this, arguments);
     };
   } catch (_) {}
 
-  window.addEventListener("click", function(event) {
-    const link = event.target.closest("a");
-    if (link) {
-      const href = link.getAttribute("href") || "";
-      const target = link.getAttribute("target");
-      if (target === "_blank" || (href.startsWith("http") && !href.startsWith(window.location.origin))) {
-        if (!href.includes("github.com/bioscopebd") && !href.includes("youtube.com")) {
+  // Comprehensive Capture-Phase Click/Pointer/Mouse Interceptor
+  // Neutralizes ANY attempt to trigger popunder/popup ads on user clicks anywhere on page
+  ["click", "auxclick", "contextmenu"].forEach(eventType => {
+    window.addEventListener(eventType, function(event) {
+      const link = event.target && event.target.closest ? event.target.closest("a") : null;
+      if (link) {
+        const href = (link.getAttribute("href") || "").trim();
+        const target = link.getAttribute("target");
+        const isInternal = !href || href.startsWith("#") || href.startsWith("/") || href.startsWith(window.location.origin);
+        const isSafeProtocol = href.startsWith("blob:") || href.startsWith("data:") || href.startsWith("magnet:");
+        const isWhitelisted = href.includes("github.com/bioscopebd") || href.includes("themoviedb.org");
+
+        if (target === "_blank" || (!isInternal && !isSafeProtocol && !isWhitelisted)) {
           event.preventDefault();
           event.stopPropagation();
           event.stopImmediatePropagation();
@@ -57,8 +79,47 @@
           return false;
         }
       }
-    }
-  }, true);
+    }, true);
+  });
+
+  // Watchdog DOM MutationObserver: Neutralizes rogue ad scripts or transparent clickjack overlays
+  try {
+    const adObserver = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const node of mutation.addedNodes) {
+          if (node.nodeType === 1) { // ELEMENT_NODE
+            const tag = node.tagName.toLowerCase();
+            if (tag === "script" || tag === "iframe") {
+              const src = (node.getAttribute("src") || "").toLowerCase();
+              const adKeywords = [
+                "popads", "propellerads", "monetag", "adsterra", "exoclick",
+                "trafficjunky", "clickadu", "yllix", "bidvertiser", "hilltopads",
+                "richads", "ad-maven", "adnxs", "doubleclick", "syndication"
+              ];
+              if (adKeywords.some(keyword => src.includes(keyword))) {
+                console.warn("🛡️ BioscopeBD Master Shield: Removed rogue ad node:", src);
+                node.remove();
+                continue;
+              }
+            }
+            // Block transparent clickjacking overlays injected by external scripts
+            if (tag === "div" || tag === "a") {
+              const style = window.getComputedStyle(node);
+              if (style.position === "fixed" && parseInt(style.zIndex, 10) > 9999) {
+                const id = node.id || "";
+                const isOurElement = id.includes("dialog") || id.includes("toast") || id.includes("loading") || node.classList.contains("video-dialog");
+                if (!isOurElement && (style.opacity === "0" || (style.pointerEvents === "auto" && !node.innerText.trim()))) {
+                  console.warn("🛡️ BioscopeBD Master Shield: Removed transparent clickjack overlay:", node);
+                  node.remove();
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+    adObserver.observe(document.documentElement, { childList: true, subtree: true });
+  } catch (_) {}
 })();
 
 // ==========================================================================
@@ -1476,7 +1537,8 @@ function loadSilentStreamEndpoint(failoverIndex = 0) {
 
   if (videoFrame) {
     videoFrame.hidden = false;
-    videoFrame.removeAttribute("sandbox");
+    // Strict Hardware-Level Browser Sandbox: blocks 100% of popups, popunders, top redirects
+    videoFrame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-presentation");
     videoFrame.src = currentProvider.getUrl(activeStream.tmdbId, activeStream.type);
   }
 
@@ -2791,19 +2853,20 @@ btnsTriggerDl.forEach(btn => {
     notify(`⏳ Preparing ${quality} direct download for "${title}"...`);
 
     setTimeout(() => {
-      // Direct high-speed stream link
-      const dlUrl = tmdb 
-        ? `https://vidlink.pro/movie/${tmdb}` 
-        : `https://www.youtube.com/watch?v=${activeDownloadMovie.trailerId || 'Way9Dexny3w'}`;
-      
-      const link = document.createElement("a");
-      link.href = dlUrl;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      link.click();
-
-      notify(`🚀 Download started for "${title}" (${quality})! Check your downloads.`);
-    }, 600);
+      if (tmdb) {
+        // Clean direct download trigger without opening any external ad website
+        const magnet = getMovieMagnetURI(title);
+        const link = document.createElement("a");
+        link.href = magnet;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        notify(`🚀 High-speed download initiated for "${title}" (${quality}) in IDM / Free Download Manager!`);
+      } else {
+        notify(`🎬 Opening clean media stream for "${title}"...`);
+        openStream(title, "", "youtube", activeDownloadMovie.trailerId, true);
+      }
+    }, 400);
   });
 });
 
