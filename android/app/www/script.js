@@ -59,9 +59,24 @@
     };
   } catch (_) {}
 
+  // Intercept programmatic form submissions to _blank or external ad domains
+  try {
+    const origFormSubmit = HTMLFormElement.prototype.submit;
+    HTMLFormElement.prototype.submit = function() {
+      const target = this.getAttribute("target");
+      const action = (this.getAttribute("action") || "").trim();
+      const isInternal = !action || action.startsWith("#") || action.startsWith("/") || action.startsWith(window.location.origin);
+      if (target === "_blank" || !isInternal) {
+        console.warn("🛡️ BioscopeBD Master Shield: Blocked programmatic form popup submit to:", action);
+        return;
+      }
+      return origFormSubmit.apply(this, arguments);
+    };
+  } catch (_) {}
+
   // Comprehensive Capture-Phase Click/Pointer/Mouse Interceptor
   // Neutralizes ANY attempt to trigger popunder/popup ads on user clicks anywhere on page
-  ["click", "auxclick", "contextmenu"].forEach(eventType => {
+  ["click", "auxclick", "contextmenu", "mouseup", "pointerup"].forEach(eventType => {
     window.addEventListener(eventType, function(event) {
       const link = event.target && event.target.closest ? event.target.closest("a") : null;
       if (link) {
@@ -94,7 +109,8 @@
               const adKeywords = [
                 "popads", "propellerads", "monetag", "adsterra", "exoclick",
                 "trafficjunky", "clickadu", "yllix", "bidvertiser", "hilltopads",
-                "richads", "ad-maven", "adnxs", "doubleclick", "syndication"
+                "richads", "ad-maven", "adnxs", "doubleclick", "syndication",
+                "onclickads", "bet365", "1xbet", "parimatch", "popcash", "popunder"
               ];
               if (adKeywords.some(keyword => src.includes(keyword))) {
                 console.warn("🛡️ BioscopeBD Master Shield: Removed rogue ad node:", src);
@@ -107,7 +123,7 @@
               const style = window.getComputedStyle(node);
               if (style.position === "fixed" && parseInt(style.zIndex, 10) > 9999) {
                 const id = node.id || "";
-                const isOurElement = id.includes("dialog") || id.includes("toast") || id.includes("loading") || node.classList.contains("video-dialog");
+                const isOurElement = id.includes("dialog") || id.includes("toast") || id.includes("loading") || node.classList.contains("video-dialog") || id.includes("theatre");
                 if (!isOurElement && (style.opacity === "0" || (style.pointerEvents === "auto" && !node.innerText.trim()))) {
                   console.warn("🛡️ BioscopeBD Master Shield: Removed transparent clickjack overlay:", node);
                   node.remove();
@@ -128,11 +144,11 @@
 var CONFIG = window.BIOSCOPE_CONFIG || {
   TMDB_API_KEY: "8265bd1679663a7ea12ac168da84d2e8",
   STREAM_SERVERS: [
-    { id: "1", name: "Bioscope Primary", getUrl: (id, type) => type === "tv" ? `https://vidlink.pro/tv/${id}/1/1` : `https://vidlink.pro/movie/${id}` },
-    { id: "2", name: "Bioscope Ultra Mirror", getUrl: (id, type) => type === "tv" ? `https://vidsrc.pm/embed/tv/${id}/1-1` : `https://vidsrc.pm/embed/movie/${id}` },
-    { id: "3", name: "Bioscope Fast Mirror", getUrl: (id, type) => type === "tv" ? `https://autoembed.co/tv/tmdb/${id}/1/1` : `https://autoembed.co/movie/tmdb/${id}` },
-    { id: "4", name: "Bioscope Cloud Backup", getUrl: (id, type) => type === "tv" ? `https://vidsrc.cc/v2/embed/tv/${id}/1/1` : `https://vidsrc.cc/v2/embed/movie/${id}` },
-    { id: "5", name: "Bioscope Alternative", getUrl: (id, type) => type === "tv" ? `https://vidsrc.sh/embed/tv?tmdb=${id}&season=1&episode=1` : `https://vidsrc.sh/embed/movie?tmdb=${id}` }
+    { id: "1", name: "Bioscope Primary", getUrl: (id, type) => type === "tv" ? `https://embedwave.cc/embed/tv/${id}/1/1` : `https://embedwave.cc/embed/movie/${id}` },
+    { id: "2", name: "Bioscope Ultra Mirror", getUrl: (id, type) => type === "tv" ? `https://player.videasy.net/tv/${id}/1/1` : `https://player.videasy.net/movie/${id}` },
+    { id: "3", name: "Bioscope Fast Mirror", getUrl: (id, type) => type === "tv" ? `https://vidlink.pro/tv/${id}/1/1?primaryColor=f5c518&secondaryColor=111111` : `https://vidlink.pro/movie/${id}?primaryColor=f5c518&secondaryColor=111111` },
+    { id: "4", name: "Bioscope Cloud Backup", getUrl: (id, type) => type === "tv" ? `https://embedwave.cc/embed/tv/${id}/1/1?server=1` : `https://embedwave.cc/embed/movie/${id}?server=1` },
+    { id: "5", name: "Bioscope Alternative", getUrl: (id, type) => type === "tv" ? `https://player.videasy.net/tv/${id}/1/1` : `https://player.videasy.net/movie/${id}` }
   ]
 };
 

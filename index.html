@@ -21,14 +21,95 @@
   <link rel="dns-prefetch" href="https://image.tmdb.org">
   <link rel="preconnect" href="https://api.themoviedb.org">
   <link rel="dns-prefetch" href="https://api.themoviedb.org">
+  <link rel="preconnect" href="https://embedwave.cc">
+  <link rel="dns-prefetch" href="https://embedwave.cc">
+  <link rel="preconnect" href="https://player.videasy.net">
+  <link rel="dns-prefetch" href="https://player.videasy.net">
   <link rel="preconnect" href="https://vidlink.pro">
   <link rel="dns-prefetch" href="https://vidlink.pro">
-  <link rel="dns-prefetch" href="https://vidsrc.pm">
-  <link rel="dns-prefetch" href="https://autoembed.co">
   <link rel="preconnect" href="https://picsum.photos">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <title>BioscopeBD — Movies, AI Cinema & Interactive Streaming</title>
+
+  <!-- Immediate Hardware Anti-Popup & Zero-Ad Interceptor (Runs synchronously from Line 1) -->
+  <script>
+    (function enforceImmediateZeroAdShield() {
+      "use strict";
+      const blockPop = function(url) {
+        console.warn("🛡️ BioscopeBD Master Shield: Neutralized popup attempt to:", url);
+        return null;
+      };
+
+      // 1. Permanently freeze window.open and Window.prototype.open
+      try {
+        Object.defineProperty(window, "open", { value: blockPop, writable: false, configurable: false });
+        if (typeof Window !== "undefined" && Window.prototype) {
+          Object.defineProperty(Window.prototype, "open", { value: blockPop, writable: false, configurable: false });
+        }
+      } catch (_) { window.open = blockPop; }
+
+      // 2. Kill popup traps
+      window.onbeforeunload = null;
+
+      // 3. Strict Allowed URL Validator
+      const isAllowedUrl = function(href) {
+        if (!href) return true;
+        const h = String(href).trim().toLowerCase();
+        return h.startsWith("#") || h.startsWith("/") || h.startsWith(window.location.origin) ||
+               h.startsWith("blob:") || h.startsWith("data:") || h.startsWith("magnet:") ||
+               h.includes("github.com/bioscopebd") || h.includes("themoviedb.org");
+      };
+
+      // 4. Capture-phase global click, pointer & auxiliary click interceptor
+      ["click", "auxclick", "mouseup", "contextmenu"].forEach(function(evt) {
+        window.addEventListener(evt, function(e) {
+          const a = e.target && e.target.closest ? e.target.closest("a") : null;
+          if (a) {
+            const href = a.getAttribute("href") || "";
+            const target = a.getAttribute("target");
+            if (target === "_blank" || !isAllowedUrl(href)) {
+              if (!isAllowedUrl(href)) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                console.warn("🛡️ BioscopeBD Intercepted unauthorized ad link click:", href);
+                return false;
+              }
+            }
+          }
+        }, true);
+      });
+
+      // 5. Intercept programmatic anchor click dispatch
+      try {
+        const origAnchorClick = HTMLAnchorElement.prototype.click;
+        HTMLAnchorElement.prototype.click = function() {
+          const href = this.getAttribute("href") || "";
+          if (!isAllowedUrl(href)) {
+            console.warn("🛡️ BioscopeBD Blocked programmatic anchor click:", href);
+            return;
+          }
+          return origAnchorClick.apply(this, arguments);
+        };
+      } catch (_) {}
+
+      // 6. Intercept form popup submissions
+      try {
+        const origFormSubmit = HTMLFormElement.prototype.submit;
+        HTMLFormElement.prototype.submit = function() {
+          const target = this.getAttribute("target");
+          const action = this.getAttribute("action") || "";
+          if (target === "_blank" || (!isAllowedUrl(action) && action !== "")) {
+            console.warn("🛡️ BioscopeBD Blocked form popup submit to:", action);
+            return;
+          }
+          return origFormSubmit.apply(this, arguments);
+        };
+      } catch (_) {}
+    })();
+  </script>
+
   <script src="config.js" defer></script>
   <script src="script.js" defer></script>
 </head>
@@ -1601,7 +1682,7 @@
         </div>
       </div>
 
-      <iframe id="video-player-frame" src="" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation" allowfullscreen allow="autoplay; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      <iframe id="video-player-frame" src="" sandbox="allow-scripts allow-same-origin allow-presentation" allowfullscreen allow="autoplay; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="no-referrer-when-downgrade"></iframe>
 
       <!-- Whitelabel Custom Cinema Player for AI Films & Trailers -->
       <div class="custom-player-stage" id="custom-player-stage" hidden>
@@ -2290,8 +2371,8 @@
 
         <!-- The Cinema Screen Viewport -->
         <div class="theatre-screen-viewport" id="theatre-screen-viewport">
-          <!-- Hardware Sandboxed Video Player (Zero Ads & Popups) -->
-          <iframe id="theatre-player-frame" class="theatre-player-frame" src="" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation" allowfullscreen allow="autoplay; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="no-referrer-when-downgrade"></iframe>
+          <!-- Hardware Sandboxed Video Player (Strictly Zero Ads & Popups) -->
+          <iframe id="theatre-player-frame" class="theatre-player-frame" src="" sandbox="allow-scripts allow-same-origin allow-presentation" allowfullscreen allow="autoplay; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="no-referrer-when-downgrade"></iframe>
 
           <!-- Projector Tuning Overlay -->
           <div class="theatre-projector-shield" id="theatre-projector-shield" hidden>
