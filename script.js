@@ -1,25 +1,55 @@
 "use strict";
 
-// 0. Anti-Popup & Anti-Redirect Shield
-// Completely block any third-party script from spawning ad windows or new tabs
-try {
-  window.open = function(url) {
-    console.warn("🛡️ BioscopeBD Shield: Blocked popup window to:", url);
-    return null;
-  };
-} catch (_) {}
-
-window.addEventListener("click", function(event) {
-  const link = event.target.closest("a");
-  if (link && link.target === "_blank") {
-    const href = link.getAttribute("href") || "";
-    if (href.startsWith("http") && !href.startsWith(window.location.origin)) {
-      event.preventDefault();
-      event.stopPropagation();
-      console.warn("🛡️ BioscopeBD Shield: Blocked unauthorized new window link:", href);
-    }
+// 0. 100% Anti-Popup & Anti-Redirect Master Shield
+// Permanently block any window.open, tab-spawning, or ad-redirecting scripts
+(function enforceAdShield() {
+  try {
+    Object.defineProperty(window, "open", {
+      value: function(url) {
+        console.warn("🛡️ BioscopeBD Master Shield: Neutralized window.open to:", url);
+        return null;
+      },
+      writable: false,
+      configurable: false
+    });
+  } catch (_) {
+    window.open = function() { return null; };
   }
-}, true);
+
+  // Neutralize programmatic hidden anchor clicks used by aggressive ad scripts
+  try {
+    const originalAnchorClick = HTMLAnchorElement.prototype.click;
+    HTMLAnchorElement.prototype.click = function() {
+      const href = this.getAttribute("href") || "";
+      const target = this.getAttribute("target");
+      if (target === "_blank" || (href.startsWith("http") && !href.startsWith(window.location.origin))) {
+        if (!href.includes("github.com/bioscopebd") && !href.includes("youtube.com")) {
+          console.warn("🛡️ BioscopeBD Master Shield: Blocked programmatic anchor click to:", href);
+          return;
+        }
+      }
+      return originalAnchorClick.apply(this, arguments);
+    };
+  } catch (_) {}
+
+  // Global capture-phase click interceptor on the entire document (empty space, cards, buttons)
+  window.addEventListener("click", function(event) {
+    const link = event.target.closest("a");
+    if (link) {
+      const href = link.getAttribute("href") || "";
+      const target = link.getAttribute("target");
+      if (target === "_blank" || (href.startsWith("http") && !href.startsWith(window.location.origin))) {
+        if (!href.includes("github.com/bioscopebd") && !href.includes("youtube.com")) {
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+          console.warn("🛡️ BioscopeBD Master Shield: Intercepted unauthorized link click:", href);
+          return false;
+        }
+      }
+    }
+  }, true);
+})();
 
 // Shared status feedback for preview & interactive actions.
 const toast = document.querySelector("#toast");
@@ -267,41 +297,46 @@ function setServer(srv) {
   const openStremioBtnEl = document.querySelector("#btn-open-stremio");
   const copyCliBtnEl = document.querySelector("#btn-copy-cli");
   if (openStremioBtnEl) openStremioBtnEl.classList.remove("is-active");
-  if (copyCliBtnEl) copyCliBtnEl.classList.toggle("is-active", srv === "2");
+  if (copyCliBtnEl) copyCliBtnEl.classList.toggle("is-active", srv === "1");
   if (!activeStream || !videoFrame) return;
 
-  // Remove sandbox attribute so modern embed providers (VidLink, MovieBox, VidSrc) stream without "Please Disable Sandbox" errors
-  videoFrame.removeAttribute("sandbox");
-
-  if (srv === "1") {
+  if (srv === "5") {
+    // VidLink Clean - requires sandbox removed to prevent "Please Disable Sandbox" screen
+    videoFrame.removeAttribute("sandbox");
     videoFrame.src = activeStream.type === "tv"
       ? `https://vidlink.pro/tv/${activeStream.tmdbId}/1/1?primaryColor=f5c518`
       : (activeStream.tmdbId ? `https://vidlink.pro/movie/${activeStream.tmdbId}?primaryColor=f5c518` : `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`);
-  } else if (srv === "2") {
-    // Server 2: MovieBox Prime
-    videoFrame.src = activeStream.type === "tv"
-      ? `https://vidsrc.pm/embed/tv/${activeStream.tmdbId}/1-1`
-      : (activeStream.tmdbId ? `https://vidsrc.pm/embed/movie/${activeStream.tmdbId}` : `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`);
-  } else if (srv === "3") {
-    // Server 3: 2Embed Multi Engine
-    videoFrame.src = activeStream.type === "tv"
-      ? `https://www.2embed.cc/embedtv/${activeStream.tmdbId}&s=1&e=1`
-      : (activeStream.tmdbId ? `https://www.2embed.cc/embed/${activeStream.tmdbId}` : `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`);
-  } else if (srv === "4") {
-    // Server 4: AutoEmbed VIP
-    videoFrame.src = activeStream.type === "tv"
-      ? `https://autoembed.co/tv/tmdb/${activeStream.tmdbId}/1/1`
-      : (activeStream.tmdbId ? `https://autoembed.co/movie/tmdb/${activeStream.tmdbId}` : `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`);
-  } else if (srv === "5") {
-    // Server 5: VidSrc VIP
-    videoFrame.src = activeStream.type === "tv"
-      ? `https://vidsrc.me/embed/tv?tmdb=${activeStream.tmdbId}&season=1&episode=1`
-      : (activeStream.tmdbId ? `https://vidsrc.me/embed/movie?tmdb=${activeStream.tmdbId}` : `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`);
-  } else if (srv === "trailer") {
-    if (activeStream.trailerId) {
-      videoFrame.src = `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`;
-    } else {
-      videoFrame.src = `https://www.youtube-nocookie.com/embed?listType=search&list=${encodeURIComponent(activeStream.title + " official trailer")}`;
+  } else {
+    // Enforce 100% Zero-Popup Sandbox on MovieBox, AutoEmbed, VidSrc, 2Embed, and YouTube
+    // Hard-blocks any window.open, new tabs, and popunders from escaping into the user's browser
+    videoFrame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-presentation");
+
+    if (srv === "1") {
+      // Server 1: MovieBox Prime (Default - Fast, 1080p, Zero Popups)
+      videoFrame.src = activeStream.type === "tv"
+        ? `https://vidsrc.pm/embed/tv/${activeStream.tmdbId}/1-1`
+        : (activeStream.tmdbId ? `https://vidsrc.pm/embed/movie/${activeStream.tmdbId}` : `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`);
+    } else if (srv === "2") {
+      // Server 2: AutoEmbed VIP (Buffer-Free Multi)
+      videoFrame.src = activeStream.type === "tv"
+        ? `https://autoembed.co/tv/tmdb/${activeStream.tmdbId}/1/1`
+        : (activeStream.tmdbId ? `https://autoembed.co/movie/tmdb/${activeStream.tmdbId}` : `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`);
+    } else if (srv === "3") {
+      // Server 3: VidSrc VIP (Ultra HD)
+      videoFrame.src = activeStream.type === "tv"
+        ? `https://vidsrc.sh/embed/tv?tmdb=${activeStream.tmdbId}&season=1&episode=1`
+        : (activeStream.tmdbId ? `https://vidsrc.sh/embed/movie?tmdb=${activeStream.tmdbId}` : `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`);
+    } else if (srv === "4") {
+      // Server 4: 2Embed Multi Engine
+      videoFrame.src = activeStream.type === "tv"
+        ? `https://www.2embed.cc/embedtv/${activeStream.tmdbId}&s=1&e=1`
+        : (activeStream.tmdbId ? `https://www.2embed.cc/embed/${activeStream.tmdbId}` : `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`);
+    } else if (srv === "trailer") {
+      if (activeStream.trailerId) {
+        videoFrame.src = `https://www.youtube.com/embed/${activeStream.trailerId}?autoplay=1`;
+      } else {
+        videoFrame.src = `https://www.youtube-nocookie.com/embed?listType=search&list=${encodeURIComponent(activeStream.title + " official trailer")}`;
+      }
     }
   }
 }
@@ -424,7 +459,7 @@ if (copyCliBtn) {
       return;
     }
     // Stream MovieBox directly inside our player frame without requiring terminal / CLI
-    setServer("2");
+    setServer("1");
     
     // Highlight CLI Stream as active source
     copyCliBtn.classList.add("is-active");
