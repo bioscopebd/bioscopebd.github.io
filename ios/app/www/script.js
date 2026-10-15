@@ -404,8 +404,13 @@ document.querySelectorAll("[data-genre-filter]").forEach(chip => chip.addEventLi
   activeGenre = activeGenre === chip.dataset.genreFilter ? "" : chip.dataset.genreFilter;
   document.querySelectorAll("[data-genre-filter]").forEach(item => item.classList.toggle("is-active", item.dataset.genreFilter === activeGenre));
   filterMovies();
-  const topRated = document.querySelector("#top-rated");
-  if (topRated) topRated.scrollIntoView({ behavior: "smooth" });
+  
+  if (activeGenre) {
+    const target = (activeGenre === "AI Cinema")
+      ? (document.querySelector("#ai-cinema") || document.querySelector("#trending"))
+      : (document.querySelector("#trending") || document.querySelector("#top-rated"));
+    if (target) target.scrollIntoView({ behavior: "smooth" });
+  }
 }));
 
 // 5. Video Player Streaming Dialog and Next-Level Features
