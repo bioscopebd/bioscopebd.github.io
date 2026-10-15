@@ -1124,55 +1124,6 @@ document.querySelectorAll("[data-genre-filter]").forEach(chip => {
   });
 });
 
-// Movie X + Movie Y Mashup Finder
-const mashupSelect1 = document.querySelector("#mashup-select-1");
-const mashupSelect2 = document.querySelector("#mashup-select-2");
-const btnCalculateMashup = document.querySelector("#btn-calculate-mashup");
-const mashupResults = document.querySelector("#mashup-results");
-const mashupCardsGrid = document.querySelector("#mashup-cards-grid");
-
-function populateMashupDropdowns() {
-  if (!mashupSelect1 || !mashupSelect2) return;
-  const optionsHtml = BUILTIN_CATALOG.slice(0, 20).map(m => `
-    <option value="${m.id}">${m.title} (${m.genre})</option>
-  `).join("");
-
-  mashupSelect1.innerHTML = optionsHtml;
-  mashupSelect2.innerHTML = optionsHtml;
-  if (mashupSelect2.options.length > 3) mashupSelect2.selectedIndex = 3;
-}
-populateMashupDropdowns();
-
-if (btnCalculateMashup && mashupSelect1 && mashupSelect2 && mashupResults && mashupCardsGrid) {
-  btnCalculateMashup.addEventListener("click", () => {
-    const m1 = BUILTIN_CATALOG.find(m => m.id === mashupSelect1.value) || BUILTIN_CATALOG[0];
-    const m2 = BUILTIN_CATALOG.find(m => m.id === mashupSelect2.value) || BUILTIN_CATALOG[1];
-
-    // Find blended recommendations
-    const targetGenres = new Set([...(m1.genres || [m1.genre]), ...(m2.genres || [m2.genre])]);
-    const blended = BUILTIN_CATALOG.filter(m => m.id !== m1.id && m.id !== m2.id && m.genres?.some(g => targetGenres.has(g))).slice(0, 3);
-
-    mashupCardsGrid.innerHTML = blended.map(m => `
-      <div class="mashup-result-card" data-title="${m.title}" data-tmdb="${m.tmdbId}" data-type="${m.type}" data-trailer="${m.trailerId}">
-        <img src="${m.poster}" alt="${m.title}">
-        <div class="mashup-result-info">
-          <span class="mashup-match-tag">🔥 96% Mashup Blend</span>
-          <h4>${m.title}</h4>
-          <p>${m.genre} · ${m.synopsis.slice(0, 80)}...</p>
-          <button type="button" class="button button--primary button--sm">▶ Watch Match</button>
-        </div>
-      </div>
-    `).join("");
-
-    mashupResults.hidden = false;
-    mashupCardsGrid.querySelectorAll(".mashup-result-card").forEach(c => {
-      c.addEventListener("click", () => openStream(c.dataset.title, c.dataset.tmdb, c.dataset.type, c.dataset.trailer));
-    });
-
-    notify(`✨ Blended "${m1.title}" + "${m2.title}" to find top crossover cinema!`);
-  });
-}
-
 // ==========================================================================
 // 7. Unified Custom BioscopeBD Media Player with Silent Auto-Server Engine
 // ==========================================================================
