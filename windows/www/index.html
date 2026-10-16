@@ -270,17 +270,6 @@
             </div>
           </div>
 
-          <div class="party-hub-actions">
-            <button class="button button--primary button--large party-action-btn" id="hub-host-party-btn" type="button">
-              <span class="btn-party-title">🍿 Host Party</span>
-              <span class="btn-party-sub">host room to watch with friends</span>
-            </button>
-            <button class="button button--glass button--large party-action-btn" id="hub-join-party-btn" type="button">
-              <span class="btn-party-title">🔗 Join Party</span>
-              <span class="btn-party-sub">enter room with invite code</span>
-            </button>
-          </div>
-
           <!-- Active Hall Persistent Banner (if user already has a hall open) -->
           <div class="active-hall-banner" id="active-hall-banner" hidden>
             <div class="active-hall-info">
@@ -297,18 +286,151 @@
             </div>
           </div>
 
-          <!-- 2.5.1 Bioscope Box Office: Live Public Halls Grid -->
-          <div class="box-office-section" id="box-office-section">
-            <div class="box-office-header">
-              <div class="box-office-title">
-                <span class="box-office-live-indicator"></span>
-                <h3>Bioscope Box Office · Live Public Halls</h3>
+          <!-- Watch Party Dedicated Interactive Lounge (Zero Popups) -->
+          <div class="party-lounge-sector" id="party-lounge-sector">
+            <nav class="party-lounge-nav" role="tablist" aria-label="Watch Party Modes">
+              <button type="button" class="party-lounge-tab is-active" id="hub-tab-halls" role="tab" aria-selected="true" data-tab="halls">
+                🏛️ Active Cinema Rooms (<span id="hub-halls-count">3</span>)
+              </button>
+              <button type="button" class="party-lounge-tab party-action-btn" id="hub-host-party-btn" role="tab" aria-selected="false" data-tab="host">
+                <span class="btn-party-title">🍿 Host Party</span>
+                <span class="btn-party-sub">host room to watch with friends</span>
+              </button>
+              <button type="button" class="party-lounge-tab party-action-btn" id="hub-join-party-btn" role="tab" aria-selected="false" data-tab="join">
+                <span class="btn-party-title">🔗 Join Party</span>
+                <span class="btn-party-sub">enter room with invite code</span>
+              </button>
+              <button type="button" class="party-lounge-tab" id="hub-tab-swipe" role="tab" aria-selected="false" data-tab="swipe">
+                ✨ Swipe to Match 🍿
+              </button>
+            </nav>
+
+            <!-- Panel 1: Live Cinema Halls Directory -->
+            <div class="party-lounge-panel is-active" id="panel-lounge-halls" role="tabpanel">
+              <div class="box-office-header">
+                <div class="box-office-title">
+                  <span class="box-office-live-indicator"></span>
+                  <h3>Active Cinema Rooms</h3>
+                </div>
+                <div class="hall-filter-pills" id="hall-filter-pills">
+                  <button type="button" class="hall-pill is-active" data-filter="all">All Rooms</button>
+                  <button type="button" class="hall-pill" data-filter="public">🌐 Public Halls</button>
+                  <button type="button" class="hall-pill" data-filter="private">🔒 Private Rooms</button>
+                </div>
               </div>
-              <span class="box-office-pill">🌐 Public Cinema · 1-Click Entry</span>
+              <p class="box-office-subtitle">See what movie is currently streaming inside each auditorium before entering. Drop into public halls with 1-click.</p>
+              <div class="box-office-grid" id="box-office-grid">
+                <!-- Dynamically populated room cards showing movie poster, title, status, viewers, and action button -->
+              </div>
             </div>
-            <p class="box-office-subtitle">Anyone can drop into these public halls and watch together in synchronized cinema mode. Zero codes required.</p>
-            <div class="box-office-grid" id="box-office-grid">
-              <!-- Dynamically populated or friendly default halls -->
+
+            <!-- Panel 2: Host Room (Create Public or Private Hall) -->
+            <div class="party-lounge-panel" id="panel-lounge-host" role="tabpanel" hidden>
+              <div class="party-create-card">
+                <div class="party-create-header">
+                  <h3>🍿 Create Your Cinema Hall</h3>
+                  <p class="party-desc">Launch an immersive Virtual Cinema Hall. Your room stays open until you dismiss it, and you can project and play ANY movie from the site catalog inside the hall.</p>
+                </div>
+
+                <!-- Visibility Selector: Public vs Private -->
+                <div class="party-visibility-toggle">
+                  <label class="visibility-option is-active" id="lbl-vis-public">
+                    <input type="radio" name="party-vis" id="vis-public-radio" value="public" checked>
+                    <div class="visibility-card">
+                      <div class="visibility-card__header">
+                        <span class="vis-icon">🌐</span>
+                        <strong>Public Cinema Hall</strong>
+                        <span class="vis-badge">No Code Needed</span>
+                      </div>
+                      <p>Displayed in "Active Cinema Rooms". Anyone on BioscopeBD can discover and enter with 1-click.</p>
+                    </div>
+                  </label>
+
+                  <label class="visibility-option" id="lbl-vis-private">
+                    <input type="radio" name="party-vis" id="vis-private-radio" value="private">
+                    <div class="visibility-card">
+                      <div class="visibility-card__header">
+                        <span class="vis-icon">🔒</span>
+                        <strong>Private Friends Hall</strong>
+                        <span class="vis-badge">Invite Code Only</span>
+                      </div>
+                      <p>Strictly for friends. Generates a permanent invite code. Only friends with your code can enter.</p>
+                    </div>
+                  </label>
+                </div>
+
+                <div class="party-input-group">
+                  <label for="party-hall-name-input">Auditorium / Hall Name:</label>
+                  <input type="text" id="party-hall-name-input" placeholder="e.g. Tanjir's Grand Cinema Lounge" maxlength="40">
+                </div>
+
+                <!-- Permanent Hall Invite Code (Visible only when Private is selected) -->
+                <div class="party-room-code-box" id="party-private-code-box" hidden>
+                  <label>Permanent Hall Invite Code (Fixed for Friends):</label>
+                  <div class="code-box" id="party-code-box">
+                    <strong id="party-room-code">BIOSCOPE-7892</strong>
+                    <button type="button" class="button button--primary button--sm" id="btn-copy-room">📋 Copy Invite Link</button>
+                  </div>
+                  <small class="code-hint">Friends enter this invite code in "Join Party" to enter your auditorium.</small>
+                  <div class="party-copy-status" id="party-copy-status" aria-live="polite"></div>
+                </div>
+
+                <div class="party-theatre-preview-card">
+                  <div class="theatre-preview-icon">🏛️</div>
+                  <div class="theatre-preview-info">
+                    <strong>Virtual Cinema Experience with Real-Time Projector</strong>
+                    <p>No need to pick movies right now. Once inside your hall, simply search and play ANY movie or AI film from our catalog and it will instantly project onto the big screen for all viewers.</p>
+                  </div>
+                </div>
+
+                <div class="party-create-footer-actions">
+                  <button type="button" class="button button--glass" id="btn-generate-ticket">
+                    🎟️ Generate Commemorative Hall Ticket
+                  </button>
+                  <button type="button" class="button button--primary button--large" id="btn-start-party">
+                    🎬 Launch &amp; Enter Cinema Theatre
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel 3: Join Private Room -->
+            <div class="party-lounge-panel" id="panel-lounge-join" role="tabpanel" hidden>
+              <div class="party-join-card">
+                <h3>🔗 Join a Private Cinema Room</h3>
+                <p class="party-desc">Enter any Hall Code or Invite Link shared by the host to take your seat in their live auditorium.</p>
+                <div class="join-input-group">
+                  <input type="text" id="join-room-input" placeholder="e.g. BIOSCOPE-7892" autocomplete="off">
+                  <button type="button" class="button button--primary button--large" id="btn-submit-join">🎬 Enter Hall</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel 4: Swipe to Match -->
+            <div class="party-lounge-panel" id="panel-lounge-swipe" role="tabpanel" hidden>
+              <div class="party-swipe-card">
+                <h3>🍿 Swipe to Match Group Movie Picker</h3>
+                <p class="party-desc">Can't agree on what to watch? Swipe Yes or No on these curated picks and we'll automatically select the group winner!</p>
+                <div class="swipe-deck-container" id="swipe-deck-container">
+                  <div class="swipe-card" id="swipe-active-card">
+                    <img id="swipe-card-img" src="https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg" alt="Dune 2" loading="lazy">
+                    <div class="swipe-card-body">
+                      <h4 id="swipe-card-title">Dune: Part Two (2024)</h4>
+                      <p id="swipe-card-desc">Sci-Fi Adventure · ★ 8.7</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="swipe-actions">
+                  <button type="button" class="swipe-btn swipe-btn--pass" id="btn-swipe-pass" title="Pass (Skip)">✕ Pass</button>
+                  <button type="button" class="swipe-btn swipe-btn--match" id="btn-swipe-match" title="Match (Love it!)">♥ Match</button>
+                </div>
+                <div class="swipe-tally" id="swipe-tally">
+                  <span>Group Leader:</span> <strong id="swipe-top-match">Voting in progress...</strong>
+                </div>
+                <button type="button" class="button button--primary button--full" id="btn-launch-matched-movie" hidden>
+                  🍿 Stream Matched Film Now
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1978,132 +2100,7 @@
     </div>
   </dialog>
 
-  <!-- Built-in Watch Party Modal -->
-  <dialog class="party-dialog" id="party-dialog" aria-labelledby="party-dialog-title">
-    <div class="party-box">
-      <div class="party-box__header">
-        <div>
-          <span class="party-badge">🍿 Built-In Watch Party</span>
-          <h3 id="party-dialog-title">Watch Together with Friends</h3>
-        </div>
-        <button type="button" class="party-close" id="party-close-btn" aria-label="Close Watch Party">✕</button>
-      </div>
-
-      <div class="party-tabs">
-        <button type="button" class="party-tab is-active" id="tab-host">Host Room</button>
-        <button type="button" class="party-tab" id="tab-join">Join Room</button>
-        <button type="button" class="party-tab" id="tab-swipe">Swipe to Match 🍿</button>
-      </div>
-
-      <div class="party-view" id="party-host-view">
-        <p class="party-desc">Launch an immersive Virtual Cinema Hall. Your hall will stay open and active until you choose to dismiss it.</p>
-        
-        <!-- Persistent Room Live Banner (if already created) -->
-        <div class="party-existing-alert" id="party-existing-alert" hidden>
-          <div class="existing-alert-left">
-            <span class="pulse-dot"></span>
-            <div>
-              <strong>Your Cinema Hall is Currently Live!</strong>
-              <small>Room Code: <span id="party-existing-code">BIOSCOPE-7892</span></small>
-            </div>
-          </div>
-          <button type="button" class="button button--danger button--sm" id="btn-modal-dismiss-room">
-            🛑 Dismiss Hall
-          </button>
-        </div>
-
-        <div class="party-room-code">
-          <label>Permanent Hall Invite Code:</label>
-          <div class="code-box" id="party-code-box">
-            <strong id="party-room-code">BIOSCOPE-7892</strong>
-            <button type="button" class="button button--primary button--sm" id="btn-copy-room">📋 Copy Link</button>
-          </div>
-          <div class="party-copy-status" id="party-copy-status" aria-live="polite"></div>
-        </div>
-
-        <div class="party-input-group">
-          <label for="party-hall-name-input">Auditorium / Hall Name:</label>
-          <input type="text" id="party-hall-name-input" placeholder="e.g. Tanjir's Grand Cinema Hall" maxlength="40">
-        </div>
-
-        <div class="party-select-movie">
-          <label for="party-movie-picker">Feature Presentation (Movie to Screen):</label>
-          <select id="party-movie-picker">
-            <option value="693134|movie|Way9Dexny3w">Dune: Part Two (2024)</option>
-            <option value="872585|movie|uYPbbksJxIg">Oppenheimer (2023)</option>
-            <option value="1009187|movie|0YvVw1E5pE0">Hawa (হাওয়া)</option>
-            <option value="603692|movie|qEVUtrk8_B4">John Wick: Chapter 4</option>
-            <option value="1147573|movie|2xM3c6C1sN8">Priyotoma (প্রিয়তমা)</option>
-            <option value="|youtube|IAl240xpSGM">The Trigger (Higgsfield AI Action)</option>
-            <option value="|youtube|UQDM-ZigvGo">ANERNEQ (Higgsfield Arctic AI Film)</option>
-            <option value="157336|movie|2LqzF5WauS2">Interstellar (2014)</option>
-            <option value="27205|movie|YoHD9XEInc0">Inception (2010)</option>
-            <option value="955916|movie|5aVw797_q0c">Lift (2024 Action Thriller)</option>
-          </select>
-        </div>
-
-        <!-- Public Hall Checkbox -->
-        <div class="party-public-toggle">
-          <label class="theatre-checkbox-label">
-            <input type="checkbox" id="party-is-public-chk" checked>
-            <span class="custom-check-box"></span>
-            <div class="theatre-checkbox-text">
-              <strong>🌐 Make this Hall Public (Recommended)</strong>
-              <small>Display in "Bioscope Box Office" so visitors can discover and join with 1-click.</small>
-            </div>
-          </label>
-        </div>
-
-        <div class="party-theatre-preview-card">
-          <div class="theatre-preview-icon">🏛️</div>
-          <div class="theatre-preview-info">
-            <strong>Virtual Cinema Experience</strong>
-            <p>Entering the hall opens an auditorium screen with plush front-row seating, corner whisper chat, and host projector sync.</p>
-          </div>
-        </div>
-
-        <button type="button" class="button button--glass button--full" id="btn-generate-ticket" style="margin-bottom:10px;">
-          🎟️ Generate Commemorative Hall Ticket
-        </button>
-
-        <button type="button" class="button button--primary button--full button--large" id="btn-start-party">
-          🎬 Enter Grand Cinema Theatre
-        </button>
-      </div>
-
-      <div class="party-view" id="party-join-view" hidden>
-        <p class="party-desc">Enter any Hall Code or Invite Link shared by the host to take your seat in their live auditorium.</p>
-        <div class="join-input-group">
-          <input type="text" id="join-room-input" placeholder="e.g. BIOSCOPE-7892" autocomplete="off">
-          <button type="button" class="button button--primary" id="btn-submit-join">Enter Hall</button>
-        </div>
-      </div>
-
-      <!-- Swipe to Match Group Movie Picker -->
-      <div class="party-view" id="party-swipe-view" hidden>
-        <p class="party-desc">Can't agree on what to watch? Swipe Yes or No on these curated picks and we'll automatically select the group winner!</p>
-        <div class="swipe-deck-container" id="swipe-deck-container">
-          <div class="swipe-card" id="swipe-active-card">
-            <img id="swipe-card-img" src="https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg" alt="Dune 2" loading="lazy">
-            <div class="swipe-card-body">
-              <h4 id="swipe-card-title">Dune: Part Two (2024)</h4>
-              <p id="swipe-card-desc">Sci-Fi Adventure · ★ 8.7</p>
-            </div>
-          </div>
-        </div>
-        <div class="swipe-actions">
-          <button type="button" class="swipe-btn swipe-btn--pass" id="btn-swipe-pass" title="Pass (Skip)">✕ Pass</button>
-          <button type="button" class="swipe-btn swipe-btn--match" id="btn-swipe-match" title="Match (Love it!)">♥ Match</button>
-        </div>
-        <div class="swipe-tally" id="swipe-tally">
-          <span>Group Leader:</span> <strong id="swipe-top-match">Voting in progress...</strong>
-        </div>
-        <button type="button" class="button button--primary button--full" id="btn-launch-matched-movie" hidden>
-          🍿 Stream Matched Film Now
-        </button>
-      </div>
-    </div>
-  </dialog>
+  <!-- Watch Party is now fully integrated in-page in #watch-party-hub (Zero Popups) -->
 
   <!-- Digital Movie Ticket Invite Dialog -->
   <dialog class="ticket-dialog" id="ticket-dialog" aria-labelledby="ticket-dialog-title">
@@ -2459,9 +2456,15 @@
           <small id="theatre-host-sub">You have playback &amp; movie switching authority</small>
         </div>
       </div>
-      <div class="host-deck__actions">
+        <div class="host-deck__search-project">
+          <label for="theatre-projector-search">🔍 Project Any Movie:</label>
+          <div class="theatre-search-box">
+            <input type="text" id="theatre-projector-search" placeholder="Search any movie to project on big screen..." autocomplete="off">
+            <div class="theatre-search-dropdown" id="theatre-projector-results" hidden></div>
+          </div>
+        </div>
         <div class="host-deck__movie-select">
-          <label for="theatre-switch-movie">Switch Feature:</label>
+          <label for="theatre-switch-movie">Quick Pick:</label>
           <select id="theatre-switch-movie">
             <!-- Dynamically populated movies -->
           </select>
