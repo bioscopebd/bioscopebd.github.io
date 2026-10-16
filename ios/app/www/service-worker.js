@@ -1,5 +1,5 @@
 /* Offline app shell; remote sample artwork is cached as it is viewed. */
-const VERSION = "bioscopebd-v2";
+const VERSION = "bioscopebd-v3";
 const SHELL = `${VERSION}-shell`;
 const MEDIA = `${VERSION}-media`;
 const APP_FILES = ["./", "./index.html", "./style.css", "./config.js", "./script.js", "./manifest.json",
@@ -21,10 +21,18 @@ self.addEventListener("fetch", event => {
   if (request.method !== "GET") return;
   const url = new URL(request.url);
   if (url.origin === self.location.origin) {
-    event.respondWith(caches.match(request).then(cached => cached || fetch(request).then(response => {
-      if (response.ok) caches.open(SHELL).then(cache => cache.put(request, response.clone()));
-      return response;
-    }).catch(() => caches.match("./index.html"))));
+    // Network-First: Always fetch the freshest version when online, fallback to cache if offline
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(SHELL).then(cache => cache.put(request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request).then(cached => cached || caches.match("./index.html")))
+    );
     return;
   }
   if (request.destination === "image" || request.destination === "font") {

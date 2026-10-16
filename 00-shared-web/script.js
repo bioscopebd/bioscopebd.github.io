@@ -3711,7 +3711,9 @@ if (copyYear) copyYear.textContent = new Date().getFullYear();
 // PWA Service Worker Registration
 if ("serviceWorker" in navigator && !(window.Capacitor?.isNativePlatform?.())) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+    navigator.serviceWorker.register("./service-worker.js").then(reg => {
+      reg.update().catch(() => {});
+    }).catch(() => {});
   });
 }
 
