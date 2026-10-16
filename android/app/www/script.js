@@ -578,6 +578,7 @@ if (heroWatchlistBtn) {
 const continueSection = document.querySelector("#continue-watching-section");
 const continueCarousel = document.querySelector("#continue-watching-carousel");
 const banglaCarousel = document.querySelector("#bangla-carousel");
+const hindiCarousel = document.querySelector("#hindi-carousel");
 const thrillersCarousel = document.querySelector("#thrillers-carousel");
 const topRatedGrid = document.querySelector("#main-browse-grid") || document.querySelector("#top-rated-grid");
 const catalogCountBadge = document.querySelector("#catalog-count-badge");
@@ -601,6 +602,8 @@ function initImageLoading() {
 
 function createMovieCardHTML(movie) {
   const isAi = movie.genre === "AI Cinema" || (movie.genres && movie.genres.includes("AI Cinema")) || movie.id?.startsWith("higgs");
+  const isBangla = Boolean(movie.bangla || /[\u0980-\u09FF]/.test(movie.title || ""));
+  const isHindi = Boolean(movie.hindi || (movie.genres && movie.genres.includes("Hindi")));
   const yearText = movie.year || "2024";
   const scoreText = movie.score ? `★ ${movie.score}` : "★ 8.5";
   const genresList = (movie.genres || [movie.genre || 'Cinema']).join(',');
@@ -614,16 +617,20 @@ function createMovieCardHTML(movie) {
              data-duration="${movie.duration || 120}"
              data-tmdb="${movie.tmdbId || ''}" 
              data-trailer="${movie.trailerId || ''}" 
-             data-type="${movie.type || 'movie'}"
+             data-type="${isBangla ? 'bangla' : (movie.type || 'movie')}"
+             data-bangla="${isBangla}"
+             data-hindi="${isHindi}"
              data-year="${yearText}">
       <div class="movie-card__media image-shell is-loaded">
         <img src="${movie.poster}" alt="${movie.title}" loading="lazy">
         <span class="movie-card__score">${scoreText}</span>
         ${isAi ? '<span class="badge-studio">Higgsfield AI</span>' : ''}
+        ${isBangla ? '<span class="badge-studio" style="background:rgba(0,106,78,0.9);color:#f5c518;">Bangla Cinema</span>' : ''}
+        ${isHindi ? '<span class="badge-studio" style="background:rgba(229,9,20,0.85);color:#fff;">Bollywood</span>' : ''}
         <div class="movie-card__overlay">
           <p>${scoreText} · ${movie.genre || 'Cinema'}</p>
           <button type="button" class="button button--primary quick-view" data-title="${movie.title}">Quick View</button>
-          <button type="button" class="button button--glass card-play-btn" data-title="${movie.title}" data-tmdb="${movie.tmdbId || ''}" data-type="${movie.type || 'movie'}" data-trailer="${movie.trailerId || ''}">▶ Play</button>
+          <button type="button" class="button button--glass card-play-btn" data-title="${movie.title}" data-tmdb="${movie.tmdbId || ''}" data-type="${isBangla ? 'bangla' : (movie.type || 'movie')}" data-trailer="${movie.trailerId || ''}">▶ Play</button>
         </div>
       </div>
       <h3>${movie.title}</h3>
@@ -666,10 +673,21 @@ function hydrateBanglaSection() {
   if (!banglaCarousel) return;
   // If cards are already pre-rendered in HTML, do NOT overwrite them!
   if (banglaCarousel.querySelectorAll(".movie-card").length === 0) {
-    const banglaMovies = BUILTIN_CATALOG.filter(m => m.bangla || m.southAsian);
+    const banglaMovies = BUILTIN_CATALOG.filter(m => m.bangla);
     banglaCarousel.innerHTML = banglaMovies.map(createMovieCardHTML).join("");
   }
   bindCardInteractions(banglaCarousel);
+  initImageLoading();
+}
+
+function hydrateHindiSection() {
+  if (!hindiCarousel) return;
+  // If cards are already pre-rendered in HTML, do NOT overwrite them!
+  if (hindiCarousel.querySelectorAll(".movie-card").length === 0) {
+    const hindiMovies = BUILTIN_CATALOG.filter(m => m.hindi);
+    hindiCarousel.innerHTML = hindiMovies.map(createMovieCardHTML).join("");
+  }
+  bindCardInteractions(hindiCarousel);
   initImageLoading();
 }
 
@@ -830,11 +848,13 @@ function initCarouselNav(carouselId, prevId, nextId) {
 initCarouselNav("#trending-carousel", "#trending-prev", "#trending-next");
 initCarouselNav("#ai-carousel", "#ai-prev", "#ai-next");
 initCarouselNav("#bangla-carousel", "#bangla-prev", "#bangla-next");
+initCarouselNav("#hindi-carousel", "#hindi-prev", "#hindi-next");
 initCarouselNav("#thrillers-carousel", "#thrillers-prev", "#thrillers-next");
 
 // Initial hydrations
 hydrateContinueWatching();
 hydrateBanglaSection();
+hydrateHindiSection();
 hydrateThrillersSection();
 hydrateBrowseGrid(1, false);
 
@@ -1104,7 +1124,11 @@ function filterCatalog() {
     
     // Check genre against primary genre and all genres
     const targetGenre = activeGenre.toLowerCase();
-    const matchesGenre = !activeGenre || genre.includes(targetGenre) || genres.includes(targetGenre);
+    const isBanglaCard = card.dataset.bangla === "true" || card.dataset.type === "bangla" || /[\u0980-\u09FF]/.test(title);
+    const isHindiCard = card.dataset.hindi === "true" || genres.includes("hindi");
+    const matchesGenre = !activeGenre || genre.includes(targetGenre) || genres.includes(targetGenre) ||
+      (targetGenre === "bangla" && isBanglaCard) ||
+      ((targetGenre === "hindi" || targetGenre === "bollywood") && isHindiCard);
 
     let matchesDuration = true;
     if (activeDurationBudget === "short") matchesDuration = duration <= 30;
@@ -1124,8 +1148,9 @@ function filterCatalog() {
   const carousels = [
     { sec: document.querySelector("#trending"), car: document.querySelector("#trending-carousel") },
     { sec: document.querySelector("#ai-cinema"), car: document.querySelector("#ai-carousel") },
-    { sec: document.querySelector("#bangla-gems"), car: document.querySelector("#bangla-carousel") },
-    { sec: document.querySelector("#mind-thrillers"), car: document.querySelector("#thrillers-carousel") }
+    { sec: document.querySelector("#bangla-cinema") || document.querySelector("#bangla-gems"), car: document.querySelector("#bangla-carousel") },
+    { sec: document.querySelector("#hindi-cinema"), car: document.querySelector("#hindi-carousel") },
+    { sec: document.querySelector("#thrillers-cinema") || document.querySelector("#mind-thrillers"), car: document.querySelector("#thrillers-carousel") }
   ];
 
   carousels.forEach(({ sec, car }) => {
@@ -1570,7 +1595,18 @@ function updateSourceToggleUI(isTrailerActive) {
   const toggleWrap = document.querySelector("#stream-source-toggle");
   const btnMovie = document.querySelector("#btn-toggle-movie");
   const btnTrailer = document.querySelector("#btn-toggle-trailer");
+  const btnServer = document.querySelector("#btn-server-tool");
   if (!toggleWrap || !btnMovie || !btnTrailer) return;
+
+  if (activeStream?.isBangla) {
+    toggleWrap.hidden = false;
+    btnMovie.classList.add("is-active");
+    btnTrailer.classList.remove("is-active");
+    if (btnServer) btnServer.style.display = "none";
+    return;
+  }
+
+  if (btnServer) btnServer.style.display = "";
 
   if (!activeStream?.tmdbId && activeStream?.type === "youtube") {
     toggleWrap.hidden = true;
@@ -1601,28 +1637,70 @@ function handleStreamErrorOrTimeout() {
     currentFailoverIndex++;
     loadSilentStreamEndpoint(currentFailoverIndex);
   } else {
-    // If all failover mirrors exhaust, fallback to custom whitelabel trailer/teaser
+    // If all failover mirrors exhaust, fallback cleanly without defaulting to Dune 2
     if (streamLoadingShield) streamLoadingShield.hidden = true;
     updateSourceToggleUI(true);
     if (activeStream?.trailerId) {
       loadCustomWhitelabelStream(activeStream.trailerId);
     } else if (activeStream?.tmdbId) {
       getTmdbTrailerId(activeStream.tmdbId, activeStream.type).then(tKey => {
-        if (tKey) loadCustomWhitelabelStream(tKey);
-        else notify("⚠️ This title is not yet available for streaming.");
+        if (tKey) {
+          activeStream.trailerId = tKey;
+          loadCustomWhitelabelStream(tKey);
+        } else {
+          notify("⚠️ This title is temporarily unavailable on streaming mirrors.");
+        }
       });
+    } else {
+      notify("⚠️ Video stream temporarily unavailable.");
     }
   }
 }
 
 // Master openStream function
 async function openStream(title, tmdbId, type = "movie", trailerId = "", isTrailer = false) {
-  activeStream = { title, tmdbId, type, trailerId, isTrailer };
+  const catalogEntry = (typeof BUILTIN_CATALOG !== "undefined" ? BUILTIN_CATALOG : []).find(
+    m => (m.title && m.title.toLowerCase() === (title || "").toLowerCase()) ||
+         (m.banglaTitle && title && title.includes(m.banglaTitle)) ||
+         (m.tmdbId && m.tmdbId === String(tmdbId))
+  );
+
+  const isBangla = Boolean(
+    type === "bangla" ||
+    catalogEntry?.bangla ||
+    /[\u0980-\u09FF]/.test(title || "") ||
+    (title && (
+      title.includes("Hawa") || title.includes("Priyotoma") || title.includes("Toofan") ||
+      title.includes("Aynabaji") || title.includes("Surongo") || title.includes("Shurongo") ||
+      title.includes("Poran") || title.includes("Monpura") || title.includes("Pather Panchali") ||
+      title.includes("Dipu Number") || title.includes("Aguner Poroshmoni") || title.includes("Chhutir Ghonta")
+    ))
+  );
+
+  activeStream = { title, tmdbId, type, trailerId, isTrailer, isBangla };
   currentFailoverIndex = 0;
 
   if (videoTitle) videoTitle.textContent = `Now Streaming: ${title}`;
 
-  // If trailerId is missing but we have a tmdbId, prefetch its trailer in background
+  // Bangla Movies Route DIRECTLY into BioscopeBD Whitelabel Custom Player Stage
+  if (isBangla) {
+    const videoKey = trailerId || catalogEntry?.trailerId;
+    activeStream.trailerId = videoKey;
+    updateSourceToggleUI(true);
+    if (videoKey) {
+      loadCustomWhitelabelStream(videoKey);
+      const engineBadge = document.querySelector("#stream-engine-badge");
+      if (engineBadge) engineBadge.textContent = "BioscopeBD Cinema Engine (HD)";
+    } else {
+      notify("⚠️ Video stream for this title is currently updating.");
+    }
+    startProgressTracking(title, tmdbId, type, videoKey);
+    populateXrayData(title);
+    if (videoDialog) videoDialog.showModal();
+    return;
+  }
+
+  // Non-Bangla movies
   if (!trailerId && tmdbId) {
     getTmdbTrailerId(tmdbId, type).then(tKey => {
       if (tKey && activeStream?.tmdbId === tmdbId) {
@@ -1635,7 +1713,21 @@ async function openStream(title, tmdbId, type = "movie", trailerId = "", isTrail
   updateSourceToggleUI(isTrailerMode);
 
   if (isTrailerMode) {
-    loadCustomWhitelabelStream(trailerId || "Way9Dexny3w");
+    const finalTrailer = trailerId || catalogEntry?.trailerId;
+    if (finalTrailer) {
+      loadCustomWhitelabelStream(finalTrailer);
+    } else if (tmdbId) {
+      getTmdbTrailerId(tmdbId, type).then(tKey => {
+        if (tKey) {
+          activeStream.trailerId = tKey;
+          loadCustomWhitelabelStream(tKey);
+        } else {
+          notify("⚠️ Official trailer currently unavailable.");
+        }
+      });
+    } else {
+      notify("⚠️ Video stream currently unavailable.");
+    }
   } else {
     stopCustomWhitelabelStream();
     loadSilentStreamEndpoint(0);
@@ -1656,6 +1748,13 @@ const btnToggleTrailer = document.querySelector("#btn-toggle-trailer");
 
 if (btnToggleMovie) {
   btnToggleMovie.addEventListener("click", () => {
+    if (activeStream?.isBangla) {
+      if (activeStream?.trailerId) {
+        loadCustomWhitelabelStream(activeStream.trailerId);
+        notify("🎬 Playing in BioscopeBD Cinema Player");
+      }
+      return;
+    }
     if (!activeStream?.tmdbId) return;
     activeStream.isTrailer = false;
     updateSourceToggleUI(false);
@@ -1667,23 +1766,31 @@ if (btnToggleMovie) {
 
 if (btnToggleTrailer) {
   btnToggleTrailer.addEventListener("click", () => {
+    if (activeStream?.isBangla) {
+      if (activeStream?.trailerId) {
+        loadCustomWhitelabelStream(activeStream.trailerId);
+        notify("🎞️ Playing in BioscopeBD Cinema Player");
+      }
+      return;
+    }
     activeStream.isTrailer = true;
     updateSourceToggleUI(true);
     if (activeStream?.trailerId) {
       loadCustomWhitelabelStream(activeStream.trailerId);
+      notify("🎞️ Switched to Official High-Definition Teaser");
     } else if (activeStream?.tmdbId) {
       getTmdbTrailerId(activeStream.tmdbId, activeStream.type).then(tKey => {
         if (tKey) {
           activeStream.trailerId = tKey;
           loadCustomWhitelabelStream(tKey);
+          notify("🎞️ Switched to Official High-Definition Teaser");
         } else {
-          loadCustomWhitelabelStream("Way9Dexny3w");
+          notify("⚠️ Official teaser not available for this title.");
         }
       });
     } else {
-      loadCustomWhitelabelStream("Way9Dexny3w");
+      notify("⚠️ Official teaser not available for this title.");
     }
-    notify("🎞️ Switched to Official High-Definition Teaser");
   });
 }
 
@@ -2224,8 +2331,8 @@ function bindCardInteractions(container) {
     btn.dataset.bound = "true";
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
-      const isAi = btn.dataset.type === "youtube" || !btn.dataset.tmdb;
-      openStream(btn.dataset.title, btn.dataset.tmdb, btn.dataset.type, btn.dataset.trailer, isAi);
+      const isCustom = btn.dataset.type === "youtube" || btn.dataset.type === "bangla" || btn.dataset.bangla === "true" || !btn.dataset.tmdb;
+      openStream(btn.dataset.title, btn.dataset.tmdb, btn.dataset.type, btn.dataset.trailer, isCustom);
     });
   });
 
@@ -2233,8 +2340,8 @@ function bindCardInteractions(container) {
     if (card.dataset.bound) return;
     card.dataset.bound = "true";
     card.addEventListener("click", () => {
-      const isAi = card.dataset.type === "youtube" || !card.dataset.tmdb;
-      openStream(card.dataset.title, card.dataset.tmdb, card.dataset.type, card.dataset.trailer, isAi);
+      const isCustom = card.dataset.type === "youtube" || card.dataset.type === "bangla" || card.dataset.bangla === "true" || !card.dataset.tmdb;
+      openStream(card.dataset.title, card.dataset.tmdb, card.dataset.type, card.dataset.trailer, isCustom);
     });
   });
 }
@@ -2689,11 +2796,29 @@ function loadTheatreScreen(title, tmdbId, type = "movie", trailerId = "") {
   if (!theatrePlayerFrame) return;
   if (theatreProjectorShield) theatreProjectorShield.hidden = false;
 
-  const isYoutube = type === "youtube" || !tmdbId;
+  const catalogEntry = (typeof BUILTIN_CATALOG !== "undefined" ? BUILTIN_CATALOG : []).find(
+    m => (m.title && m.title.toLowerCase() === (title || "").toLowerCase()) ||
+         (m.banglaTitle && title && title.includes(m.banglaTitle)) ||
+         (m.tmdbId && m.tmdbId === String(tmdbId))
+  );
+
+  const isBangla = Boolean(
+    type === "bangla" ||
+    catalogEntry?.bangla ||
+    /[\u0980-\u09FF]/.test(title || "") ||
+    (title && (
+      title.includes("Hawa") || title.includes("Priyotoma") || title.includes("Toofan") ||
+      title.includes("Aynabaji") || title.includes("Surongo") || title.includes("Shurongo") ||
+      title.includes("Poran") || title.includes("Monpura") || title.includes("Pather Panchali") ||
+      title.includes("Dipu Number") || title.includes("Aguner Poroshmoni") || title.includes("Chhutir Ghonta")
+    ))
+  );
+
+  const isYoutube = type === "youtube" || isBangla || !tmdbId;
   let url = "";
 
   if (isYoutube) {
-    const yId = trailerId || "Way9Dexny3w";
+    const yId = trailerId || catalogEntry?.trailerId || "K9W52rpdlLQ";
     url = `https://www.youtube-nocookie.com/embed/${yId}?autoplay=1&controls=1&rel=0&modestbranding=1&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`;
   } else {
     url = CONFIG.STREAM_SERVERS[0].getUrl(tmdbId, type);
