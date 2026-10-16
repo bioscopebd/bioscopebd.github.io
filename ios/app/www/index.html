@@ -1938,23 +1938,6 @@
         </div>
       </div>
       <div class="video-dialog__header-right">
-        <!-- Silent stream status with Zero External Links/Server Menus -->
-        <div class="video-dialog__stream-status" id="video-stream-status">
-          <!-- Interactive Resolution Selector (Min to Max) -->
-          <div class="quality-selector-wrap" id="quality-selector-wrap" title="Select Stream Resolution">
-            <span class="badge-dot"></span>
-            <select id="player-quality-picker" class="quality-picker-select" aria-label="Select stream resolution">
-              <option value="auto" selected>⚡ Auto (Buffer-Free)</option>
-              <option value="1080p">1080p (Full HD)</option>
-              <option value="720p">720p (HD Fast)</option>
-              <option value="4k">4K (Ultra HD)</option>
-              <option value="1440p">1440p (QHD)</option>
-              <option value="480p">480p (SD)</option>
-              <option value="360p">360p (Low Data)</option>
-            </select>
-          </div>
-          <span class="stream-badge stream-badge--engine" id="stream-engine-badge">Auto-Optimized Stream</span>
-        </div>
         <button class="video-dialog__close" id="video-dialog-close" type="button" aria-label="Close player">×</button>
       </div>
     </div>
@@ -2150,7 +2133,7 @@
           <span class="tool-icon">🎧</span>
           <span class="tool-label">Night Audio</span>
         </button>
-        <button type="button" class="player-tool-btn" id="btn-quality-tool" title="Cycle Resolution (360p - 4K)">
+        <button type="button" class="player-tool-btn" id="btn-quality-tool" title="Cycle Resolution (360p - 4K)" hidden>
           <span class="tool-icon">⚙️</span>
           <span class="tool-label">Quality: <strong id="toolbar-quality-label">AUTO</strong></span>
         </button>
