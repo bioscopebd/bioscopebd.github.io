@@ -130,14 +130,13 @@
         <span>BIOSCOPE<span class="text-accent">BD</span></span>
       </a>
       <div class="nav__menu" id="nav-menu">
-        <a href="#trending">Trending</a>
-        <a href="#bangla-cinema">🇧🇩 Bangla</a>
-        <a href="#hindi-cinema">🔥 Bollywood</a>
-        <a href="#hollywood-cinema">🇺🇸 Hollywood</a>
-        <a href="#anime-cinema">🇯🇵 Anime</a>
-        <a href="#east-asian-cinema">🇨🇳 East Asian</a>
-        <a href="#ai-cinema">AI Cinema <span class="badge-pill">NEW</span></a>
-        <a href="room/index.html" id="nav-rooms-link" onclick="window.location.href='room/index.html';">🏛️ Rooms <span class="badge-pill">LIVE</span></a>
+        <a href="#trending" class="nav-tab is-active" data-content-tab="all">All</a>
+        <a href="#movies" class="nav-tab" data-content-tab="movie">🎬 Movies</a>
+        <a href="#tv-series" class="nav-tab" data-content-tab="tv">📺 TV Series</a>
+        <a href="#bangla-cinema" class="nav-tab" data-content-tab="bangla">🎭 Bangla Drama</a>
+        <a href="#anime-cinema" class="nav-tab" data-content-tab="animation">🎨 Animation</a>
+        <a href="#ai-cinema" class="nav-tab" data-content-tab="ai">🤖 AI Cinema</a>
+        <a href="room/index.html" class="nav-tab" id="nav-rooms-link" onclick="window.location.href='room/index.html';">🏛️ Rooms <span class="badge-pill">LIVE</span></a>
       </div>
       <form class="nav__search" role="search" id="search-form">
         <label class="sr-only" for="site-search">Search movies, mood, or dialogue</label>
@@ -195,42 +194,6 @@
   </header>
 
   <main id="main">
-    <!-- 2. Featured hero -->
-    <section class="hero" aria-labelledby="hero-title">
-      <img class="hero__image" src="https://picsum.photos/seed/bioscope-hero/1800/1000" alt="Atmospheric cinematic landscape used as sample artwork" fetchpriority="high">
-      <div class="hero__shade"></div>
-      <div class="container hero__inner">
-        <div class="hero__content">
-          <p class="eyebrow"><span class="eyebrow__line"></span> Featured Premiere</p>
-          <h1 id="hero-title">THE LAST<br><span>HORIZON</span></h1>
-          <div class="hero__meta">
-            <span>2026</span><span class="meta-dot"></span>
-            <span>2h 18m</span><span class="meta-dot"></span>
-            <span class="tag">Sci-Fi</span><span class="tag">Adventure</span>
-            <span class="rating"><span aria-hidden="true">★</span> 8.7 <small>/ 10</small></span>
-            <span class="tag tag--feature">HD Multi-Server</span>
-          </div>
-          <p class="hero__synopsis">At the edge of a changing world, one journey becomes the story of a generation. A breathtaking voyage through time, memory, and everything we leave behind.</p>
-          <div class="hero__actions">
-            <button class="button button--primary" id="hero-watch-movie" type="button" data-title="Dune: Part Two" data-tmdb="693134" data-type="movie" data-trailer="Way9Dexny3w">
-              <svg viewBox="0 0 24 24" aria-hidden="true" style="width:18px;height:18px;margin-right:6px;fill:currentColor;"><path d="m8 5 11 7-11 7V5Z"/></svg>Watch Movie
-            </button>
-            <button class="button button--glass" id="hero-watch-trailer" type="button" data-title="Dune: Part Two" data-tmdb="693134" data-type="movie" data-trailer="Way9Dexny3w">
-              <svg viewBox="0 0 24 24" aria-hidden="true" style="width:18px;height:18px;margin-right:6px;fill:currentColor;"><path d="M10 9v6l5-3-5-3z"/></svg>Watch Trailer
-            </button>
-            <button class="button button--primary" id="hero-party-btn" type="button" data-title="Dune: Part Two" data-tmdb="693134">
-              <span aria-hidden="true">🍿</span> Host Watch Party
-            </button>
-            <button class="button button--glass" id="hero-watchlist" type="button" aria-pressed="false">
-              <span aria-hidden="true">＋</span> Watchlist
-            </button>
-          </div>
-          <p class="hero__sample">Multi-server playback with zero pop-up guarantee and subtitle synchronization.</p>
-        </div>
-      </div>
-      <span class="hero__index" aria-hidden="true">01 / 04</span>
-    </section>
-
     <!-- 2.1 Continue Watching (Dynamic Progress Resume) -->
     <section class="section container" id="continue-watching-section" aria-labelledby="continue-watching-title" hidden>
       <div class="section__heading">
@@ -807,19 +770,141 @@
     
     
     
-    <!-- 5. Japanese & Anime Cinema -->
+    <!-- TV Series & Web Shows -->
+    <section class="section container reveal" id="tv-series" aria-labelledby="tv-series-title">
+      <div class="section__heading">
+        <div>
+          <p class="eyebrow"><span class="eyebrow__line"></span> Seasons &amp; Episodes · জনপ্রিয় ওয়েব সিরিজ</p>
+          <h2 id="tv-series-title">📺 TV Series &amp; Web Shows</h2>
+        </div>
+        <div class="carousel__controls">
+          <button class="round-button" id="tv-prev" type="button" aria-label="Scroll TV series left">←</button>
+          <button class="round-button" id="tv-next" type="button" aria-label="Scroll TV series right">→</button>
+        </div>
+      </div>
+      <div class="carousel" id="tv-carousel" aria-label="TV Series and Web Shows">
+        <article class="movie-card" data-title="Breaking Bad" data-genre="Crime" data-genres="Crime Drama Thriller" data-mood="adrenaline mind-bending" data-tmdb="1396" data-trailer="HhesaQXLuRY" data-type="tv" data-duration="47" data-backdrop="https://image.tmdb.org/t/p/original/tsRy63Mu5cu8etL1X7ZLyf7UP1M.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/anFx9aTOOYqgS3v7x3R84Kz67ly.jpg" alt="Breaking Bad" loading="lazy">
+            <span class="movie-card__score">★ 9.5</span>
+            <span class="badge-studio" style="background:rgba(245,197,24,0.9);color:#000;">TV Series</span>
+            <div class="movie-card__overlay">
+              <p>★ 9.5 · 5 Seasons</p>
+              <button type="button" class="button button--primary quick-view" data-title="Breaking Bad">Seasons &amp; Episodes</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Breaking Bad" data-tmdb="1396" data-type="tv" data-trailer="HhesaQXLuRY">▶ S1 : E1</button>
+            </div>
+          </div>
+          <h3>Breaking Bad</h3>
+          <p>2008 · All 5 Seasons · Crime Drama</p>
+        </article>
+
+        <article class="movie-card" data-title="Game of Thrones" data-genre="Fantasy" data-genres="Fantasy Action Drama" data-mood="adrenaline mind-bending" data-tmdb="1399" data-trailer="KPLWWIOCOOQ" data-type="tv" data-duration="57" data-backdrop="https://image.tmdb.org/t/p/original/zZqpAXxVSBtxV9qPBcscfXBcL2w.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg" alt="Game of Thrones" loading="lazy">
+            <span class="movie-card__score">★ 9.3</span>
+            <span class="badge-studio" style="background:rgba(245,197,24,0.9);color:#000;">TV Series</span>
+            <div class="movie-card__overlay">
+              <p>★ 9.3 · 8 Seasons</p>
+              <button type="button" class="button button--primary quick-view" data-title="Game of Thrones">Seasons &amp; Episodes</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Game of Thrones" data-tmdb="1399" data-type="tv" data-trailer="KPLWWIOCOOQ">▶ S1 : E1</button>
+            </div>
+          </div>
+          <h3>Game of Thrones</h3>
+          <p>2011 · All 8 Seasons · HBO Epic</p>
+        </article>
+
+        <article class="movie-card" data-title="Stranger Things" data-genre="Sci-Fi" data-genres="Sci-Fi Drama Mystery Horror" data-mood="mind-bending adrenaline family" data-tmdb="66732" data-trailer="b9EkMc79ZSU" data-type="tv" data-duration="50" data-backdrop="https://image.tmdb.org/t/p/original/9P4IIMYY3HifqeruZq0ZZ9g7YUi.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/uOOtwVbSr4QDjAGIifLDwpb2Pdl.jpg" alt="Stranger Things" loading="lazy">
+            <span class="movie-card__score">★ 9.2</span>
+            <span class="badge-studio" style="background:rgba(245,197,24,0.9);color:#000;">TV Series</span>
+            <div class="movie-card__overlay">
+              <p>★ 9.2 · 4 Seasons</p>
+              <button type="button" class="button button--primary quick-view" data-title="Stranger Things">Seasons &amp; Episodes</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Stranger Things" data-tmdb="66732" data-type="tv" data-trailer="b9EkMc79ZSU">▶ S1 : E1</button>
+            </div>
+          </div>
+          <h3>Stranger Things</h3>
+          <p>2016 · 4 Seasons · Sci-Fi Mystery</p>
+        </article>
+
+        <article class="movie-card" data-title="Shōgun" data-genre="Drama" data-genres="Drama War History" data-mood="mind-bending adrenaline" data-tmdb="126308" data-trailer="yAN5uspAo8U" data-type="tv" data-duration="60" data-backdrop="https://image.tmdb.org/t/p/original/bwSmgmd90hCWwqOKQYTEraeOZhJ.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/7O4iVfOMQmdCSxhOg1WnzG1AgYT.jpg" alt="Shōgun" loading="lazy">
+            <span class="movie-card__score">★ 9.4</span>
+            <span class="badge-studio" style="background:rgba(245,197,24,0.9);color:#000;">TV Series</span>
+            <div class="movie-card__overlay">
+              <p>★ 9.4 · Season 1</p>
+              <button type="button" class="button button--primary quick-view" data-title="Shōgun">Seasons &amp; Episodes</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Shōgun" data-tmdb="126308" data-type="tv" data-trailer="yAN5uspAo8U">▶ S1 : E1</button>
+            </div>
+          </div>
+          <h3>Shōgun</h3>
+          <p>2024 · Masterpiece Drama · FX</p>
+        </article>
+
+        <article class="movie-card" data-title="Karagar (কারাগার)" data-genre="Mystery" data-genres="Mystery Thriller Drama Bangla" data-mood="mind-bending rainy" data-tmdb="208249" data-trailer="6xN9cT5Q6A4" data-type="tv" data-duration="35" data-backdrop="https://image.tmdb.org/t/p/original/8gT1vB4w5eJ3k0eH9Vf7o2bN.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/8gT1vB4w5eJ3k0eH9Vf7o2bN.jpg" alt="Karagar" loading="lazy">
+            <span class="movie-card__score">★ 9.1</span>
+            <span class="badge-studio" style="background:rgba(0,106,78,0.9);color:#f5c518;">Bangla Series</span>
+            <div class="movie-card__overlay">
+              <p>★ 9.1 · 2 Parts</p>
+              <button type="button" class="button button--primary quick-view" data-title="Karagar (কারাগার)">Seasons &amp; Episodes</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Karagar (কারাগার)" data-tmdb="208249" data-type="tv" data-trailer="6xN9cT5Q6A4">▶ S1 : E1</button>
+            </div>
+          </div>
+          <h3>Karagar (কারাগার)</h3>
+          <p>2022 · Chanchal Chowdhury · Hoichoi</p>
+        </article>
+      </div>
+    </section>
+    
+    
+    
+    <!-- 5. Animation & Anime Cinema -->
     <section class="section container reveal" id="anime-cinema" aria-labelledby="anime-title">
       <div class="section__heading">
         <div>
-          <p class="eyebrow"><span class="eyebrow__line"></span> Otaku &amp; Ghibli Masterpieces · জাপানি অ্যানিমে ও মাস্টারপিস</p>
-          <h2 id="anime-title">🇯🇵 Anime &amp; Japanese Cinema</h2>
+          <p class="eyebrow"><span class="eyebrow__line"></span> Animation &amp; Ghibli Masterpieces · অ্যানিমেশন ও অস্কার সেরা</p>
+          <h2 id="anime-title">🎨 Animation &amp; Anime Cinema</h2>
         </div>
         <div class="carousel__controls">
           <button class="round-button" id="anime-prev" type="button" aria-label="Scroll Anime movies left">←</button>
           <button class="round-button" id="anime-next" type="button" aria-label="Scroll Anime movies right">→</button>
         </div>
       </div>
-      <div class="carousel" id="anime-carousel" aria-label="Japanese and Anime movies">
+      <div class="carousel" id="anime-carousel" aria-label="Animation and Anime movies">
+        <article class="movie-card" data-title="Inside Out 2" data-genre="Animation" data-genres="Animation Family Adventure Comedy" data-mood="family feel-good" data-tmdb="1022789" data-trailer="LEjhY15eCx0" data-type="movie" data-duration="96" data-backdrop="https://image.tmdb.org/t/p/original/p5ozvmdgsmbWe0H8Xk7Rc8SCwAB.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/vpnVM9B6NMmQpWeZvzLvDESb2QY.jpg" alt="Inside Out 2" loading="lazy">
+            <span class="movie-card__score">★ 8.6</span>
+            <span class="badge-studio" style="background:rgba(255,107,107,0.9);color:#fff;">Disney Pixar</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.6 · Global Blockbuster</p>
+              <button type="button" class="button button--primary quick-view" data-title="Inside Out 2">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Inside Out 2" data-tmdb="1022789" data-type="movie" data-trailer="LEjhY15eCx0">▶ Play</button>
+            </div>
+          </div>
+          <h3>Inside Out 2</h3>
+          <p>2024 · Pixar All-Time #1 Animation</p>
+        </article>
+
+        <article class="movie-card" data-title="Moana 2" data-genre="Animation" data-genres="Animation Adventure Family Comedy" data-mood="family feel-good" data-tmdb="1241982" data-trailer="hDZ7y8RP5HE" data-type="movie" data-duration="100" data-backdrop="https://image.tmdb.org/t/p/original/tEWB3WvL4BwHq3aO13r7oG1gV2m.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/m0SbwFNCa9epWKA9AcMi9va0zy8.jpg" alt="Moana 2" loading="lazy">
+            <span class="movie-card__score">★ 8.4</span>
+            <span class="badge-studio" style="background:rgba(0,180,216,0.9);color:#fff;">Disney</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.4 · Ocean Adventure</p>
+              <button type="button" class="button button--primary quick-view" data-title="Moana 2">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Moana 2" data-tmdb="1241982" data-type="movie" data-trailer="hDZ7y8RP5HE">▶ Play</button>
+            </div>
+          </div>
+          <h3>Moana 2</h3>
+          <p>2024 · Disney Oceanic Journey</p>
+        </article>
+
         <article class="movie-card" data-title="Spirited Away" data-genre="Anime" data-genres="Animation Adventure Family Fantasy" data-mood="family feel-good" data-tmdb="129" data-trailer="ByXuk9QqQkk" data-type="movie" data-duration="125" data-anime="true" data-backdrop="https://image.tmdb.org/t/p/original/6oaL4DP75yABrd5EbC4H2zq5ghc.jpg">
           <div class="movie-card__media image-shell is-loaded">
             <img src="https://image.tmdb.org/t/p/w500/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg" alt="Spirited Away" loading="lazy">
@@ -2131,9 +2216,21 @@
       <div class="quick-reviews-list" id="quick-reviews-list"></div>
     </div>
 
+    <!-- TV Series Season & Episode Picker (Visible for TV Series) -->
+    <div class="quick-tv-seasons-box" id="quick-tv-seasons-box" hidden>
+      <div class="tv-season-tabs-header">
+        <span class="tv-season-label">📺 Select Season:</span>
+        <div class="tv-season-tabs" id="tv-season-tabs"></div>
+      </div>
+      <div class="tv-episodes-wrap">
+        <span class="tv-episodes-label" id="tv-episodes-label">Episodes:</span>
+        <div class="tv-episodes-grid" id="tv-episodes-grid"></div>
+      </div>
+    </div>
+
     <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">
       <button class="button button--primary" id="dialog-play-btn" type="button" style="flex:1;">
-        <svg viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px;margin-right:6px;fill:currentColor;"><path d="m8 5 11 7-11 7V5Z"/></svg>Watch Movie
+        <svg viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px;margin-right:6px;fill:currentColor;"><path d="m8 5 11 7-11 7V5Z"/></svg><span id="dialog-play-btn-text">Watch Movie</span>
       </button>
       <button class="button button--outline" id="dialog-watchlist-btn" type="button">＋ Watchlist</button>
       <button class="button button--outline" id="dialog-party-btn" type="button">🍿 Party</button>
@@ -2153,6 +2250,23 @@
         <div class="stream-source-toggle" id="stream-source-toggle">
           <button type="button" class="source-toggle-btn is-active" id="btn-toggle-movie" title="Switch to Full Movie Stream">🎬 Movie</button>
           <button type="button" class="source-toggle-btn" id="btn-toggle-trailer" title="Switch to Official Teaser">🎞️ Teaser</button>
+        </div>
+        <!-- In-Player TV Episode Controller (Visible only for TV series) -->
+        <div class="player-tv-controls" id="player-tv-controls" hidden>
+          <button type="button" class="player-tv-pill" id="player-tv-pill" title="Select Season & Episode">
+            <span>📺</span> <strong id="player-tv-current-ep">S1 : E1</strong> <span>▼</span>
+          </button>
+          <button type="button" class="player-tv-next-btn" id="player-tv-next-btn" title="Next Episode">
+            <span>Next Ep ⏭️</span>
+          </button>
+          <div class="player-tv-popover" id="player-tv-popover" hidden>
+            <div class="player-tv-popover-header">
+              <span>Seasons &amp; Episodes</span>
+              <button type="button" id="player-tv-popover-close">✕</button>
+            </div>
+            <div class="player-tv-seasons-row" id="player-tv-seasons-row"></div>
+            <div class="player-tv-episodes-list" id="player-tv-episodes-list"></div>
+          </div>
         </div>
       </div>
       <div class="video-dialog__header-right">

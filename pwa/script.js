@@ -606,6 +606,7 @@ const continueCarousel = document.querySelector("#continue-watching-carousel");
 const banglaCarousel = document.querySelector("#bangla-carousel");
 const hindiCarousel = document.querySelector("#hindi-carousel");
 const hollywoodCarousel = document.querySelector("#hollywood-carousel");
+const tvCarousel = document.querySelector("#tv-carousel");
 const animeCarousel = document.querySelector("#anime-carousel");
 const eastAsianCarousel = document.querySelector("#east-asian-carousel");
 const trendingCarousel = document.querySelector("#trending-carousel");
@@ -636,10 +637,12 @@ function createMovieCardHTML(movie) {
   const isHindi = Boolean(movie.hindi || (movie.genres && movie.genres.includes("Hindi")));
   const isAnime = Boolean(movie.anime);
   const isEastAsian = Boolean(movie.eastAsian);
+  const isTv = Boolean(movie.type === "tv" || movie.tv);
   const yearText = movie.year || "2024";
   const scoreText = movie.score ? `★ ${movie.score}` : "★ 8.5";
   const genresList = (movie.genres || [movie.genre || 'Cinema']).join(',');
   const backdropUrl = movie.backdrop || movie.poster || '';
+  const itemType = isTv ? "tv" : (isBangla ? "bangla" : (movie.type || "movie"));
 
   return `
     <article class="movie-card ${isAi ? 'movie-card--ai' : ''}" 
@@ -650,29 +653,31 @@ function createMovieCardHTML(movie) {
              data-duration="${movie.duration || 120}"
              data-tmdb="${movie.tmdbId || ''}" 
              data-trailer="${movie.trailerId || ''}" 
-             data-type="${isBangla ? 'bangla' : (movie.type || 'movie')}"
+             data-type="${itemType}"
              data-bangla="${isBangla}"
              data-hindi="${isHindi}"
              data-anime="${isAnime}"
              data-east-asian="${isEastAsian}"
+             data-tv="${isTv}"
              data-backdrop="${backdropUrl}"
              data-year="${yearText}">
       <div class="movie-card__media image-shell is-loaded">
         <img src="${movie.poster}" alt="${movie.title}" loading="lazy">
         <span class="movie-card__score">${scoreText}</span>
         ${isAi ? '<span class="badge-studio">Higgsfield AI</span>' : ''}
-        ${isBangla ? '<span class="badge-studio" style="background:rgba(0,106,78,0.9);color:#f5c518;">Bangla Cinema</span>' : ''}
+        ${isTv ? '<span class="badge-studio" style="background:rgba(245,197,24,0.9);color:#000;">TV Series</span>' : ''}
+        ${isBangla && !isTv ? '<span class="badge-studio" style="background:rgba(0,106,78,0.9);color:#f5c518;">Bangla Cinema</span>' : ''}
         ${isHindi ? '<span class="badge-studio" style="background:rgba(229,9,20,0.85);color:#fff;">Bollywood</span>' : ''}
         ${isAnime ? '<span class="badge-studio" style="background:rgba(238,68,102,0.9);color:#fff;">Anime</span>' : ''}
         ${isEastAsian ? '<span class="badge-studio" style="background:rgba(218,41,28,0.9);color:#f5c518;">East Asian</span>' : ''}
         <div class="movie-card__overlay">
-          <p>${scoreText} · ${movie.genre || 'Cinema'}</p>
-          <button type="button" class="button button--primary quick-view" data-title="${movie.title}">Quick View</button>
-          <button type="button" class="button button--glass card-play-btn" data-title="${movie.title}" data-tmdb="${movie.tmdbId || ''}" data-type="${isBangla ? 'bangla' : (movie.type || 'movie')}" data-trailer="${movie.trailerId || ''}">▶ Play</button>
+          <p>${scoreText} · ${isTv ? 'TV Series' : (movie.genre || 'Cinema')}</p>
+          <button type="button" class="button button--primary quick-view" data-title="${movie.title}">${isTv ? 'Seasons & Episodes' : 'Quick View'}</button>
+          <button type="button" class="button button--glass card-play-btn" data-title="${movie.title}" data-tmdb="${movie.tmdbId || ''}" data-type="${itemType}" data-trailer="${movie.trailerId || ''}">${isTv ? '▶ S1 : E1' : '▶ Play'}</button>
         </div>
       </div>
       <h3>${movie.title}</h3>
-      <p>${yearText} · ${movie.genre || 'Feature'}</p>
+      <p>${yearText} · ${isTv ? 'TV Series' : (movie.genre || 'Feature')}</p>
     </article>
   `;
 }
@@ -685,7 +690,7 @@ function hydrateContinueWatching() {
   }
   continueSection.hidden = false;
   continueCarousel.innerHTML = continueWatching.map(item => `
-    <article class="continue-card" data-title="${item.title}" data-tmdb="${item.tmdbId}" data-type="${item.type}" data-trailer="${item.trailerId}">
+    <article class="continue-card" data-title="${item.title}" data-tmdb="${item.tmdbId}" data-type="${item.type || 'movie'}" data-trailer="${item.trailerId}" data-season="${item.season || 1}" data-episode="${item.episode || 1}">
       <div class="continue-card__thumb">
         <img src="${item.poster || 'https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg'}" alt="${item.title}" loading="lazy">
         <button type="button" class="continue-card__play" aria-label="Resume ${item.title}">▶</button>
@@ -694,7 +699,7 @@ function hydrateContinueWatching() {
         </div>
       </div>
       <div class="continue-card__body">
-        <h4 class="continue-card__title">${item.title}</h4>
+        <h4 class="continue-card__title">${item.title} ${item.type === 'tv' ? `(S${item.season || 1}:E${item.episode || 1})` : ''}</h4>
         <p class="continue-card__meta">${item.percent || 25}% completed · Click to resume</p>
       </div>
     </article>
@@ -702,7 +707,16 @@ function hydrateContinueWatching() {
 
   continueCarousel.querySelectorAll(".continue-card").forEach(card => {
     card.addEventListener("click", () => {
-      openStream(card.dataset.title, card.dataset.tmdb, card.dataset.type, card.dataset.trailer, false, card.dataset.duration);
+      openStream(
+        card.dataset.title,
+        card.dataset.tmdb,
+        card.dataset.type,
+        card.dataset.trailer,
+        false,
+        card.dataset.duration,
+        parseInt(card.dataset.season, 10) || 1,
+        parseInt(card.dataset.episode, 10) || 1
+      );
     });
   });
 }
@@ -737,10 +751,20 @@ function hydrateHollywoodSection() {
   initImageLoading();
 }
 
+function hydrateTvSeriesSection() {
+  if (!tvCarousel) return;
+  if (tvCarousel.querySelectorAll(".movie-card").length === 0) {
+    const tvSeries = BUILTIN_CATALOG.filter(m => m.type === "tv" || m.tv);
+    tvCarousel.innerHTML = tvSeries.map(createMovieCardHTML).join("");
+  }
+  bindCardInteractions(tvCarousel);
+  initImageLoading();
+}
+
 function hydrateAnimeSection() {
   if (!animeCarousel) return;
   if (animeCarousel.querySelectorAll(".movie-card").length === 0) {
-    const animeMovies = BUILTIN_CATALOG.filter(m => m.anime);
+    const animeMovies = BUILTIN_CATALOG.filter(m => m.anime || m.animation || m.genre === 'Animation');
     animeCarousel.innerHTML = animeMovies.map(createMovieCardHTML).join("");
   }
   bindCardInteractions(animeCarousel);
@@ -915,6 +939,7 @@ initCarouselNav("#ai-carousel", "#ai-prev", "#ai-next");
 initCarouselNav("#bangla-carousel", "#bangla-prev", "#bangla-next");
 initCarouselNav("#hindi-carousel", "#hindi-prev", "#hindi-next");
 initCarouselNav("#hollywood-carousel", "#hollywood-prev", "#hollywood-next");
+initCarouselNav("#tv-carousel", "#tv-prev", "#tv-next");
 initCarouselNav("#anime-carousel", "#anime-prev", "#anime-next");
 initCarouselNav("#east-asian-carousel", "#east-asian-prev", "#east-asian-next");
 initCarouselNav("#thrillers-carousel", "#thrillers-prev", "#thrillers-next");
@@ -958,6 +983,7 @@ hydrateContinueWatching();
 hydrateBanglaSection();
 hydrateHindiSection();
 hydrateHollywoodSection();
+hydrateTvSeriesSection();
 hydrateAnimeSection();
 hydrateEastAsianSection();
 hydrateThrillersSection();
@@ -1015,17 +1041,18 @@ function searchCatalogPrefix(query) {
     }
 
     if (score > 0) {
+      const isTv = movie.type === "tv" || Boolean(movie.tv);
       seen.add(title);
       ranked.push({
         score,
         title: movie.title,
         year: movie.year || "2024",
         tmdb: movie.tmdbId || "",
-        type: movie.type || "movie",
+        type: isTv ? "tv" : (movie.type || "movie"),
         trailer: movie.trailerId || "",
         poster: movie.poster,
         rating: movie.score ? `★ ${movie.score}` : "★ 8.5",
-        badge: movie.genre || "Feature",
+        badge: isTv ? "TV Series" : (movie.genre || "Feature"),
         isAi: movie.genre === "AI Cinema" || movie.id?.startsWith("higgs")
       });
     }
@@ -1101,7 +1128,11 @@ function renderAutocompleteDropdown(results, query, isLoading = false) {
       const tmdb = el.dataset.tmdb;
       const type = el.dataset.type;
       const trailer = el.dataset.trailer;
-      openStream(title, tmdb, type, trailer);
+      if (type === "tv") {
+        openQuickView(title, { tmdbId: tmdb, type: "tv", trailerId: trailer });
+      } else {
+        openStream(title, tmdb, type, trailer);
+      }
       searchDropdown.hidden = true;
     });
   });
@@ -1768,6 +1799,40 @@ window.addEventListener("message", (event) => {
   } catch (_) {}
 });
 
+// TV Series Season & Episode Cache & TMDB API Fetchers
+const tvDetailsCache = {};
+const tvSeasonCache = {};
+
+async function fetchTmdbTvDetails(tmdbId) {
+  if (!tmdbId) return null;
+  if (tvDetailsCache[tmdbId]) return tvDetailsCache[tmdbId];
+  try {
+    const res = await fetch(`https://api.themoviedb.org/3/tv/${tmdbId}?api_key=${CONFIG.TMDB_API_KEY}&language=en-US`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    tvDetailsCache[tmdbId] = data;
+    return data;
+  } catch (e) {
+    console.warn("TMDB TV fetch error:", e);
+    return null;
+  }
+}
+
+async function fetchTmdbSeasonEpisodes(tmdbId, seasonNumber) {
+  const cacheKey = `${tmdbId}_s${seasonNumber}`;
+  if (tvSeasonCache[cacheKey]) return tvSeasonCache[cacheKey];
+  try {
+    const res = await fetch(`https://api.themoviedb.org/3/tv/${tmdbId}/season/${seasonNumber}?api_key=${CONFIG.TMDB_API_KEY}&language=en-US`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    tvSeasonCache[cacheKey] = data.episodes || [];
+    return tvSeasonCache[cacheKey];
+  } catch (e) {
+    console.warn("TMDB Season fetch error:", e);
+    return null;
+  }
+}
+
 // Silent Auto-Server Engine with Failover
 function loadSilentStreamEndpoint(failoverIndex = 0) {
   clearTimeout(failoverTimer);
@@ -1800,7 +1865,12 @@ function loadSilentStreamEndpoint(failoverIndex = 0) {
       handleStreamErrorOrTimeout();
     };
 
-    videoFrame.src = currentProvider.getUrl(activeStream.tmdbId, activeStream.type);
+    videoFrame.src = currentProvider.getUrl(
+      activeStream.tmdbId,
+      activeStream.type,
+      activeStream.season || 1,
+      activeStream.episode || 1
+    );
 
     // Auto Server Failover: smoothly switch to next mirror if server handshake stalls past 6.5s
     failoverTimer = setTimeout(() => {
@@ -1883,8 +1953,119 @@ function handleStreamErrorOrTimeout() {
   }
 }
 
+// In-Player TV Episode Switcher
+function switchPlayerTvEpisode(season, episode) {
+  if (!activeStream) return;
+  activeStream.season = parseInt(season, 10) || 1;
+  activeStream.episode = parseInt(episode, 10) || 1;
+  const playerTvCurrentEp = document.querySelector("#player-tv-current-ep");
+  if (playerTvCurrentEp) {
+    playerTvCurrentEp.textContent = `S${activeStream.season} : E${activeStream.episode}`;
+  }
+  const popover = document.querySelector("#player-tv-popover");
+  if (popover) popover.hidden = true;
+  if (videoTitle) {
+    videoTitle.textContent = `Now Streaming: ${activeStream.title} (S${activeStream.season}:E${activeStream.episode})`;
+  }
+  loadSilentStreamEndpoint(0);
+  notify(`📺 Switched to Season ${activeStream.season}, Episode ${activeStream.episode}`);
+}
+
+async function renderPlayerTvPopover(streamInfo) {
+  const popover = document.querySelector("#player-tv-popover");
+  const seasonsRow = document.querySelector("#player-tv-seasons-row");
+  const epList = document.querySelector("#player-tv-episodes-list");
+  if (!seasonsRow || !epList) return;
+
+  const tmdbId = streamInfo.tmdbId;
+  const currentSeason = streamInfo.season || 1;
+
+  seasonsRow.innerHTML = `<span style="font-size:0.72rem;color:var(--color-muted);padding:4px;">Loading...</span>`;
+  const tvData = await fetchTmdbTvDetails(tmdbId);
+  const seasons = (tvData?.seasons && tvData.seasons.filter(s => s.season_number > 0)) || [
+    { season_number: 1, name: "Season 1" },
+    { season_number: 2, name: "Season 2" },
+    { season_number: 3, name: "Season 3" }
+  ];
+
+  let selectedSeason = currentSeason;
+
+  function renderSeasons() {
+    seasonsRow.innerHTML = seasons.map(s => `
+      <button type="button" class="tv-season-btn ${s.season_number === selectedSeason ? 'is-active' : ''}" data-season="${s.season_number}">
+        S${s.season_number}
+      </button>
+    `).join("");
+
+    seasonsRow.querySelectorAll(".tv-season-btn").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        selectedSeason = parseInt(btn.dataset.season, 10);
+        renderSeasons();
+        loadEpisodes(selectedSeason);
+      });
+    });
+  }
+
+  async function loadEpisodes(sNumber) {
+    epList.innerHTML = `<div style="padding:10px;text-align:center;color:var(--color-muted);font-size:0.75rem;">Loading episodes...</div>`;
+    const eps = await fetchTmdbSeasonEpisodes(tmdbId, sNumber);
+    const epArray = (eps && eps.length) ? eps : Array.from({ length: 8 }, (_, i) => ({
+      episode_number: i + 1,
+      name: `Episode ${i + 1}`
+    }));
+
+    epList.innerHTML = epArray.map(ep => `
+      <div class="tv-episode-item ${sNumber === activeStream?.season && ep.episode_number === activeStream?.episode ? 'is-active' : ''}" data-season="${sNumber}" data-episode="${ep.episode_number}">
+        <strong>E${ep.episode_number}</strong>
+        <span>${ep.name || `Episode ${ep.episode_number}`}</span>
+      </div>
+    `).join("");
+
+    epList.querySelectorAll(".tv-episode-item").forEach(item => {
+      item.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const s = parseInt(item.dataset.season, 10);
+        const ep = parseInt(item.dataset.episode, 10);
+        switchPlayerTvEpisode(s, ep);
+      });
+    });
+  }
+
+  renderSeasons();
+  loadEpisodes(currentSeason);
+}
+
+// In-Player TV Episode Controls Listeners
+const playerTvPill = document.querySelector("#player-tv-pill");
+const playerTvNextBtn = document.querySelector("#player-tv-next-btn");
+const playerTvPopover = document.querySelector("#player-tv-popover");
+const playerTvPopoverClose = document.querySelector("#player-tv-popover-close");
+
+if (playerTvPill && playerTvPopover) {
+  playerTvPill.addEventListener("click", (e) => {
+    e.stopPropagation();
+    playerTvPopover.hidden = !playerTvPopover.hidden;
+  });
+}
+
+if (playerTvPopoverClose && playerTvPopover) {
+  playerTvPopoverClose.addEventListener("click", (e) => {
+    e.stopPropagation();
+    playerTvPopover.hidden = true;
+  });
+}
+
+if (playerTvNextBtn) {
+  playerTvNextBtn.addEventListener("click", () => {
+    if (!activeStream || activeStream.type !== "tv") return;
+    const nextEp = (activeStream.episode || 1) + 1;
+    switchPlayerTvEpisode(activeStream.season || 1, nextEp);
+  });
+}
+
 // Master openStream function
-async function openStream(title, tmdbId, type = "movie", trailerId = "", isTrailer = false, duration = 0) {
+async function openStream(title, tmdbId, type = "movie", trailerId = "", isTrailer = false, duration = 0, season = 1, episode = 1) {
   const catalogEntry = (typeof BUILTIN_CATALOG !== "undefined" ? BUILTIN_CATALOG : []).find(
     m => (m.title && m.title.toLowerCase() === (title || "").toLowerCase()) ||
          (m.banglaTitle && title && title.includes(m.banglaTitle)) ||
@@ -1901,22 +2082,45 @@ async function openStream(title, tmdbId, type = "movie", trailerId = "", isTrail
     }
   }
 
+  const isTv = type === "tv" || Boolean(catalogEntry?.tv);
+  const sNum = parseInt(season, 10) || 1;
+  const eNum = parseInt(episode, 10) || 1;
+
   const isBangla = Boolean(
-    type === "bangla" ||
-    catalogEntry?.bangla ||
-    /[\u0980-\u09FF]/.test(title || "") ||
-    (title && (
-      title.includes("Hawa") || title.includes("Priyotoma") || title.includes("Toofan") ||
-      title.includes("Aynabaji") || title.includes("Surongo") || title.includes("Shurongo") ||
-      title.includes("Poran") || title.includes("Monpura") || title.includes("Pather Panchali") ||
-      title.includes("Dipu Number") || title.includes("Aguner Poroshmoni") || title.includes("Chhutir Ghonta")
-    ))
+    !isTv && (
+      type === "bangla" ||
+      catalogEntry?.bangla ||
+      /[\u0980-\u09FF]/.test(title || "") ||
+      (title && (
+        title.includes("Hawa") || title.includes("Priyotoma") || title.includes("Toofan") ||
+        title.includes("Aynabaji") || title.includes("Surongo") || title.includes("Shurongo") ||
+        title.includes("Poran") || title.includes("Monpura") || title.includes("Pather Panchali") ||
+        title.includes("Dipu Number") || title.includes("Aguner Poroshmoni") || title.includes("Chhutir Ghonta")
+      ))
+    )
   );
 
-  activeStream = { title, tmdbId, type, trailerId, isTrailer, isBangla, duration: streamDurationSeconds };
+  activeStream = { title, tmdbId, type: isTv ? "tv" : type, trailerId, isTrailer, isBangla, duration: streamDurationSeconds, season: sNum, episode: eNum };
   currentFailoverIndex = 0;
 
-  if (videoTitle) videoTitle.textContent = `Now Streaming: ${title}`;
+  if (videoTitle) {
+    videoTitle.textContent = isTv ? `Now Streaming: ${title} (S${sNum}:E${eNum})` : `Now Streaming: ${title}`;
+  }
+
+  // Update in-player TV Episode Controls
+  const playerTvControls = document.querySelector("#player-tv-controls");
+  const playerTvCurrentEp = document.querySelector("#player-tv-current-ep");
+  if (playerTvPopover) playerTvPopover.hidden = true;
+
+  if (playerTvControls) {
+    if (isTv) {
+      playerTvControls.hidden = false;
+      if (playerTvCurrentEp) playerTvCurrentEp.textContent = `S${sNum} : E${eNum}`;
+      renderPlayerTvPopover(activeStream);
+    } else {
+      playerTvControls.hidden = true;
+    }
+  }
 
   // Bangla Movies Route DIRECTLY into BioscopeBD Whitelabel Custom Player Stage
   if (isBangla) {
@@ -1930,7 +2134,7 @@ async function openStream(title, tmdbId, type = "movie", trailerId = "", isTrail
     } else {
       notify("⚠️ Video stream for this title is currently updating.");
     }
-    startProgressTracking(title, tmdbId, type, videoKey);
+    startProgressTracking(title, tmdbId, type, videoKey, sNum, eNum);
     populateXrayData(title);
     if (videoDialog) videoDialog.showModal();
     return;
@@ -1970,7 +2174,7 @@ async function openStream(title, tmdbId, type = "movie", trailerId = "", isTrail
   }
 
   // Start tracking Continue Watching progress
-  startProgressTracking(title, tmdbId, type, trailerId);
+  startProgressTracking(title, tmdbId, activeStream.type, trailerId, sNum, eNum);
 
   // Populate X-Ray data
   populateXrayData(title);
@@ -2045,7 +2249,7 @@ if (btnServerTool) {
   });
 }
 
-function startProgressTracking(title, tmdbId, type, trailerId) {
+function startProgressTracking(title, tmdbId, type, trailerId, season = 1, episode = 1) {
   stopProgressTracking();
   let elapsed = 0;
   progressTrackingInterval = setInterval(() => {
@@ -2061,6 +2265,8 @@ function startProgressTracking(title, tmdbId, type, trailerId) {
       tmdbId: tmdbId || "",
       type: type || "movie",
       trailerId: trailerId || "",
+      season: season || 1,
+      episode: episode || 1,
       poster: BUILTIN_CATALOG.find(m => m.title === title)?.poster || "https://picsum.photos/seed/cinema/300/450",
       currentTime: currentSec,
       duration: durationSec,
@@ -2397,6 +2603,75 @@ function setAdvisoryBadge(el, level) {
   el.className = `advisory-badge advisory-badge--${level.toLowerCase()}`;
 }
 
+// Quick TV Seasons UI renderer
+async function renderQuickTvSeasons(movie) {
+  const tabsContainer = document.querySelector("#tv-season-tabs");
+  const gridContainer = document.querySelector("#tv-episodes-grid");
+  const epLabel = document.querySelector("#tv-episodes-label");
+  if (!tabsContainer || !gridContainer) return;
+
+  tabsContainer.innerHTML = `<span style="font-size:0.75rem;color:var(--color-muted);">Loading seasons...</span>`;
+  gridContainer.innerHTML = `<div style="padding:15px;color:var(--color-muted);font-size:0.78rem;">Loading episodes...</div>`;
+
+  const tmdbId = movie.tmdbId;
+  const tvData = await fetchTmdbTvDetails(tmdbId);
+  const seasons = (tvData?.seasons && tvData.seasons.filter(s => s.season_number > 0)) || [
+    { season_number: 1, name: "Season 1" },
+    { season_number: 2, name: "Season 2" },
+    { season_number: 3, name: "Season 3" }
+  ];
+
+  let activeSeason = 1;
+
+  function renderSeasonButtons() {
+    tabsContainer.innerHTML = seasons.map(s => `
+      <button type="button" class="tv-season-btn ${s.season_number === activeSeason ? 'is-active' : ''}" data-season="${s.season_number}">
+        Season ${s.season_number}
+      </button>
+    `).join("");
+
+    tabsContainer.querySelectorAll(".tv-season-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        activeSeason = parseInt(btn.dataset.season, 10);
+        renderSeasonButtons();
+        loadEpisodes(activeSeason);
+      });
+    });
+  }
+
+  async function loadEpisodes(sNum) {
+    if (epLabel) epLabel.textContent = `Season ${sNum} Episodes:`;
+    gridContainer.innerHTML = `<div style="padding:15px;color:var(--color-muted);font-size:0.78rem;">Loading Season ${sNum} episodes...</div>`;
+    const eps = await fetchTmdbSeasonEpisodes(tmdbId, sNum);
+    const epArray = (eps && eps.length) ? eps : Array.from({ length: 8 }, (_, i) => ({
+      episode_number: i + 1,
+      name: `Episode ${i + 1}`,
+      runtime: movie.duration || 45
+    }));
+
+    gridContainer.innerHTML = epArray.map(ep => `
+      <button type="button" class="tv-ep-card" data-season="${sNum}" data-episode="${ep.episode_number}" data-runtime="${ep.runtime || 45}">
+        <strong>Ep ${ep.episode_number}</strong>
+        <span>${ep.name || `Episode ${ep.episode_number}`}</span>
+      </button>
+    `).join("");
+
+    gridContainer.querySelectorAll(".tv-ep-card").forEach(card => {
+      card.addEventListener("click", () => {
+        const s = parseInt(card.dataset.season, 10);
+        const e = parseInt(card.dataset.episode, 10);
+        const dur = parseInt(card.dataset.runtime, 10) || 45;
+        if (quickDialog) quickDialog.close();
+        openStream(movie.title, movie.tmdbId, "tv", movie.trailerId, false, dur, s, e);
+        notify(`▶ Playing ${movie.title} - Season ${s}, Episode ${e}`);
+      });
+    });
+  }
+
+  renderSeasonButtons();
+  loadEpisodes(activeSeason);
+}
+
 function openQuickView(movieTitle, movieData = null) {
   let m = BUILTIN_CATALOG.find(item => item.title === movieTitle);
   if (!m) {
@@ -2424,7 +2699,7 @@ function openQuickView(movieTitle, movieData = null) {
   if (quickDialogCast) quickDialogCast.innerHTML = `<strong>Cast:</strong> ${m.cast || 'Ensemble cast'}`;
   if (quickDuration) quickDuration.textContent = m.duration ? `${Math.floor(m.duration / 60)}h ${m.duration % 60}m` : "2h 15m";
   if (quickRating) quickRating.textContent = `★ ${m.score || '8.5'}`;
-  if (quickGenre) quickGenre.textContent = m.genre || "Feature";
+  if (quickGenre) quickGenre.textContent = (m.type === "tv" || m.tv) ? "TV Series" : (m.genre || "Feature");
 
   // Parents Guide Content Advisory
   const pg = m.parentsGuide || { nudity: "None", violence: "Mild", profanity: "None" };
@@ -2437,6 +2712,20 @@ function openQuickView(movieTitle, movieData = null) {
   updateStarRatingUI(currentRate);
 
   renderMovieReviews(m.title);
+
+  // Quick TV Seasons & Episodes Picker
+  const quickTvBox = document.querySelector("#quick-tv-seasons-box");
+  const isTvSeries = m.type === "tv" || Boolean(m.tv);
+  if (quickTvBox) {
+    if (isTvSeries) {
+      quickTvBox.hidden = false;
+      renderQuickTvSeasons(m);
+      if (dialogPlayBtn) dialogPlayBtn.textContent = "▶ Watch Series (S1 : E1)";
+    } else {
+      quickTvBox.hidden = true;
+      if (dialogPlayBtn) dialogPlayBtn.textContent = "▶ Watch Movie";
+    }
+  }
 
   if (quickDialog) quickDialog.showModal();
 }
@@ -2507,7 +2796,17 @@ if (dialogPlayBtn && quickDialog) {
   dialogPlayBtn.addEventListener("click", () => {
     quickDialog.close();
     if (currentQuickMovie) {
-      openStream(currentQuickMovie.title, currentQuickMovie.tmdbId, currentQuickMovie.type, currentQuickMovie.trailerId, false, currentQuickMovie.duration);
+      const isTv = currentQuickMovie.type === "tv" || Boolean(currentQuickMovie.tv);
+      openStream(
+        currentQuickMovie.title,
+        currentQuickMovie.tmdbId,
+        isTv ? "tv" : currentQuickMovie.type,
+        currentQuickMovie.trailerId,
+        false,
+        currentQuickMovie.duration,
+        1,
+        1
+      );
     }
   });
 }
@@ -4438,3 +4737,43 @@ window.Capacitor?.Plugins?.App?.addListener("backButton", ({ canGoBack }) => {
   if (canGoBack) { history.back(); return; }
   window.Capacitor.Plugins.App.exitApp();
 });
+
+// ==========================================================================
+// Top Navigation Content Format Tabs Handler (All, Movies, TV Series, Bangla Drama, Animation, AI Cinema)
+// ==========================================================================
+function initNavContentTabs() {
+  const tabs = document.querySelectorAll(".nav-tab");
+  if (!tabs.length) return;
+
+  tabs.forEach(tab => {
+    tab.addEventListener("click", (e) => {
+      const tabType = tab.dataset.contentTab;
+      if (!tabType || tabType === "room") return; // Allow natural navigation to room/index.html
+      e.preventDefault();
+
+      tabs.forEach(t => t.classList.remove("is-active"));
+      tab.classList.add("is-active");
+
+      let targetEl = null;
+      if (tabType === "all") targetEl = document.querySelector("#trending");
+      else if (tabType === "movie") targetEl = document.querySelector("#trending");
+      else if (tabType === "tv") targetEl = document.querySelector("#tv-series");
+      else if (tabType === "bangla") targetEl = document.querySelector("#bangla-cinema");
+      else if (tabType === "animation") targetEl = document.querySelector("#anime-cinema");
+      else if (tabType === "ai") targetEl = document.querySelector("#ai-cinema");
+
+      if (targetEl) {
+        const headerOffset = 135;
+        const elementPosition = targetEl.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+        window.scrollTo({
+          top: Math.max(0, offsetPosition),
+          behavior: "smooth"
+        });
+      }
+    });
+  });
+}
+
+initNavContentTabs();
+
