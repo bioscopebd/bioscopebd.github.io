@@ -2262,12 +2262,10 @@ const partyDialog = document.querySelector("#party-dialog"); // legacy fallback
 const tabLoungeHalls = document.querySelector("#hub-tab-halls");
 const tabLoungeHost = document.querySelector("#hub-host-party-btn");
 const tabLoungeJoin = document.querySelector("#hub-join-party-btn");
-const tabLoungeSwipe = document.querySelector("#hub-tab-swipe");
 
 const panelLoungeHalls = document.querySelector("#panel-lounge-halls");
 const panelLoungeHost = document.querySelector("#panel-lounge-host");
 const panelLoungeJoin = document.querySelector("#panel-lounge-join");
-const panelLoungeSwipe = document.querySelector("#panel-lounge-swipe");
 
 const visPublicRadio = document.querySelector("#vis-public-radio");
 const visPrivateRadio = document.querySelector("#vis-private-radio");
@@ -2417,8 +2415,7 @@ function switchLoungeTab(tabName) {
   const tabs = [
     { name: "halls", btn: tabLoungeHalls, panel: panelLoungeHalls },
     { name: "host", btn: tabLoungeHost, panel: panelLoungeHost },
-    { name: "join", btn: tabLoungeJoin, panel: panelLoungeJoin },
-    { name: "swipe", btn: tabLoungeSwipe, panel: panelLoungeSwipe }
+    { name: "join", btn: tabLoungeJoin, panel: panelLoungeJoin }
   ];
 
   tabs.forEach(t => {
@@ -2440,13 +2437,11 @@ function switchLoungeTab(tabName) {
       if (joinRoomInput) joinRoomInput.focus();
     }, 120);
   }
-  if (tabName === "swipe") initSwipeToMatch();
 }
 
 if (tabLoungeHalls) tabLoungeHalls.addEventListener("click", () => switchLoungeTab("halls"));
 if (tabLoungeHost) tabLoungeHost.addEventListener("click", () => switchLoungeTab("host"));
 if (tabLoungeJoin) tabLoungeJoin.addEventListener("click", () => switchLoungeTab("join"));
-if (tabLoungeSwipe) tabLoungeSwipe.addEventListener("click", () => switchLoungeTab("swipe"));
 
 // Public vs Private Visibility Selection in Host Panel
 function updateVisibilityToggle() {
@@ -3252,75 +3247,6 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   } catch (_) {}
 });
-
-// Swipe to Match Group Movie Picker
-const swipeCardImg = document.querySelector("#swipe-card-img");
-const swipeCardTitle = document.querySelector("#swipe-card-title");
-const swipeCardDesc = document.querySelector("#swipe-card-desc");
-const btnSwipePass = document.querySelector("#btn-swipe-pass");
-const btnSwipeMatch = document.querySelector("#btn-swipe-match");
-const swipeTopMatch = document.querySelector("#swipe-top-match");
-const btnLaunchMatchedMovie = document.querySelector("#btn-launch-matched-movie");
-
-const swipeDeck = [
-  { title: "Dune: Part Two", genre: "Sci-Fi Epic", score: "★ 8.7", poster: "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg", tmdbId: "693134", type: "movie", trailerId: "Way9Dexny3w" },
-  { title: "Oppenheimer", genre: "Thriller Drama", score: "★ 8.9", poster: "https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg", tmdbId: "872585", type: "movie", trailerId: "uYPbbksJxIg" },
-  { title: "Hawa (হাওয়া)", genre: "Bangla Mystery", score: "★ 8.5", poster: "https://image.tmdb.org/t/p/w500/0oXq2Zf0X02b2j6kK1LqWbYxM2s.jpg", tmdbId: "1009187", type: "movie", trailerId: "0YvVw1E5pE0" },
-  { title: "John Wick: Chapter 4", genre: "Adrenaline Action", score: "★ 8.2", poster: "https://image.tmdb.org/t/p/w500/vZloFAK7NKnMGKEslUsZloNXzBP.jpg", tmdbId: "603692", type: "movie", trailerId: "qEVUtrk8_B4" },
-  { title: "The Trigger", genre: "Higgsfield AI", score: "★ 9.1", poster: "https://picsum.photos/seed/trigger/500/750", tmdbId: "", type: "youtube", trailerId: "IAl240xpSGM" }
-];
-let currentSwipeIndex = 0;
-let swipeScores = {};
-
-function initSwipeToMatch() {
-  currentSwipeIndex = 0;
-  swipeScores = {};
-  swipeDeck.forEach(m => { swipeScores[m.title] = 0; });
-  renderActiveSwipeCard();
-}
-
-function renderActiveSwipeCard() {
-  if (currentSwipeIndex >= swipeDeck.length) {
-    // Determine winner
-    let topTitle = swipeDeck[0].title;
-    let maxPts = -1;
-    for (const [title, pts] of Object.entries(swipeScores)) {
-      if (pts > maxPts) { maxPts = pts; topTitle = title; }
-    }
-    const matchedMovie = swipeDeck.find(m => m.title === topTitle);
-    if (swipeTopMatch) swipeTopMatch.textContent = `🎉 Match Found: ${topTitle}!`;
-    if (btnLaunchMatchedMovie) {
-      btnLaunchMatchedMovie.hidden = false;
-      btnLaunchMatchedMovie.onclick = () => {
-        if (partyDialog) partyDialog.close();
-        openStream(matchedMovie.title, matchedMovie.tmdbId, matchedMovie.type, matchedMovie.trailerId);
-      };
-    }
-    return;
-  }
-
-  const m = swipeDeck[currentSwipeIndex];
-  if (swipeCardImg) swipeCardImg.src = m.poster;
-  if (swipeCardTitle) swipeCardTitle.textContent = m.title;
-  if (swipeCardDesc) swipeCardDesc.textContent = `${m.genre} · ${m.score}`;
-  if (swipeTopMatch) swipeTopMatch.textContent = `Card ${currentSwipeIndex + 1} of ${swipeDeck.length}`;
-}
-
-if (btnSwipePass) {
-  btnSwipePass.addEventListener("click", () => {
-    currentSwipeIndex++;
-    renderActiveSwipeCard();
-  });
-}
-
-if (btnSwipeMatch) {
-  btnSwipeMatch.addEventListener("click", () => {
-    const cur = swipeDeck[currentSwipeIndex];
-    if (cur) swipeScores[cur.title] = (swipeScores[cur.title] || 0) + 1;
-    currentSwipeIndex++;
-    renderActiveSwipeCard();
-  });
-}
 
 // Digital Movie Ticket Invite Generator (HTML5 Canvas)
 const ticketDialog = document.querySelector("#ticket-dialog");

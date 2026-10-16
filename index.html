@@ -300,9 +300,6 @@
                 <span class="btn-party-title">🔗 Join Party</span>
                 <span class="btn-party-sub">enter room with invite code</span>
               </button>
-              <button type="button" class="party-lounge-tab" id="hub-tab-swipe" role="tab" aria-selected="false" data-tab="swipe">
-                ✨ Swipe to Match 🍿
-              </button>
             </nav>
 
             <!-- Panel 1: Live Cinema Halls Directory -->
@@ -402,35 +399,6 @@
                 <div class="join-input-group">
                   <input type="text" id="join-room-input" placeholder="e.g. BIOSCOPE-7892" autocomplete="off">
                   <button type="button" class="button button--primary button--large" id="btn-submit-join">🎬 Enter Hall</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Panel 4: Swipe to Match -->
-            <div class="party-lounge-panel" id="panel-lounge-swipe" role="tabpanel" hidden>
-              <div class="party-swipe-card">
-                <h3>🍿 Swipe to Match Group Movie Picker</h3>
-                <p class="party-desc">Can't agree on what to watch? Swipe Yes or No on these curated picks and we'll automatically select the group winner!</p>
-                <div class="swipe-deck-container" id="swipe-deck-container">
-                  <div class="swipe-card" id="swipe-active-card">
-                    <img id="swipe-card-img" src="https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg" alt="Dune 2" loading="lazy">
-                    <div class="swipe-card-body">
-                      <h4 id="swipe-card-title">Dune: Part Two (2024)</h4>
-                      <p id="swipe-card-desc">Sci-Fi Adventure · ★ 8.7</p>
-                    </div>
-                  </div>
-                </div>
-                <div class="swipe-actions">
-                  <button type="button" class="swipe-btn swipe-btn--pass" id="btn-swipe-pass" title="Pass (Skip)">✕ Pass</button>
-                  <button type="button" class="swipe-btn swipe-btn--match" id="btn-swipe-match" title="Match (Love it!)">♥ Match</button>
-                </div>
-                <div class="swipe-tally" id="swipe-tally">
-                  <span>Group Leader:</span> <strong id="swipe-top-match">Voting in progress...</strong>
-                </div>
-                <button type="button" class="button button--primary button--full" id="btn-launch-matched-movie" hidden>
-                  🍿 Stream Matched Film Now
-                </button>
-              </div>
             </div>
           </div>
         </div>
