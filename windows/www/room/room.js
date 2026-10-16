@@ -163,8 +163,19 @@ function getPersistentHostRoomCode() {
 
 function loadActiveHallState() {
   try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomParam = urlParams.get("room") || urlParams.get("code") || urlParams.get("join");
     const saved = localStorage.getItem("bioscope_active_hall");
-    if (saved) activeHall = JSON.parse(saved);
+    if (saved && roomParam) {
+      const parsed = JSON.parse(saved);
+      if (parsed.roomCode === roomParam) {
+        activeHall = parsed;
+        return;
+      }
+    }
+    // If sitting in lobby without room in URL, purge stale session
+    activeHall = null;
+    localStorage.removeItem("bioscope_active_hall");
   } catch (_) {
     activeHall = null;
   }
@@ -371,8 +382,46 @@ function handleIncomingNetworkMessage(topic, data) {
       }
     }
   } else if (data.type === "dismiss") {
-    notify("🛑 The Host has ended this Cinema Hall. Returning to Lobby...");
-    leaveTheatreHall();
+    notify(data.reason ? `🛑 ${data.reason}` : "🛑 The Host has ended this Cinema Hall. Returning to Lobby...");
+    leaveTheatreHall(true);
+  } else if (data.type === "host_transferred") {
+    const isMeNewHost = (currentUser.id === data.newHostId || currentUser.name === data.newHostName);
+    if (isMeNewHost) {
+      if (currentHallSession) currentHallSession.isHost = true;
+      activeHall = { ...(currentHallSession || {}), isHost: true };
+      saveActiveHallState();
+      if (btnTheatreDismiss) btnTheatreDismiss.hidden = false;
+      if (theatreHostDeck) theatreHostDeck.hidden = false;
+      if (btnTheatrePauseReq) btnTheatrePauseReq.hidden = true;
+      if (btnDockPauseReq) btnDockPauseReq.hidden = true;
+      notify("👑 Host role transferred to you! You now have full playback authority.");
+      appendTheatreChatMessage("system", `👑 ${data.newHostName} is now the Host of this Cinema Hall.`);
+    } else {
+      appendTheatreChatMessage("system", `👑 Host role transferred to Co-Host ${data.newHostName}.`);
+    }
+    const newHost = hallAudience.find(m => m.id === data.newHostId || m.name === data.newHostName);
+    if (newHost) {
+      newHost.isHost = true;
+      newHost.isCoHost = false;
+      renderHallAudienceSeats();
+      renderRosterPopoverList();
+    }
+  } else if (data.type === "cohost_update") {
+    const mem = hallAudience.find(x => x.id === data.userId || x.name === data.userName);
+    if (mem) {
+      mem.isCoHost = data.isCoHost;
+      renderHallAudienceSeats();
+      renderRosterPopoverList();
+      appendTheatreChatMessage("system", data.isCoHost ? `⭐ <em>${data.userName}</em> was appointed as Co-Host.` : `Co-Host status removed from <em>${data.userName}</em>.`);
+      if (currentUser.id === data.userId || currentUser.name === data.userName) {
+        notify(data.isCoHost ? "⭐ You were appointed as Co-Host! If the host leaves, you will take over." : "You are no longer a Co-Host.");
+      }
+    }
+  } else if (data.type === "member_left") {
+    hallAudience = hallAudience.filter(m => m.id !== data.userId && m.name !== data.userName);
+    renderHallAudienceSeats();
+    renderRosterPopoverList();
+    appendTheatreChatMessage("system", `👋 <em>${escapeHTML(data.userName)}</em> left the hall.`);
   }
 }
 
@@ -389,6 +438,9 @@ if (hallChannel) {
 // Host Periodic Heartbeat (Advertises Room to Global Lobby like PUBG custom room)
 function publishHostHeartbeat() {
   if (!activeHall || !activeHall.isHost) return;
+  // Strictly broadcast ONLY when the host is actively present in the theatre hall!
+  if (!theatreRoomView || theatreRoomView.hidden) return;
+
   broadcastToLobby({
     type: "hall_alive",
     roomCode: activeHall.roomCode,
@@ -409,24 +461,30 @@ function publishHostHeartbeat() {
   });
 }
 
-// Run host heartbeat every 4s, purge inactive rooms every 3s
+// Run host heartbeat every 3s, purge inactive rooms without recent heartbeat in 8s
 setInterval(() => {
-  if (activeHall && activeHall.isHost) {
+  if (activeHall && activeHall.isHost && theatreRoomView && !theatreRoomView.hidden) {
     publishHostHeartbeat();
   }
 
-  // Purge rooms not heard from in 12s
+  // Purge rooms not heard from in 8s
   const now = Date.now();
   let changed = false;
   discoveredRooms.forEach((hall, code) => {
-    if (activeHall && activeHall.roomCode === code) return; // Keep own active hall
-    if (now - hall.lastSeen > 12000) {
+    if (activeHall && activeHall.roomCode === code) {
+      if (!theatreRoomView || theatreRoomView.hidden) {
+        discoveredRooms.delete(code);
+        changed = true;
+      }
+      return;
+    }
+    if (now - hall.lastSeen > 8000) {
       discoveredRooms.delete(code);
       changed = true;
     }
   });
   if (changed) renderBoxOfficeHalls();
-}, 4000);
+}, 3000);
 
 // ==========================================================================
 // 5. Cinema Lounge Navigation & Tab Switching
@@ -549,21 +607,22 @@ if (btnStartParty) {
 
 // Dismiss Hall from Dialog Alert or Banner
 function dismissActiveHall() {
-  if (!activeHall) return;
-  const dismissedCode = activeHall.roomCode;
+  const dismissedCode = activeHall?.roomCode || currentHallSession?.roomCode;
+  if (!dismissedCode) return;
 
   // Broadcast dismissal to room & lobby
-  broadcastToRoom({ type: "dismiss", roomCode: dismissedCode });
+  broadcastToRoom({ type: "dismiss", roomCode: dismissedCode, reason: "Host has dismissed and ended the Cinema Hall." });
   broadcastToLobby({ type: "hall_closed", roomCode: dismissedCode });
 
   try {
     localStorage.removeItem("bioscope_persistent_host_code");
+    localStorage.removeItem("bioscope_active_hall");
   } catch (_) {}
 
   discoveredRooms.delete(dismissedCode);
   activeHall = null;
   saveActiveHallState();
-  leaveTheatreHall();
+  leaveTheatreHall(true);
   notify("🛑 Cinema Hall has been dismissed and ended.");
 }
 
@@ -714,17 +773,71 @@ function enterTheatreHall(hallData, startSeconds = 0) {
   appendTheatreChatMessage("system", "🎬 Welcome to the Grand Virtual Theatre! Whisper in chat or tap emojis to react live on screen.");
 }
 
-function leaveTheatreHall() {
+function leaveTheatreHall(isKickedOrDismissed = false) {
   if (!theatreRoomView) return;
-  
-  if (currentHallSession && mqttClient && mqttClient.isConnected()) {
-    mqttClient.unsubscribe(`bioscopebd/room/${currentHallSession.roomCode}`);
+
+  const wasHost = Boolean((currentHallSession && currentHallSession.isHost) || (activeHall && activeHall.isHost));
+  const roomCode = currentHallSession?.roomCode || activeHall?.roomCode;
+
+  // Check if a designated Co-Host exists among other real members
+  const coHost = hallAudience.find(m => m.isCoHost && !m.isHost);
+
+  if (wasHost && !isKickedOrDismissed) {
+    if (coHost) {
+      // Co-Host exists -> Transfer host authority to co-host
+      broadcastToRoom({
+        type: "host_transferred",
+        roomCode: roomCode,
+        newHostId: coHost.id,
+        newHostName: coHost.name
+      });
+      notify(`👑 You left the hall. Host role transferred to Co-Host ${coHost.name}.`);
+      activeHall = null;
+      saveActiveHallState();
+    } else {
+      // No Co-Host exists -> Auto-close the room entirely!
+      if (roomCode) {
+        broadcastToRoom({
+          type: "dismiss",
+          roomCode: roomCode,
+          reason: "The Host has left the auditorium and no co-host was assigned. Room is now closed."
+        });
+        broadcastToLobby({
+          type: "hall_closed",
+          roomCode: roomCode
+        });
+        discoveredRooms.delete(roomCode);
+      }
+      activeHall = null;
+      saveActiveHallState();
+      try {
+        localStorage.removeItem("bioscope_active_hall");
+        localStorage.removeItem("bioscope_persistent_host_code");
+      } catch (_) {}
+      notify("🚪 You left the hall. No co-host was assigned, so the room has automatically closed.");
+    }
+  } else if (!wasHost && !isKickedOrDismissed) {
+    // Normal audience member leaving
+    if (roomCode) {
+      broadcastToRoom({
+        type: "member_left",
+        roomCode: roomCode,
+        userId: currentUser.id || "guest_me",
+        userName: currentUser.name || "Audience Member"
+      });
+    }
+    notify("🚪 You left the Cinema Hall.");
+  }
+
+  if (roomCode && mqttClient && mqttClient.isConnected()) {
+    try { mqttClient.unsubscribe(`bioscopebd/room/${roomCode}`); } catch (_) {}
   }
 
   document.body.classList.remove("theatre-mode-active");
   theatreRoomView.hidden = true;
   if (theatrePlayerFrame) theatrePlayerFrame.src = "";
   currentHallSession = null;
+  hallAudience = [];
 
   try {
     window.history.replaceState({}, "", window.location.pathname);
@@ -733,7 +846,23 @@ function leaveTheatreHall() {
   renderBoxOfficeHalls();
 }
 
-if (btnTheatreLeave) btnTheatreLeave.addEventListener("click", leaveTheatreHall);
+if (btnTheatreLeave) btnTheatreLeave.addEventListener("click", () => leaveTheatreHall(false));
+
+// Immediate emergency dismissal if host tab is closed or navigated away without a co-host
+window.addEventListener("pagehide", () => {
+  const isHost = Boolean((currentHallSession && currentHallSession.isHost) || (activeHall && activeHall.isHost));
+  const hasCoHost = hallAudience.some(m => m.isCoHost && !m.isHost);
+  const code = currentHallSession?.roomCode || activeHall?.roomCode;
+
+  if (isHost && !hasCoHost && code) {
+    broadcastToLobby({ type: "hall_closed", roomCode: code });
+    broadcastToRoom({ type: "dismiss", roomCode: code, reason: "Host has left and no co-host was assigned. Room closed." });
+    try {
+      localStorage.removeItem("bioscope_active_hall");
+      localStorage.removeItem("bioscope_persistent_host_code");
+    } catch (_) {}
+  }
+});
 
 // Load Cinema Screen Video Stream with Live Sync Offset
 function loadTheatreScreen(title, tmdbId, type = "movie", trailerId = "", startSeconds = 0) {
@@ -961,9 +1090,9 @@ function initHallAudience(hall) {
 function renderHallAudienceSeats() {
   if (!theatreSeatsTrack) return;
   theatreSeatsTrack.innerHTML = hallAudience.map(member => `
-    <div class="cinema-seat" id="seat-${member.id}" title="${member.name} (${member.isHost ? 'Host' : 'Audience'} · Seat ${member.seat})">
+    <div class="cinema-seat" id="seat-${member.id}" title="${member.name} (${member.isHost ? 'Host' : (member.isCoHost ? 'Co-Host' : 'Audience')} · Seat ${member.seat})">
       <div class="cinema-seat__chair">
-        ${member.isHost ? '<span class="cinema-seat__crown">👑</span>' : ''}
+        ${member.isHost ? '<span class="cinema-seat__crown">👑</span>' : (member.isCoHost ? '<span class="cinema-seat__crown" style="filter:drop-shadow(0 0 6px #00d2ff);">⭐</span>' : '')}
         <span class="cinema-seat__avatar">${member.avatar || '🍿'}</span>
       </div>
       <span class="cinema-seat__tag">${member.seat}</span>
@@ -975,15 +1104,42 @@ function renderHallAudienceSeats() {
   if (theatreRosterCount) theatreRosterCount.textContent = `${count} Watching`;
   if (rosterPopoverCount) rosterPopoverCount.textContent = count;
 
-  if (theatreRosterList) {
-    theatreRosterList.innerHTML = hallAudience.map(m => `
-      <li class="roster-user-item">
-        <span class="roster-avatar">${m.avatar || '🍿'}</span>
-        <span class="roster-name">${m.name}</span>
-        ${m.isHost ? '<span class="roster-role-badge">HOST</span>' : '<span style="font-size:0.65rem;color:#888;">Seat ' + m.seat + '</span>'}
-      </li>
-    `).join("");
-  }
+  renderRosterPopoverList();
+}
+
+function renderRosterPopoverList() {
+  if (!theatreRosterList) return;
+  theatreRosterList.innerHTML = hallAudience.map(m => `
+    <li class="roster-user-item" style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+      <span class="roster-avatar">${m.avatar || '🍿'}</span>
+      <span class="roster-name" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(m.name)}</span>
+      ${m.isHost ? '<span class="roster-role-badge">HOST</span>' : (m.isCoHost ? '<span class="roster-role-badge" style="background:#00d2ff;color:#000;">CO-HOST</span>' : '<span style="font-size:0.65rem;color:#888;">Seat ' + m.seat + '</span>')}
+      ${(currentHallSession?.isHost && !m.isHost) ? `
+        <button type="button" class="btn-toggle-cohost" data-user-id="${m.id}" style="margin-left:auto;font-size:0.68rem;padding:2px 7px;background:${m.isCoHost ? 'rgba(255,71,87,0.2)' : 'rgba(0,210,255,0.15)'};color:${m.isCoHost ? '#ff6b81' : '#00d2ff'};border:1px solid ${m.isCoHost ? 'rgba(255,71,87,0.4)' : 'rgba(0,210,255,0.3)'};border-radius:4px;cursor:pointer;">
+          ${m.isCoHost ? 'Demote' : '⭐ Make Co-Host'}
+        </button>
+      ` : ''}
+    </li>
+  `).join("");
+
+  theatreRosterList.querySelectorAll(".btn-toggle-cohost").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const uId = btn.dataset.userId;
+      const targetMember = hallAudience.find(x => x.id === uId);
+      if (targetMember) {
+        targetMember.isCoHost = !targetMember.isCoHost;
+        broadcastToRoom({
+          type: "cohost_update",
+          roomCode: currentHallSession?.roomCode,
+          userId: targetMember.id,
+          isCoHost: targetMember.isCoHost,
+          userName: targetMember.name
+        });
+        renderHallAudienceSeats();
+        notify(targetMember.isCoHost ? `⭐ ${targetMember.name} appointed as Co-Host!` : `Removed Co-Host role from ${targetMember.name}`);
+      }
+    });
+  });
 }
 
 // ==========================================================================
@@ -1152,8 +1308,8 @@ function renderBoxOfficeHalls() {
   if (!grid) return;
   const list = [];
 
-  // Add user's active hall if exists
-  if (activeHall) {
+  // Add user's active hall only if actively inside the theatre hall
+  if (activeHall && theatreRoomView && !theatreRoomView.hidden) {
     list.push({
       roomCode: activeHall.roomCode,
       hallName: activeHall.hallName || "Your Live Cinema Hall",
