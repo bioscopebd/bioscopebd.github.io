@@ -605,6 +605,10 @@ const continueSection = document.querySelector("#continue-watching-section");
 const continueCarousel = document.querySelector("#continue-watching-carousel");
 const banglaCarousel = document.querySelector("#bangla-carousel");
 const hindiCarousel = document.querySelector("#hindi-carousel");
+const hollywoodCarousel = document.querySelector("#hollywood-carousel");
+const animeCarousel = document.querySelector("#anime-carousel");
+const eastAsianCarousel = document.querySelector("#east-asian-carousel");
+const trendingCarousel = document.querySelector("#trending-carousel");
 const thrillersCarousel = document.querySelector("#thrillers-carousel");
 const topRatedGrid = document.querySelector("#main-browse-grid") || document.querySelector("#top-rated-grid");
 const catalogCountBadge = document.querySelector("#catalog-count-badge");
@@ -630,9 +634,12 @@ function createMovieCardHTML(movie) {
   const isAi = movie.genre === "AI Cinema" || (movie.genres && movie.genres.includes("AI Cinema")) || movie.id?.startsWith("higgs");
   const isBangla = Boolean(movie.bangla || /[\u0980-\u09FF]/.test(movie.title || ""));
   const isHindi = Boolean(movie.hindi || (movie.genres && movie.genres.includes("Hindi")));
+  const isAnime = Boolean(movie.anime);
+  const isEastAsian = Boolean(movie.eastAsian);
   const yearText = movie.year || "2024";
   const scoreText = movie.score ? `★ ${movie.score}` : "★ 8.5";
   const genresList = (movie.genres || [movie.genre || 'Cinema']).join(',');
+  const backdropUrl = movie.backdrop || movie.poster || '';
 
   return `
     <article class="movie-card ${isAi ? 'movie-card--ai' : ''}" 
@@ -646,6 +653,9 @@ function createMovieCardHTML(movie) {
              data-type="${isBangla ? 'bangla' : (movie.type || 'movie')}"
              data-bangla="${isBangla}"
              data-hindi="${isHindi}"
+             data-anime="${isAnime}"
+             data-east-asian="${isEastAsian}"
+             data-backdrop="${backdropUrl}"
              data-year="${yearText}">
       <div class="movie-card__media image-shell is-loaded">
         <img src="${movie.poster}" alt="${movie.title}" loading="lazy">
@@ -653,6 +663,8 @@ function createMovieCardHTML(movie) {
         ${isAi ? '<span class="badge-studio">Higgsfield AI</span>' : ''}
         ${isBangla ? '<span class="badge-studio" style="background:rgba(0,106,78,0.9);color:#f5c518;">Bangla Cinema</span>' : ''}
         ${isHindi ? '<span class="badge-studio" style="background:rgba(229,9,20,0.85);color:#fff;">Bollywood</span>' : ''}
+        ${isAnime ? '<span class="badge-studio" style="background:rgba(238,68,102,0.9);color:#fff;">Anime</span>' : ''}
+        ${isEastAsian ? '<span class="badge-studio" style="background:rgba(218,41,28,0.9);color:#f5c518;">East Asian</span>' : ''}
         <div class="movie-card__overlay">
           <p>${scoreText} · ${movie.genre || 'Cinema'}</p>
           <button type="button" class="button button--primary quick-view" data-title="${movie.title}">Quick View</button>
@@ -697,7 +709,6 @@ function hydrateContinueWatching() {
 
 function hydrateBanglaSection() {
   if (!banglaCarousel) return;
-  // If cards are already pre-rendered in HTML, do NOT overwrite them!
   if (banglaCarousel.querySelectorAll(".movie-card").length === 0) {
     const banglaMovies = BUILTIN_CATALOG.filter(m => m.bangla);
     banglaCarousel.innerHTML = banglaMovies.map(createMovieCardHTML).join("");
@@ -708,7 +719,6 @@ function hydrateBanglaSection() {
 
 function hydrateHindiSection() {
   if (!hindiCarousel) return;
-  // If cards are already pre-rendered in HTML, do NOT overwrite them!
   if (hindiCarousel.querySelectorAll(".movie-card").length === 0) {
     const hindiMovies = BUILTIN_CATALOG.filter(m => m.hindi);
     hindiCarousel.innerHTML = hindiMovies.map(createMovieCardHTML).join("");
@@ -717,9 +727,38 @@ function hydrateHindiSection() {
   initImageLoading();
 }
 
+function hydrateHollywoodSection() {
+  if (!hollywoodCarousel) return;
+  if (hollywoodCarousel.querySelectorAll(".movie-card").length === 0) {
+    const hollywoodMovies = BUILTIN_CATALOG.filter(m => !m.bangla && !m.hindi && !m.anime && !m.eastAsian && m.genre !== 'AI Cinema');
+    hollywoodCarousel.innerHTML = hollywoodMovies.map(createMovieCardHTML).join("");
+  }
+  bindCardInteractions(hollywoodCarousel);
+  initImageLoading();
+}
+
+function hydrateAnimeSection() {
+  if (!animeCarousel) return;
+  if (animeCarousel.querySelectorAll(".movie-card").length === 0) {
+    const animeMovies = BUILTIN_CATALOG.filter(m => m.anime);
+    animeCarousel.innerHTML = animeMovies.map(createMovieCardHTML).join("");
+  }
+  bindCardInteractions(animeCarousel);
+  initImageLoading();
+}
+
+function hydrateEastAsianSection() {
+  if (!eastAsianCarousel) return;
+  if (eastAsianCarousel.querySelectorAll(".movie-card").length === 0) {
+    const eastAsianMovies = BUILTIN_CATALOG.filter(m => m.eastAsian);
+    eastAsianCarousel.innerHTML = eastAsianMovies.map(createMovieCardHTML).join("");
+  }
+  bindCardInteractions(eastAsianCarousel);
+  initImageLoading();
+}
+
 function hydrateThrillersSection() {
   if (!thrillersCarousel) return;
-  // If cards are already pre-rendered in HTML, do NOT overwrite them!
   if (thrillersCarousel.querySelectorAll(".movie-card").length === 0) {
     const thrillerMovies = BUILTIN_CATALOG.filter(m => m.thriller);
     thrillersCarousel.innerHTML = thrillerMovies.map(createMovieCardHTML).join("");
@@ -875,14 +914,55 @@ initCarouselNav("#trending-carousel", "#trending-prev", "#trending-next");
 initCarouselNav("#ai-carousel", "#ai-prev", "#ai-next");
 initCarouselNav("#bangla-carousel", "#bangla-prev", "#bangla-next");
 initCarouselNav("#hindi-carousel", "#hindi-prev", "#hindi-next");
+initCarouselNav("#hollywood-carousel", "#hollywood-prev", "#hollywood-next");
+initCarouselNav("#anime-carousel", "#anime-prev", "#anime-next");
+initCarouselNav("#east-asian-carousel", "#east-asian-prev", "#east-asian-next");
 initCarouselNav("#thrillers-carousel", "#thrillers-prev", "#thrillers-next");
+
+// Dynamic Ambient Cinematic Backdrop System (Smooth Cross-fade & Ken Burns Animation)
+function initAmbientBackdropSystem() {
+  const backdropImg = document.querySelector("#ambient-backdrop-img");
+  if (!backdropImg) return;
+
+  const defaultBackdrop = "https://image.tmdb.org/t/p/original/eZ239CUp1d6OryZEBPnO2n87gMG.jpg";
+  backdropImg.style.backgroundImage = `url("${defaultBackdrop}")`;
+  backdropImg.classList.add("is-animating");
+
+  let hoverTimeout = null;
+  let activeSrc = defaultBackdrop;
+
+  document.addEventListener("mouseover", (e) => {
+    const card = e.target.closest(".movie-card, .continue-card, .hero");
+    if (!card) return;
+
+    let targetBg = null;
+    if (card.classList.contains("hero")) {
+      targetBg = defaultBackdrop;
+    } else {
+      targetBg = card.dataset.backdrop || card.querySelector("img")?.src;
+    }
+
+    clearTimeout(hoverTimeout);
+    hoverTimeout = setTimeout(() => {
+      activeSrc = targetBg;
+      backdropImg.classList.remove("is-animating");
+      backdropImg.style.backgroundImage = `url("${targetBg}")`;
+      void backdropImg.offsetWidth; // Trigger reflow for smooth animation restart
+      backdropImg.classList.add("is-animating");
+    }, 80);
+  }, { passive: true });
+}
 
 // Initial hydrations
 hydrateContinueWatching();
 hydrateBanglaSection();
 hydrateHindiSection();
+hydrateHollywoodSection();
+hydrateAnimeSection();
+hydrateEastAsianSection();
 hydrateThrillersSection();
 hydrateBrowseGrid(1, false);
+initAmbientBackdropSystem();
 
 // ==========================================================================
 // 5. Real-Time Alphabet Search Autocomplete with Release Years
@@ -1176,6 +1256,9 @@ function filterCatalog() {
     { sec: document.querySelector("#ai-cinema"), car: document.querySelector("#ai-carousel") },
     { sec: document.querySelector("#bangla-cinema") || document.querySelector("#bangla-gems"), car: document.querySelector("#bangla-carousel") },
     { sec: document.querySelector("#hindi-cinema"), car: document.querySelector("#hindi-carousel") },
+    { sec: document.querySelector("#hollywood-cinema"), car: document.querySelector("#hollywood-carousel") },
+    { sec: document.querySelector("#anime-cinema"), car: document.querySelector("#anime-carousel") },
+    { sec: document.querySelector("#east-asian-cinema"), car: document.querySelector("#east-asian-carousel") },
     { sec: document.querySelector("#thrillers-cinema") || document.querySelector("#mind-thrillers"), car: document.querySelector("#thrillers-carousel") }
   ];
 

@@ -116,6 +116,12 @@
 <body data-theme="dark">
   <a class="skip-link" href="#main">Skip to content</a>
 
+  <!-- Dynamic Ambient Cinematic Backdrop (Ken Burns Animated) -->
+  <div class="ambient-backdrop" id="ambient-backdrop" aria-hidden="true">
+    <div class="ambient-backdrop__image" id="ambient-backdrop-img"></div>
+    <div class="ambient-backdrop__overlay"></div>
+  </div>
+
   <!-- 1. Navigation -->
   <header class="site-header" id="top">
     <nav class="nav container" aria-label="Main navigation">
@@ -124,13 +130,14 @@
         <span>BIOSCOPE<span class="text-accent">BD</span></span>
       </a>
       <div class="nav__menu" id="nav-menu">
-        <a href="#trending">Movies</a>
-        <a href="room/index.html" id="nav-rooms-link" onclick="window.location.href='room/index.html';">🏛️ Rooms <span class="badge-pill">LIVE</span></a>
+        <a href="#trending">Trending</a>
         <a href="#bangla-cinema">🇧🇩 Bangla</a>
         <a href="#hindi-cinema">🔥 Bollywood</a>
+        <a href="#hollywood-cinema">🇺🇸 Hollywood</a>
+        <a href="#anime-cinema">🇯🇵 Anime</a>
+        <a href="#east-asian-cinema">🇨🇳 East Asian</a>
         <a href="#ai-cinema">AI Cinema <span class="badge-pill">NEW</span></a>
-        <a href="#top-rated">Top Rated</a>
-        <a href="#mood-section">Mood Search</a>
+        <a href="room/index.html" id="nav-rooms-link" onclick="window.location.href='room/index.html';">🏛️ Rooms <span class="badge-pill">LIVE</span></a>
       </div>
       <form class="nav__search" role="search" id="search-form">
         <label class="sr-only" for="site-search">Search movies, mood, or dialogue</label>
@@ -235,244 +242,725 @@
       </div>
       <div class="carousel" id="continue-watching-carousel" aria-label="Continue watching movies"></div>
     </section>
-
-    <!-- 2.5 Watch Party Flagship Hub -->
-    <section class="section container reveal" id="watch-party-hub" aria-labelledby="party-hub-title">
-      <div class="party-hub-card">
-        <div class="party-hub-content">
-          <div class="party-badge-glow">🍿 BioscopeBD Flagship · Live Cinema Experience</div>
-          <h2 id="party-hub-title">Watch Party with Friends.<br><span>Zero Delay. Host-Controlled Playback.</span></h2>
-          <p class="party-hub-lead">Stream movies together in real-time. No browser extensions needed, zero buffering chaos, and a unified cinema experience.</p>
-          
-          <div class="party-rules-grid">
-            <div class="party-rule">
-              <span class="party-rule__icon">👑</span>
-              <div>
-                <strong>Host Authority</strong>
-                <p>Only the room host can Play, Pause, or Seek so nobody interrupts the movie flow.</p>
-              </div>
-            </div>
-            <div class="party-rule">
-              <span class="party-rule__icon">📺</span>
-              <div>
-                <strong>Live TV Sync</strong>
-                <p>Friends watch synchronized like a live TV broadcast with real-time video alignment.</p>
-              </div>
-            </div>
-            <div class="party-rule">
-              <span class="party-rule__icon">✋</span>
-              <div>
-                <strong>Request to Pause</strong>
-                <p>Need a snack or washroom break? Friends click "Request Pause" to alert the host!</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Active Hall Persistent Banner (if user already has a hall open) -->
-          <div class="active-hall-banner" id="active-hall-banner" hidden>
-            <div class="active-hall-info">
-              <span class="active-hall-tag"><span class="pulse-dot"></span> HALL IS LIVE</span>
-              <h4 id="active-hall-banner-title">Dune: Part Two · Room: BIOSCOPE-7892</h4>
-            </div>
-            <div class="active-hall-btns">
-              <button type="button" class="button button--primary button--sm" id="btn-resume-active-hall">
-                🎬 Re-Enter Theatre
-              </button>
-              <button type="button" class="button button--danger button--sm" id="btn-dismiss-active-hall">
-                🛑 Dismiss Hall
-              </button>
-            </div>
-          </div>
-
-          <!-- Watch Party Dedicated Interactive Lounge (Zero Popups) -->
-          <div class="party-lounge-sector" id="party-lounge-sector">
-            <nav class="party-lounge-nav" role="tablist" aria-label="Watch Party Modes">
-              <button type="button" class="party-lounge-tab party-action-btn is-active" id="hub-tab-halls" role="tab" aria-selected="true" data-tab="halls">
-                <span class="btn-party-title">🏛️ Active Cinema Rooms <span class="hub-count-pill" id="hub-halls-count">4</span></span>
-                <span class="btn-party-sub">browse &amp; enter live halls</span>
-              </button>
-              <button type="button" class="party-lounge-tab party-action-btn" id="hub-host-party-btn" role="tab" aria-selected="false" data-tab="host">
-                <span class="btn-party-title">🍿 Host Party</span>
-                <span class="btn-party-sub">host room to watch with friends</span>
-              </button>
-              <button type="button" class="party-lounge-tab party-action-btn" id="hub-join-party-btn" role="tab" aria-selected="false" data-tab="join">
-                <span class="btn-party-title">🔗 Join Party</span>
-                <span class="btn-party-sub">enter room with invite code</span>
-              </button>
-            </nav>
-
-            <!-- Panel 1: Live Cinema Halls Directory -->
-            <div class="party-lounge-panel is-active" id="panel-lounge-halls" role="tabpanel">
-              <div class="box-office-header">
-                <div class="box-office-title">
-                  <span class="box-office-live-indicator"></span>
-                  <h3>Live Auditoriums &amp; Theatres</h3>
-                </div>
-                <div class="hall-filter-pills" id="hall-filter-pills">
-                  <button type="button" class="hall-pill is-active" data-filter="all">All Rooms</button>
-                  <button type="button" class="hall-pill" data-filter="public">🌐 Public Halls</button>
-                  <button type="button" class="hall-pill" data-filter="private">🔒 Private Rooms</button>
-                </div>
-              </div>
-              <p class="box-office-subtitle">See what movie is currently streaming inside each auditorium before entering. Drop into public halls with 1-click.</p>
-              <div class="box-office-grid" id="box-office-grid">
-                <!-- Dynamically populated room cards showing movie poster, title, status, viewers, and action button -->
-              </div>
-            </div>
-
-            <!-- Panel 2: Host Room (Create Public or Private Hall) -->
-            <div class="party-lounge-panel" id="panel-lounge-host" role="tabpanel" hidden>
-              <div class="party-create-card">
-                <div class="party-create-header">
-                  <h3>🍿 Create Your Cinema Hall</h3>
-                  <p class="party-desc">Launch an immersive Virtual Cinema Hall. Your room stays open until you dismiss it, and you can project and play ANY movie from the site catalog inside the hall.</p>
-                </div>
-
-                <!-- Visibility Selector: Public vs Private -->
-                <div class="party-visibility-toggle">
-                  <label class="visibility-option is-active" id="lbl-vis-public">
-                    <input type="radio" name="party-vis" id="vis-public-radio" value="public" checked>
-                    <div class="visibility-card">
-                      <div class="visibility-card__header">
-                        <span class="vis-icon">🌐</span>
-                        <strong>Public Cinema Hall</strong>
-                        <span class="vis-badge">No Code Needed</span>
-                      </div>
-                      <p>Displayed in "Active Cinema Rooms". Anyone on BioscopeBD can discover and enter with 1-click.</p>
-                    </div>
-                  </label>
-
-                  <label class="visibility-option" id="lbl-vis-private">
-                    <input type="radio" name="party-vis" id="vis-private-radio" value="private">
-                    <div class="visibility-card">
-                      <div class="visibility-card__header">
-                        <span class="vis-icon">🔒</span>
-                        <strong>Private Friends Hall</strong>
-                        <span class="vis-badge">Invite Code Only</span>
-                      </div>
-                      <p>Strictly for friends. Generates a permanent invite code. Only friends with your code can enter.</p>
-                    </div>
-                  </label>
-                </div>
-
-                <div class="party-input-group">
-                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                    <label for="party-hall-name-input" style="margin:0;">Auditorium / Hall Name:</label>
-                    <button type="button" class="btn-text-action" id="btn-random-hall-name">🎲 Random Name</button>
-                  </div>
-                  <input type="text" id="party-hall-name-input" placeholder="e.g. Tanjir's Grand Cinema Lounge" maxlength="40">
-                </div>
-
-                <div class="party-input-group" style="margin-top:14px;">
-                  <label for="party-capacity-select">Auditorium Capacity:</label>
-                  <select id="party-capacity-select" class="party-select">
-                    <option value="5">VIP Suite (5 Seats)</option>
-                    <option value="10">Intimate Circle (10 Seats)</option>
-                    <option value="25" selected>Grand Hall (25 Seats)</option>
-                    <option value="50">IMAX Theatre (50 Seats)</option>
-                    <option value="Unlimited">Open Auditorium (Unlimited)</option>
-                  </select>
-                </div>
-
-                <!-- Private Hall Invite Code (Visible only when Private is selected) -->
-                <div class="party-room-code-box" id="party-private-code-box" hidden>
-                  <label>Private Room Invite Code (Share with Friends):</label>
-                  <div class="code-box" id="party-code-box">
-                    <strong id="party-room-code">BIOSCOPE-7892</strong>
-                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                      <button type="button" class="button button--glass button--sm" id="btn-generate-new-code" title="Generate New Room Code">🎲 New Code</button>
-                      <button type="button" class="button button--primary button--sm" id="btn-copy-room">📋 Copy Invite Link</button>
-                    </div>
-                  </div>
-                  <small class="code-hint">Friends enter this invite code in "Join Party" to enter your auditorium.</small>
-                  <div class="party-copy-status" id="party-copy-status" aria-live="polite"></div>
-                </div>
-
-                <div class="party-theatre-preview-card">
-                  <div class="theatre-preview-icon">🏛️</div>
-                  <div class="theatre-preview-info">
-                    <strong>Virtual Cinema Experience with Real-Time Projector</strong>
-                    <p>No need to pick movies right now. Once inside your hall, simply search and play ANY movie or AI film from our catalog and it will instantly project onto the big screen for all viewers.</p>
-                  </div>
-                </div>
-
-                <div class="party-create-footer-actions">
-                  <button type="button" class="button button--glass" id="btn-generate-ticket">
-                    🎟️ Generate Commemorative Hall Ticket
-                  </button>
-                  <button type="button" class="button button--primary button--large" id="btn-start-party">
-                    🎬 Launch &amp; Enter Cinema Theatre
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Panel 3: Join Private Room -->
-            <div class="party-lounge-panel" id="panel-lounge-join" role="tabpanel" hidden>
-              <div class="party-join-card">
-                <h3>🔗 Join a Private Cinema Room</h3>
-                <p class="party-desc">Enter any Hall Code or Invite Link shared by the host to take your seat in their live auditorium.</p>
-                <div class="join-input-group">
-                  <input type="text" id="join-room-input" placeholder="e.g. BIOSCOPE-7892" autocomplete="off">
-                  <button type="button" class="button button--primary button--large" id="btn-submit-join">🎬 Enter Hall</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 3. Smart Discovery: Mood & Vibe Search -->
-    <section class="mood-section container reveal" id="mood-section" aria-labelledby="mood-title">
-      <div class="mood-section__header">
+    
+    
+    
+    <!-- 1. Top Rated & Trending Carousel (Worldwide Mixed) -->
+    <section class="section container reveal" id="trending" aria-labelledby="trending-title">
+      <div class="section__heading">
         <div>
-          <p class="eyebrow"><span class="eyebrow__line"></span> AI Smart Discovery</p>
-          <h2 id="mood-title">How's your mood today?</h2>
+          <p class="eyebrow"><span class="eyebrow__line"></span> Worldwide Mixed · বিশ্বসেরা সিনেমা</p>
+          <h2 id="trending-title">🌟 Top Rated &amp; Trending</h2>
         </div>
-        <p class="mood-section__sub" id="mood-sub">Skip the 30-minute scrolling fatigue. Choose your current feeling:</p>
+        <div class="carousel__controls">
+          <button class="round-button" id="trending-prev" type="button" aria-label="Scroll trending movies left">←</button>
+          <button class="round-button" id="trending-next" type="button" aria-label="Scroll trending movies right">→</button>
+        </div>
       </div>
-      <div class="mood-chips" role="toolbar" aria-label="Filter by mood">
-        <button type="button" class="mood-chip is-active" data-mood="all">
-          <span class="mood-chip__emoji">✨</span>
-          <span class="mood-chip__text"><strong>All Stories</strong><small>সব সিনেমা</small></span>
-        </button>
-        <button type="button" class="mood-chip" data-mood="rainy">
-          <span class="mood-chip__emoji">🌧️</span>
-          <span class="mood-chip__text"><strong>Rainy Day Chill</strong><small>শান্ত বৃষ্টির দিন</small></span>
-        </button>
-        <button type="button" class="mood-chip" data-mood="mind-bending">
-          <span class="mood-chip__emoji">🤯</span>
-          <span class="mood-chip__text"><strong>Mind-Bending</strong><small>মাথা ঘোরানো থ্রিলার</small></span>
-        </button>
-        <button type="button" class="mood-chip" data-mood="adrenaline">
-          <span class="mood-chip__emoji">⚡</span>
-          <span class="mood-chip__text"><strong>High Adrenaline</strong><small>দমবন্ধ অ্যাকশন</small></span>
-        </button>
-        <button type="button" class="mood-chip" data-mood="family">
-          <span class="mood-chip__emoji">👨‍👩‍👧</span>
-          <span class="mood-chip__text"><strong>Family Safe</strong><small>পারিবারিক নির্ভেজাল</small></span>
-        </button>
-        <button type="button" class="mood-chip" data-mood="ai-cinema">
-          <span class="mood-chip__emoji">🤖</span>
-          <span class="mood-chip__text"><strong>Higgsfield AI</strong><small>ভবিষ্যতের সিনেমা</small></span>
-        </button>
-        <button type="button" class="mood-chip" data-mood="feel-good">
-          <span class="mood-chip__emoji">🍿</span>
-          <span class="mood-chip__text"><strong>Feel Good</strong><small>হাসিখুশি হালকা গল্প</small></span>
-        </button>
-      </div>
+      <div class="carousel" id="trending-carousel" aria-label="Trending and top rated movies">
+        <article class="movie-card" data-title="Dune: Part Two" data-genre="Sci-Fi" data-mood="adrenaline mind-bending" data-tmdb="693134" data-trailer="Way9Dexny3w" data-type="movie" data-duration="166" data-backdrop="https://image.tmdb.org/t/p/original/eZ239CUp1d6OryZEBPnO2n87gMG.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg" alt="Dune: Part Two" loading="lazy">
+            <span class="movie-card__score">★ 8.7</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.7 · Sci-Fi Epic</p>
+              <button type="button" class="button button--primary quick-view" data-title="Dune: Part Two">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Dune: Part Two" data-tmdb="693134" data-type="movie" data-trailer="Way9Dexny3w">▶ Play</button>
+            </div>
+          </div>
+          <h3>Dune: Part Two</h3>
+          <p>2024 · Denis Villeneuve · Sci-Fi</p>
+        </article>
 
-      <!-- Time-Budget Quick Duration Filter -->
-      <div class="time-budget-wrap" id="time-budget-wrap">
-        <span class="time-budget-label"><span aria-hidden="true">⏱️</span> Time Budget:</span>
-        <div class="time-budget-chips" role="toolbar" aria-label="Filter by movie duration">
-          <button type="button" class="budget-chip is-active" data-duration="all">All Lengths</button>
-          <button type="button" class="budget-chip" data-duration="short">&lt; 30 Mins (AI / Shorts)</button>
-          <button type="button" class="budget-chip" data-duration="medium">&lt; 90 Mins (Quick Thrills)</button>
-          <button type="button" class="budget-chip" data-duration="epic">2+ Hour Epics</button>
-        </div>
+        <article class="movie-card" data-title="Oppenheimer" data-genre="Drama" data-genres="Drama Biography History" data-mood="mind-bending" data-tmdb="872585" data-trailer="uYPbbksJxIg" data-type="movie" data-duration="180" data-backdrop="https://image.tmdb.org/t/p/original/neeNHeXjMF5fXoCJRsOmkNGC7q.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg" alt="Oppenheimer" loading="lazy">
+            <span class="movie-card__score">★ 8.9</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.9 · Masterpiece</p>
+              <button type="button" class="button button--primary quick-view" data-title="Oppenheimer">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Oppenheimer" data-tmdb="872585" data-type="movie" data-trailer="uYPbbksJxIg">▶ Play</button>
+            </div>
+          </div>
+          <h3>Oppenheimer</h3>
+          <p>2023 · Christopher Nolan · Thriller</p>
+        </article>
+
+        <article class="movie-card" data-title="Toofan (তুফান)" data-genre="Action" data-genres="Action Crime Thriller Bangla" data-mood="adrenaline" data-tmdb="1284004" data-trailer="E2rAePNkcMc" data-type="bangla" data-bangla="true" data-duration="145" data-backdrop="https://image.tmdb.org/t/p/original/k8U8UjY2lKk3B9Xo6Lq9R0Wz8Vz.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/k8U8UjY2lKk3B9Xo6Lq9R0Wz8Vz.jpg" alt="Toofan" loading="lazy">
+            <span class="movie-card__score">★ 8.6</span>
+            <span class="badge-studio" style="background:rgba(0,106,78,0.9);color:#f5c518;">Bangla Cinema</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.6 · Action Thriller</p>
+              <button type="button" class="button button--primary quick-view" data-title="Toofan (তুফান)">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Toofan (তুফান)" data-tmdb="1284004" data-type="bangla" data-trailer="E2rAePNkcMc">▶ Play</button>
+            </div>
+          </div>
+          <h3>Toofan (তুফান)</h3>
+          <p>2024 · Shakib Khan Blockbuster</p>
+        </article>
+
+        <article class="movie-card" data-title="Jawan" data-genre="Action" data-genres="Action Thriller Hindi" data-mood="adrenaline" data-tmdb="872906" data-trailer="MWOlnZSnXJo" data-type="movie" data-duration="169" data-hindi="true" data-backdrop="https://image.tmdb.org/t/p/original/5LtSjMNw6j3LkG29Oa4O0iY5U8.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/jFt1gS4BGHlK8xt76Y81Alp4dbt.jpg" alt="Jawan" loading="lazy">
+            <span class="movie-card__score">★ 7.8</span>
+            <span class="badge-studio" style="background:rgba(229,9,20,0.85);color:#fff;">Bollywood</span>
+            <div class="movie-card__overlay">
+              <p>★ 7.8 · Action</p>
+              <button type="button" class="button button--primary quick-view" data-title="Jawan">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Jawan" data-tmdb="872906" data-type="movie" data-trailer="MWOlnZSnXJo">▶ Play</button>
+            </div>
+          </div>
+          <h3>Jawan</h3>
+          <p>2023 · Shah Rukh Khan Mega Hit</p>
+        </article>
+
+        <article class="movie-card" data-title="Avatar: The Way of Water" data-genre="Sci-Fi" data-mood="family feel-good" data-tmdb="76600" data-trailer="d9MyW72ELq0" data-type="movie" data-duration="192" data-backdrop="https://image.tmdb.org/t/p/original/kJsPVzdyBrYHLomuNv5SJDXUQ2f.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg" alt="Avatar: The Way of Water" loading="lazy">
+            <span class="movie-card__score">★ 7.8</span>
+            <div class="movie-card__overlay">
+              <p>★ 7.8 · Sci-Fi</p>
+              <button type="button" class="button button--primary quick-view" data-title="Avatar: The Way of Water">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Avatar: The Way of Water" data-tmdb="76600" data-type="movie" data-trailer="d9MyW72ELq0">▶ Play</button>
+            </div>
+          </div>
+          <h3>Avatar: The Way of Water</h3>
+          <p>2022 · James Cameron · Sci-Fi</p>
+        </article>
+
+        <article class="movie-card" data-title="Hawa (হাওয়া)" data-genre="Drama" data-genres="Drama Mystery Thriller Bangla" data-mood="rainy mind-bending" data-tmdb="1009187" data-trailer="K9W52rpdlLQ" data-type="bangla" data-bangla="true" data-duration="135" data-backdrop="https://image.tmdb.org/t/p/original/oE17i5QGzK2oO65hJqGfB4WpL1d.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/oE17i5QGzK2oO65hJqGfB4WpL1d.jpg" alt="Hawa" loading="lazy">
+            <span class="movie-card__score">★ 8.5</span>
+            <span class="badge-studio" style="background:rgba(0,106,78,0.9);color:#f5c518;">Bangla Cinema</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.5 · Mystery</p>
+              <button type="button" class="button button--primary quick-view" data-title="Hawa (হাওয়া)">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Hawa (হাওয়া)" data-tmdb="1009187" data-type="bangla" data-trailer="K9W52rpdlLQ">▶ Play</button>
+            </div>
+          </div>
+          <h3>Hawa (হাওয়া)</h3>
+          <p>2022 · Chanchal Chowdhury Classic</p>
+        </article>
+
+        <article class="movie-card" data-title="John Wick: Chapter 4" data-genre="Action" data-mood="adrenaline" data-tmdb="603692" data-trailer="qEVUtrk8_B4" data-type="movie" data-duration="169" data-backdrop="https://image.tmdb.org/t/p/original/7I6VUdPj6tQECNHdviJkUHD2u89.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/vZloFAK7NKnMGKEslUsZloNXzBP.jpg" alt="John Wick 4" loading="lazy">
+            <span class="movie-card__score">★ 8.2</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.2 · Non-Stop Action</p>
+              <button type="button" class="button button--primary quick-view" data-title="John Wick: Chapter 4">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="John Wick: Chapter 4" data-tmdb="603692" data-type="movie" data-trailer="qEVUtrk8_B4">▶ Play</button>
+            </div>
+          </div>
+          <h3>John Wick: Chapter 4</h3>
+          <p>2023 · Keanu Reeves Blockbuster</p>
+        </article>
+
+        <article class="movie-card" data-title="12th Fail" data-genre="Drama" data-genres="Biography Drama Hindi" data-mood="feel-good" data-tmdb="1163258" data-trailer="KjbtuqENvVE" data-type="movie" data-duration="147" data-hindi="true" data-backdrop="https://image.tmdb.org/t/p/original/6RV2o8PBCEyw9ylOWViV1CtULIF.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/eebUPRI4Z5e1Z7Hev4JZAwMIFkX.jpg" alt="12th Fail" loading="lazy">
+            <span class="movie-card__score">★ 8.6</span>
+            <span class="badge-studio" style="background:rgba(229,9,20,0.85);color:#fff;">Bollywood</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.6 · Inspirational</p>
+              <button type="button" class="button button--primary quick-view" data-title="12th Fail">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="12th Fail" data-tmdb="1163258" data-type="movie" data-trailer="KjbtuqENvVE">▶ Play</button>
+            </div>
+          </div>
+          <h3>12th Fail</h3>
+          <p>2023 · True Story Masterpiece</p>
+        </article>
+
+        <article class="movie-card" data-title="Spider-Man: Across the Spider-Verse" data-genre="Animation" data-mood="family adrenaline" data-tmdb="569094" data-trailer="cqGjhVJWtEg" data-type="movie" data-duration="140" data-backdrop="https://image.tmdb.org/t/p/original/kVd3a9YeLGkoeR50jGEXM6EqseS.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg" alt="Spider-Man" loading="lazy">
+            <span class="movie-card__score">★ 8.6</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.6 · Animation</p>
+              <button type="button" class="button button--primary quick-view" data-title="Spider-Man: Across the Spider-Verse">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Spider-Man: Across the Spider-Verse" data-tmdb="569094" data-type="movie" data-trailer="cqGjhVJWtEg">▶ Play</button>
+            </div>
+          </div>
+          <h3>Spider-Man: Spider-Verse</h3>
+          <p>2023 · Oscar Nominee · Animation</p>
+        </article>
       </div>
     </section>
+    
+    
+    
+    <!-- 6. Bangla & South Asian Cinema Gems -->
+    <section class="section container reveal" id="bangla-cinema" aria-labelledby="bangla-title">
+      <div class="section__heading">
+        <div>
+          <p class="eyebrow"><span class="eyebrow__line"></span> Local Roots · Global Stage</p>
+          <h2 id="bangla-title">Bangla &amp; South Asian Gems</h2>
+        </div>
+        <div class="carousel__controls">
+          <button class="round-button" id="bangla-prev" type="button" aria-label="Scroll Bangla movies left">←</button>
+          <button class="round-button" id="bangla-next" type="button" aria-label="Scroll Bangla movies right">→</button>
+        </div>
+      </div>
+      <div class="carousel" id="bangla-carousel" aria-label="Bangla and South Asian movies">
+        <article class="movie-card" data-title="Hawa (হাওয়া)" data-genre="Drama" data-genres="Drama Mystery Thriller Bangla" data-mood="rainy mind-bending" data-tmdb="1009187" data-trailer="K9W52rpdlLQ" data-type="bangla" data-bangla="true" data-duration="135">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/oE17i5QGzK2oO65hJqGfB4WpL1d.jpg" alt="Hawa" loading="lazy">
+            <span class="movie-card__score">★ 8.5</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.5 · Mystery</p>
+              <button type="button" class="button button--primary quick-view" data-title="Hawa (হাওয়া)">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Hawa (হাওয়া)" data-tmdb="1009187" data-type="bangla" data-trailer="K9W52rpdlLQ">▶ Play</button>
+            </div>
+          </div>
+          <h3>Hawa (হাওয়া)</h3>
+          <p>2022 · Bangla Cinema · Mystery</p>
+        </article>
 
+        <article class="movie-card" data-title="Toofan (তুফান)" data-genre="Action" data-genres="Action Crime Thriller Bangla" data-mood="adrenaline" data-tmdb="1284004" data-trailer="E2rAePNkcMc" data-type="bangla" data-bangla="true" data-duration="145">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/k8U8UjY2lKk3B9Xo6Lq9R0Wz8Vz.jpg" alt="Toofan" loading="lazy">
+            <span class="movie-card__score">★ 8.6</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.6 · Action Thriller</p>
+              <button type="button" class="button button--primary quick-view" data-title="Toofan (তুফান)">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Toofan (তুফান)" data-tmdb="1284004" data-type="bangla" data-trailer="E2rAePNkcMc">▶ Play</button>
+            </div>
+          </div>
+          <h3>Toofan (তুফান)</h3>
+          <p>2024 · Shakib Khan Blockbuster</p>
+        </article>
+
+        <article class="movie-card" data-title="Priyotoma (প্রিয়তমা)" data-genre="Romance" data-genres="Romance Drama Action Bangla" data-mood="feel-good rainy" data-tmdb="1147573" data-trailer="oy7FY3k3TJc" data-type="bangla" data-bangla="true" data-duration="150">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/5M4j9Hq7z6a8S2CgCjKjJ7z8Yx7.jpg" alt="Priyotoma" loading="lazy">
+            <span class="movie-card__score">★ 8.2</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.2 · Romance</p>
+              <button type="button" class="button button--primary quick-view" data-title="Priyotoma (প্রিয়তমা)">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Priyotoma (প্রিয়তমা)" data-tmdb="1147573" data-type="bangla" data-trailer="oy7FY3k3TJc">▶ Play</button>
+            </div>
+          </div>
+          <h3>Priyotoma (প্রিয়তমা)</h3>
+          <p>2023 · Bangla Cinema · Romance</p>
+        </article>
+
+        <article class="movie-card" data-title="Surongo (সুরঙ্গ)" data-genre="Thriller" data-genres="Thriller Crime Mystery Bangla" data-mood="mind-bending adrenaline" data-tmdb="1139414" data-trailer="9OuJwweHJ_I" data-type="bangla" data-bangla="true" data-duration="150">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/4H5z6N7B8V9C0X1Z2A3S4D5F6G7.jpg" alt="Surongo" loading="lazy">
+            <span class="movie-card__score">★ 8.4</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.4 · Bank Heist</p>
+              <button type="button" class="button button--primary quick-view" data-title="Surongo (সুরঙ্গ)">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Surongo (সুরঙ্গ)" data-tmdb="1139414" data-type="bangla" data-trailer="9OuJwweHJ_I">▶ Play</button>
+            </div>
+          </div>
+          <h3>Surongo (সুরঙ্গ)</h3>
+          <p>2023 · Afran Nisho Thriller</p>
+        </article>
+
+        <article class="movie-card" data-title="Aynabaji (আয়নাবাজি)" data-genre="Thriller" data-genres="Thriller Crime Drama Bangla" data-mood="mind-bending" data-tmdb="419992" data-trailer="ytGQFKAJEaE" data-type="bangla" data-bangla="true" data-duration="144">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/1X2Y3Z4A5B6C7D8E9F0G1H2I3J4.jpg" alt="Aynabaji" loading="lazy">
+            <span class="movie-card__score">★ 8.9</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.9 · Crime Mystery</p>
+              <button type="button" class="button button--primary quick-view" data-title="Aynabaji (আয়নাবাজি)">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Aynabaji (আয়নাবাজি)" data-tmdb="419992" data-type="bangla" data-trailer="ytGQFKAJEaE">▶ Play</button>
+            </div>
+          </div>
+          <h3>Aynabaji (আয়নাবাজি)</h3>
+          <p>2016 · Chanchal Chowdhury Classic</p>
+        </article>
+
+        <article class="movie-card" data-title="Pather Panchali (পথের পাঁচালী)" data-genre="Drama" data-genres="Drama Classic History Bangla" data-mood="rainy family feel-good" data-tmdb="5900" data-trailer="f2B7dpPFuiY" data-type="bangla" data-bangla="true" data-duration="125">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/8gT1vB4w5eJ3k0eH9Vf7o2bN.jpg" alt="Pather Panchali" loading="lazy">
+            <span class="movie-card__score">★ 9.1</span>
+            <div class="movie-card__overlay">
+              <p>★ 9.1 · Satyajit Ray (Full Movie)</p>
+              <button type="button" class="button button--primary quick-view" data-title="Pather Panchali (পথের পাঁচালী)">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Pather Panchali (পথের পাঁচালী)" data-tmdb="5900" data-type="bangla" data-trailer="f2B7dpPFuiY">▶ Play</button>
+            </div>
+          </div>
+          <h3>Pather Panchali (পথের পাঁচালী)</h3>
+          <p>1955 · All-Time Masterpiece (Full Film)</p>
+        </article>
+
+        <article class="movie-card" data-title="Monpura (মনপুরা)" data-genre="Drama" data-genres="Drama Romance Music Bangla" data-mood="rainy feel-good" data-tmdb="43336" data-trailer="iTdwwiwfHrU" data-type="bangla" data-bangla="true" data-duration="140">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/q5T1vB4w5eJ3k0eH9Vf7o2bN.jpg" alt="Monpura" loading="lazy">
+            <span class="movie-card__score">★ 8.7</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.7 · Folk Romance (Full Movie)</p>
+              <button type="button" class="button button--primary quick-view" data-title="Monpura (মনপুরা)">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Monpura (মনপুরা)" data-tmdb="43336" data-type="bangla" data-trailer="iTdwwiwfHrU">▶ Play</button>
+            </div>
+          </div>
+          <h3>Monpura (মনপুরা)</h3>
+          <p>2009 · Giasuddin Selim Classic (Full Film)</p>
+        </article>
+
+        <article class="movie-card" data-title="Poran (পরাণ)" data-genre="Romance" data-genres="Romance Crime Thriller Bangla" data-mood="adrenaline" data-tmdb="1003463" data-trailer="YonjB5ZZmKc" data-type="bangla" data-bangla="true" data-duration="138">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/p5T1vB4w5eJ3k0eH9Vf7o2bN.jpg" alt="Poran" loading="lazy">
+            <span class="movie-card__score">★ 8.1</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.1 · Thriller Romance</p>
+              <button type="button" class="button button--primary quick-view" data-title="Poran (পরাণ)">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Poran (পরাণ)" data-tmdb="1003463" data-type="bangla" data-trailer="YonjB5ZZmKc">▶ Play</button>
+            </div>
+          </div>
+          <h3>Poran (পরাণ)</h3>
+          <p>2022 · Bidya Sinha Mim Hit</p>
+        </article>
+
+        <article class="movie-card" data-title="Dipu Number Two (দিপু নাম্বার ২)" data-genre="Adventure" data-genres="Adventure Drama Family Bangla" data-mood="feel-good family" data-tmdb="12345671" data-trailer="-zz7T8waQbI" data-type="bangla" data-bangla="true" data-duration="154">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/m5T1vB4w5eJ3k0eH9Vf7o2bN.jpg" alt="Dipu Number Two" loading="lazy">
+            <span class="movie-card__score">★ 8.8</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.8 · Adventure Classic (Full Movie)</p>
+              <button type="button" class="button button--primary quick-view" data-title="Dipu Number Two (দিপু নাম্বার ২)">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Dipu Number Two (দিপু নাম্বার ২)" data-tmdb="12345671" data-type="bangla" data-trailer="-zz7T8waQbI">▶ Play</button>
+            </div>
+          </div>
+          <h3>Dipu Number Two (দিপু নাম্বার ২)</h3>
+          <p>1996 · Childhood Nostalgia Classic (Full Film)</p>
+        </article>
+
+        <article class="movie-card" data-title="Aguner Poroshmoni (আগুনের পরশমণি)" data-genre="Drama" data-genres="Drama War History Bangla" data-mood="mind-bending rainy" data-tmdb="12345672" data-trailer="N2_ZAY34Lc8" data-type="bangla" data-bangla="true" data-duration="132">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/8gT1vB4w5eJ3k0eH9Vf7o2bN.jpg" alt="Aguner Poroshmoni" loading="lazy">
+            <span class="movie-card__score">★ 9.0</span>
+            <div class="movie-card__overlay">
+              <p>★ 9.0 · 1971 National Award (Full Movie)</p>
+              <button type="button" class="button button--primary quick-view" data-title="Aguner Poroshmoni (আগুনের পরশমণি)">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Aguner Poroshmoni (আগুনের পরশমণি)" data-tmdb="12345672" data-type="bangla" data-trailer="N2_ZAY34Lc8">▶ Play</button>
+            </div>
+          </div>
+          <h3>Aguner Poroshmoni (আগুনের পরশমণি)</h3>
+          <p>1994 · Humayun Ahmed Masterpiece (Full Film)</p>
+        </article>
+
+        <article class="movie-card" data-title="Chhutir Ghonta (ছুটির ঘণ্টা)" data-genre="Drama" data-genres="Drama Family Bangla" data-mood="rainy" data-tmdb="12345673" data-trailer="WlUtB3a2Kbo" data-type="bangla" data-bangla="true" data-duration="135">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/oE17i5QGzK2oO65hJqGfB4WpL1d.jpg" alt="Chhutir Ghonta" loading="lazy">
+            <span class="movie-card__score">★ 8.6</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.6 · Heart-Touching Classic (Full Movie)</p>
+              <button type="button" class="button button--primary quick-view" data-title="Chhutir Ghonta (ছুটির ঘণ্টা)">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Chhutir Ghonta (ছুটির ঘণ্টা)" data-tmdb="12345673" data-type="bangla" data-trailer="WlUtB3a2Kbo">▶ Play</button>
+            </div>
+          </div>
+          <h3>Chhutir Ghonta (ছুটির ঘণ্টা)</h3>
+          <p>1980 · Razzak &amp; Shabana Classic (Full Film)</p>
+        </article>
+      </div>
+    </section>
+    
+    
+    
+    <!-- 7. Bollywood & Hindi Blockbusters -->
+    <section class="section container reveal" id="hindi-cinema" aria-labelledby="hindi-title">
+      <div class="section__heading">
+        <div>
+          <p class="eyebrow"><span class="eyebrow__line"></span> Subcontinent Mega Hits · Hindi Cinema</p>
+          <h2 id="hindi-title">🔥 Bollywood &amp; Hindi Blockbusters</h2>
+        </div>
+        <div class="carousel__controls">
+          <button class="round-button" id="hindi-prev" type="button" aria-label="Scroll Hindi movies left">←</button>
+          <button class="round-button" id="hindi-next" type="button" aria-label="Scroll Hindi movies right">→</button>
+        </div>
+      </div>
+      <div class="carousel" id="hindi-carousel" aria-label="Bollywood and Hindi blockbusters">
+        <article class="movie-card" data-title="Jawan" data-genre="Action" data-genres="Action Thriller Hindi" data-mood="adrenaline" data-tmdb="872906" data-trailer="MWOlnZSnXJo" data-type="movie" data-duration="169" data-hindi="true">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/jFt1gS4BGHlK8xt76Y81Alp4dbt.jpg" alt="Jawan" loading="lazy">
+            <span class="movie-card__score">★ 7.8</span>
+            <div class="movie-card__overlay">
+              <p>★ 7.8 · Action</p>
+              <button type="button" class="button button--primary quick-view" data-title="Jawan">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Jawan" data-tmdb="872906" data-type="movie" data-trailer="MWOlnZSnXJo">▶ Play</button>
+            </div>
+          </div>
+          <h3>Jawan</h3>
+          <p>2023 · Shah Rukh Khan Mega Hit</p>
+        </article>
+
+        <article class="movie-card" data-title="Pathaan" data-genre="Action" data-genres="Action Adventure Thriller Hindi" data-mood="adrenaline" data-tmdb="864692" data-trailer="yswBxKPFSvA" data-type="movie" data-duration="146" data-hindi="true">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/arf00BkwvXo0CFKbaD9OpqdE4Nu.jpg" alt="Pathaan" loading="lazy">
+            <span class="movie-card__score">★ 7.2</span>
+            <div class="movie-card__overlay">
+              <p>★ 7.2 · Spy Action</p>
+              <button type="button" class="button button--primary quick-view" data-title="Pathaan">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Pathaan" data-tmdb="864692" data-type="movie" data-trailer="yswBxKPFSvA">▶ Play</button>
+            </div>
+          </div>
+          <h3>Pathaan</h3>
+          <p>2023 · YRF Spy Universe</p>
+        </article>
+
+        <article class="movie-card" data-title="Animal" data-genre="Action" data-genres="Action Crime Drama Hindi" data-mood="adrenaline mind-bending" data-tmdb="781732" data-trailer="8FkLRUJj-o0" data-type="movie" data-duration="204" data-hindi="true">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/hr9rjR3J0xBBKmlJ4n3gHId9ccx.jpg" alt="Animal" loading="lazy">
+            <span class="movie-card__score">★ 7.6</span>
+            <div class="movie-card__overlay">
+              <p>★ 7.6 · Crime Drama</p>
+              <button type="button" class="button button--primary quick-view" data-title="Animal">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Animal" data-tmdb="781732" data-type="movie" data-trailer="8FkLRUJj-o0">▶ Play</button>
+            </div>
+          </div>
+          <h3>Animal</h3>
+          <p>2023 · Ranbir Kapoor Blockbuster</p>
+        </article>
+
+        <article class="movie-card" data-title="12th Fail" data-genre="Drama" data-genres="Biography Drama Hindi" data-mood="feel-good" data-tmdb="1163258" data-trailer="KjbtuqENvVE" data-type="movie" data-duration="147" data-hindi="true">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/eebUPRI4Z5e1Z7Hev4JZAwMIFkX.jpg" alt="12th Fail" loading="lazy">
+            <span class="movie-card__score">★ 8.6</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.6 · Inspirational</p>
+              <button type="button" class="button button--primary quick-view" data-title="12th Fail">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="12th Fail" data-tmdb="1163258" data-type="movie" data-trailer="KjbtuqENvVE">▶ Play</button>
+            </div>
+          </div>
+          <h3>12th Fail</h3>
+          <p>2023 · True Story Masterpiece</p>
+        </article>
+
+        <article class="movie-card" data-title="Stree 2" data-genre="Comedy" data-genres="Comedy Horror Hindi" data-mood="adrenaline feel-good" data-tmdb="1112426" data-trailer="VlvOgk5BHS4" data-type="movie" data-duration="149" data-hindi="true">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/nfnhwfUEFuSOxxf4jDdBlY6Lccw.jpg" alt="Stree 2" loading="lazy">
+            <span class="movie-card__score">★ 7.7</span>
+            <div class="movie-card__overlay">
+              <p>★ 7.7 · Horror Comedy</p>
+              <button type="button" class="button button--primary quick-view" data-title="Stree 2">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Stree 2" data-tmdb="1112426" data-type="movie" data-trailer="VlvOgk5BHS4">▶ Play</button>
+            </div>
+          </div>
+          <h3>Stree 2</h3>
+          <p>2024 · All-Time Box Office Record</p>
+        </article>
+
+        <article class="movie-card" data-title="Dangal" data-genre="Drama" data-genres="Action Biography Drama Hindi" data-mood="feel-good adrenaline" data-tmdb="360814" data-trailer="9jyD4Ykbq8Y" data-type="movie" data-duration="161" data-hindi="true">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/cJRPOLEexI7qp2DKtFfCh7YaaUG.jpg" alt="Dangal" loading="lazy">
+            <span class="movie-card__score">★ 8.4</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.4 · Sports Biography</p>
+              <button type="button" class="button button--primary quick-view" data-title="Dangal">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Dangal" data-tmdb="360814" data-type="movie" data-trailer="9jyD4Ykbq8Y">▶ Play</button>
+            </div>
+          </div>
+          <h3>Dangal</h3>
+          <p>2016 · Aamir Khan All-Time Highest</p>
+        </article>
+
+        <article class="movie-card" data-title="3 Idiots" data-genre="Comedy" data-genres="Comedy Drama Hindi" data-mood="feel-good family" data-tmdb="20453" data-trailer="22zjP29xZGM" data-type="movie" data-duration="170" data-hindi="true">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/66A9MqXOyVFCssoloscw79z8Tew.jpg" alt="3 Idiots" loading="lazy">
+            <span class="movie-card__score">★ 8.5</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.5 · Comedy Drama</p>
+              <button type="button" class="button button--primary quick-view" data-title="3 Idiots">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="3 Idiots" data-tmdb="20453" data-type="movie" data-trailer="22zjP29xZGM">▶ Play</button>
+            </div>
+          </div>
+          <h3>3 Idiots</h3>
+          <p>2009 · Rajkumar Hirani Classic</p>
+        </article>
+
+        <article class="movie-card" data-title="K.G.F: Chapter 2" data-genre="Action" data-genres="Action Crime Drama Hindi" data-mood="adrenaline" data-tmdb="587412" data-trailer="Qah9sSIXJqk" data-type="movie" data-duration="168" data-hindi="true">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/khNVygolU0TxLIDWff5tQlAhZ23.jpg" alt="K.G.F: Chapter 2" loading="lazy">
+            <span class="movie-card__score">★ 8.3</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.3 · Action Epic</p>
+              <button type="button" class="button button--primary quick-view" data-title="K.G.F: Chapter 2">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="K.G.F: Chapter 2" data-tmdb="587412" data-type="movie" data-trailer="Qah9sSIXJqk">▶ Play</button>
+            </div>
+          </div>
+          <h3>K.G.F: Chapter 2</h3>
+          <p>2022 · Monster Rocky Bhai</p>
+        </article>
+
+        <article class="movie-card" data-title="Brahmāstra Part One: Shiva" data-genre="Fantasy" data-genres="Action Adventure Fantasy Hindi" data-mood="adrenaline mind-bending" data-tmdb="496331" data-trailer="JwZRx6IGL_k" data-type="movie" data-duration="167" data-hindi="true">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/x61qdvHIsr9U53FwoLVDQqAGur0.jpg" alt="Brahmāstra Part One: Shiva" loading="lazy">
+            <span class="movie-card__score">★ 7.0</span>
+            <div class="movie-card__overlay">
+              <p>★ 7.0 · Fantasy Epic</p>
+              <button type="button" class="button button--primary quick-view" data-title="Brahmāstra Part One: Shiva">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Brahmāstra Part One: Shiva" data-tmdb="496331" data-type="movie" data-trailer="JwZRx6IGL_k">▶ Play</button>
+            </div>
+          </div>
+          <h3>Brahmāstra Part One: Shiva</h3>
+          <p>2022 · Astraverse Fantasy</p>
+        </article>
+
+        <article class="movie-card" data-title="Kabir Singh" data-genre="Romance" data-genres="Drama Romance Hindi" data-mood="adrenaline" data-tmdb="577328" data-trailer="RiANSSgCuJk" data-type="movie" data-duration="173" data-hindi="true">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/iHPF4rt8HTuDZzNH1L2FCiPzN48.jpg" alt="Kabir Singh" loading="lazy">
+            <span class="movie-card__score">★ 7.1</span>
+            <div class="movie-card__overlay">
+              <p>★ 7.1 · Romantic Drama</p>
+              <button type="button" class="button button--primary quick-view" data-title="Kabir Singh">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Kabir Singh" data-tmdb="577328" data-type="movie" data-trailer="RiANSSgCuJk">▶ Play</button>
+            </div>
+          </div>
+          <h3>Kabir Singh</h3>
+          <p>2019 · Shahid Kapoor Blockbuster</p>
+        </article>
+      </div>
+    </section>
+    
+    
+    
+    <!-- 4. Hollywood & English Hits -->
+    <section class="section container reveal" id="hollywood-cinema" aria-labelledby="hollywood-title">
+      <div class="section__heading">
+        <div>
+          <p class="eyebrow"><span class="eyebrow__line"></span> Box Office Sensations · হলিউড ব্লকবাস্টার</p>
+          <h2 id="hollywood-title">🇺🇸 Hollywood &amp; English Cinema</h2>
+        </div>
+        <div class="carousel__controls">
+          <button class="round-button" id="hollywood-prev" type="button" aria-label="Scroll Hollywood movies left">←</button>
+          <button class="round-button" id="hollywood-next" type="button" aria-label="Scroll Hollywood movies right">→</button>
+        </div>
+      </div>
+      <div class="carousel" id="hollywood-carousel" aria-label="Hollywood and English cinema">
+        <article class="movie-card" data-title="The Dark Knight" data-genre="Action" data-genres="Action Crime Thriller" data-mood="adrenaline mind-bending" data-tmdb="155" data-trailer="EXeTwQWrcwY" data-type="movie" data-duration="152" data-backdrop="https://image.tmdb.org/t/p/original/9FE5eD92WfVCiivM9Pq9GVSrlWk.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg" alt="The Dark Knight" loading="lazy">
+            <span class="movie-card__score">★ 9.0</span>
+            <div class="movie-card__overlay">
+              <p>★ 9.0 · Action Epic</p>
+              <button type="button" class="button button--primary quick-view" data-title="The Dark Knight">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="The Dark Knight" data-tmdb="155" data-type="movie" data-trailer="EXeTwQWrcwY">▶ Play</button>
+            </div>
+          </div>
+          <h3>The Dark Knight</h3>
+          <p>2008 · Christopher Nolan · Action</p>
+        </article>
+
+        <article class="movie-card" data-title="Inception" data-genre="Sci-Fi" data-genres="Sci-Fi Action Thriller" data-mood="mind-bending adrenaline" data-tmdb="27205" data-trailer="YoHD9XEInc0" data-type="movie" data-duration="148" data-backdrop="https://image.tmdb.org/t/p/original/8ZTVqvKDQ8emSGUEMjsS4yHAwrp.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg" alt="Inception" loading="lazy">
+            <span class="movie-card__score">★ 8.8</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.8 · Mind-Bending</p>
+              <button type="button" class="button button--primary quick-view" data-title="Inception">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Inception" data-tmdb="27205" data-type="movie" data-trailer="YoHD9XEInc0">▶ Play</button>
+            </div>
+          </div>
+          <h3>Inception</h3>
+          <p>2010 · Leonardo DiCaprio · Sci-Fi</p>
+        </article>
+
+        <article class="movie-card" data-title="Interstellar" data-genre="Sci-Fi" data-genres="Sci-Fi Adventure Drama" data-mood="mind-bending" data-tmdb="157336" data-trailer="zSWdZVtXT7E" data-type="movie" data-duration="169" data-backdrop="https://image.tmdb.org/t/p/original/8sNiAPPYU14PUepFNeSNGUTiHW.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg" alt="Interstellar" loading="lazy">
+            <span class="movie-card__score">★ 8.7</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.7 · Cosmic Sci-Fi</p>
+              <button type="button" class="button button--primary quick-view" data-title="Interstellar">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Interstellar" data-tmdb="157336" data-type="movie" data-trailer="zSWdZVtXT7E">▶ Play</button>
+            </div>
+          </div>
+          <h3>Interstellar</h3>
+          <p>2014 · Matthew McConaughey · Sci-Fi</p>
+        </article>
+
+        <article class="movie-card" data-title="The Batman" data-genre="Action" data-genres="Action Crime Drama" data-mood="mind-bending adrenaline" data-tmdb="414906" data-trailer="mqqft2x_Aa4" data-type="movie" data-duration="176" data-backdrop="https://image.tmdb.org/t/p/original/rvtdN5XkWAfGX6xDuPL6yYS2seK.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/74xTEgt7R36Fpooo50r9T25onhq.jpg" alt="The Batman" loading="lazy">
+            <span class="movie-card__score">★ 8.3</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.3 · Noir Crime</p>
+              <button type="button" class="button button--primary quick-view" data-title="The Batman">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="The Batman" data-tmdb="414906" data-type="movie" data-trailer="mqqft2x_Aa4">▶ Play</button>
+            </div>
+          </div>
+          <h3>The Batman</h3>
+          <p>2022 · Robert Pattinson · Mystery</p>
+        </article>
+
+        <article class="movie-card" data-title="Top Gun: Maverick" data-genre="Action" data-genres="Action Drama" data-mood="adrenaline feel-good" data-tmdb="361743" data-trailer="giXco2JAZ_4" data-type="movie" data-duration="130" data-backdrop="https://image.tmdb.org/t/p/original/AaV1YIdWKnjAIAOe8UUKBFm327v.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/62HCnUTziyWcpDaBO2i1DX17ljH.jpg" alt="Top Gun: Maverick" loading="lazy">
+            <span class="movie-card__score">★ 8.5</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.5 · Aerial Action</p>
+              <button type="button" class="button button--primary quick-view" data-title="Top Gun: Maverick">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Top Gun: Maverick" data-tmdb="361743" data-type="movie" data-trailer="giXco2JAZ_4">▶ Play</button>
+            </div>
+          </div>
+          <h3>Top Gun: Maverick</h3>
+          <p>2022 · Tom Cruise Mega Blockbuster</p>
+        </article>
+      </div>
+    </section>
+    
+    
+    
+    <!-- 5. Japanese & Anime Cinema -->
+    <section class="section container reveal" id="anime-cinema" aria-labelledby="anime-title">
+      <div class="section__heading">
+        <div>
+          <p class="eyebrow"><span class="eyebrow__line"></span> Otaku &amp; Ghibli Masterpieces · জাপানি অ্যানিমে ও মাস্টারপিস</p>
+          <h2 id="anime-title">🇯🇵 Anime &amp; Japanese Cinema</h2>
+        </div>
+        <div class="carousel__controls">
+          <button class="round-button" id="anime-prev" type="button" aria-label="Scroll Anime movies left">←</button>
+          <button class="round-button" id="anime-next" type="button" aria-label="Scroll Anime movies right">→</button>
+        </div>
+      </div>
+      <div class="carousel" id="anime-carousel" aria-label="Japanese and Anime movies">
+        <article class="movie-card" data-title="Spirited Away" data-genre="Anime" data-genres="Animation Adventure Family Fantasy" data-mood="family feel-good" data-tmdb="129" data-trailer="ByXuk9QqQkk" data-type="movie" data-duration="125" data-anime="true" data-backdrop="https://image.tmdb.org/t/p/original/6oaL4DP75yABrd5EbC4H2zq5ghc.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg" alt="Spirited Away" loading="lazy">
+            <span class="movie-card__score">★ 8.5</span>
+            <span class="badge-studio" style="background:rgba(238,68,102,0.9);color:#fff;">Anime</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.5 · Studio Ghibli</p>
+              <button type="button" class="button button--primary quick-view" data-title="Spirited Away">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Spirited Away" data-tmdb="129" data-type="movie" data-trailer="ByXuk9QqQkk">▶ Play</button>
+            </div>
+          </div>
+          <h3>Spirited Away</h3>
+          <p>2001 · Hayao Miyazaki Oscar Winner</p>
+        </article>
+
+        <article class="movie-card" data-title="Your Name (君の名は。)" data-genre="Anime" data-genres="Animation Romance Fantasy Drama" data-mood="mind-bending feel-good rainy" data-tmdb="372058" data-trailer="xU47nhruN-Q" data-type="movie" data-duration="106" data-anime="true" data-backdrop="https://image.tmdb.org/t/p/original/mMtUybQ6hL24FXo0F3Z4j2KG7kZ.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/vfJFJPepRKapMd5G2ro7klIRysq.jpg" alt="Your Name" loading="lazy">
+            <span class="movie-card__score">★ 8.9</span>
+            <span class="badge-studio" style="background:rgba(238,68,102,0.9);color:#fff;">Anime</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.9 · Makoto Shinkai</p>
+              <button type="button" class="button button--primary quick-view" data-title="Your Name (君の名は。)">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Your Name (君の名は。)" data-tmdb="372058" data-type="movie" data-trailer="xU47nhruN-Q">▶ Play</button>
+            </div>
+          </div>
+          <h3>Your Name (君の名は。)</h3>
+          <p>2016 · Makoto Shinkai Masterpiece</p>
+        </article>
+
+        <article class="movie-card" data-title="Suzume (すずめの戸締まり)" data-genre="Anime" data-genres="Animation Adventure Fantasy" data-mood="family adrenaline" data-tmdb="916224" data-trailer="F7nQ08KaQe8" data-type="movie" data-duration="122" data-anime="true" data-backdrop="https://image.tmdb.org/t/p/original/4tdV5AeojEdbvn6VpeQrbuDlmzs.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/yStW1TXF5s7Tbtu9KjIZEaWl6HL.jpg" alt="Suzume" loading="lazy">
+            <span class="movie-card__score">★ 8.6</span>
+            <span class="badge-studio" style="background:rgba(238,68,102,0.9);color:#fff;">Anime</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.6 · Adventure Fantasy</p>
+              <button type="button" class="button button--primary quick-view" data-title="Suzume (すずめの戸締まり)">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Suzume (すずめの戸締まり)" data-tmdb="916224" data-type="movie" data-trailer="F7nQ08KaQe8">▶ Play</button>
+            </div>
+          </div>
+          <h3>Suzume (すずめの戸締まり)</h3>
+          <p>2022 · Makoto Shinkai Fantasy</p>
+        </article>
+
+        <article class="movie-card" data-title="Demon Slayer: Mugen Train" data-genre="Anime" data-genres="Animation Action Fantasy Adventure" data-mood="adrenaline mind-bending" data-tmdb="635302" data-trailer="bFwdl2PPPXM" data-type="movie" data-duration="117" data-anime="true" data-backdrop="https://image.tmdb.org/t/p/original/qjGrUmKW78MCFG8PTLDBp67S27p.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/h8Rb9gBr48ODIwYUttZNYeMWeUU.jpg" alt="Demon Slayer" loading="lazy">
+            <span class="movie-card__score">★ 8.8</span>
+            <span class="badge-studio" style="background:rgba(238,68,102,0.9);color:#fff;">Anime</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.8 · Dark Fantasy</p>
+              <button type="button" class="button button--primary quick-view" data-title="Demon Slayer: Mugen Train">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Demon Slayer: Mugen Train" data-tmdb="635302" data-type="movie" data-trailer="bFwdl2PPPXM">▶ Play</button>
+            </div>
+          </div>
+          <h3>Demon Slayer: Mugen Train</h3>
+          <p>2020 · All-Time Japanese Box Office #1</p>
+        </article>
+      </div>
+    </section>
+    
+    
+    
+    <!-- 6. Chinese & East Asian Cinema -->
+    <section class="section container reveal" id="east-asian-cinema" aria-labelledby="east-asian-title">
+      <div class="section__heading">
+        <div>
+          <p class="eyebrow"><span class="eyebrow__line"></span> Martial Arts &amp; Asian Epics · কুংফু ও এশিয়ান সিনেমা</p>
+          <h2 id="east-asian-title">🇨🇳 Chinese &amp; East Asian Cinema</h2>
+        </div>
+        <div class="carousel__controls">
+          <button class="round-button" id="east-asian-prev" type="button" aria-label="Scroll East Asian movies left">←</button>
+          <button class="round-button" id="east-asian-next" type="button" aria-label="Scroll East Asian movies right">→</button>
+        </div>
+      </div>
+      <div class="carousel" id="east-asian-carousel" aria-label="Chinese and East Asian cinema">
+        <article class="movie-card" data-title="Parasite" data-genre="Comedy" data-genres="Comedy Drama Thriller" data-mood="mind-bending rainy" data-tmdb="496243" data-trailer="5xH0R_fxysQ" data-type="movie" data-duration="132" data-east-asian="true" data-backdrop="https://image.tmdb.org/t/p/original/TU9NIjwzjoKPwQHoHshkFcQUCG.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg" alt="Parasite" loading="lazy">
+            <span class="movie-card__score">★ 8.5</span>
+            <span class="badge-studio" style="background:rgba(218,41,28,0.9);color:#f5c518;">East Asian</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.5 · Dark Comedy</p>
+              <button type="button" class="button button--primary quick-view" data-title="Parasite">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Parasite" data-tmdb="496243" data-type="movie" data-trailer="5xH0R_fxysQ">▶ Play</button>
+            </div>
+          </div>
+          <h3>Parasite</h3>
+          <p>2019 · Bong Joon-ho 4x Oscar Winner</p>
+        </article>
+
+        <article class="movie-card" data-title="Ip Man (葉問)" data-genre="Action" data-genres="Action History Martial Arts" data-mood="adrenaline" data-tmdb="14756" data-trailer="1AJxXQ74QGY" data-type="movie" data-duration="106" data-east-asian="true" data-backdrop="https://image.tmdb.org/t/p/original/69QJSMkm5Hh0x9fLElZ8hjv5N4P.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/9bUIrDKnesNbBL1nAl1nt7gtocE.jpg" alt="Ip Man" loading="lazy">
+            <span class="movie-card__score">★ 8.0</span>
+            <span class="badge-studio" style="background:rgba(218,41,28,0.9);color:#f5c518;">East Asian</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.0 · Wing Chun Legend</p>
+              <button type="button" class="button button--primary quick-view" data-title="Ip Man (葉問)">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Ip Man (葉問)" data-tmdb="14756" data-type="movie" data-trailer="1AJxXQ74QGY">▶ Play</button>
+            </div>
+          </div>
+          <h3>Ip Man (葉問)</h3>
+          <p>2008 · Donnie Yen Martial Arts Classic</p>
+        </article>
+
+        <article class="movie-card" data-title="Train to Busan (부산행)" data-genre="Action" data-genres="Action Horror Thriller" data-mood="adrenaline mind-bending" data-tmdb="396535" data-trailer="pyWuHv2-Abk" data-type="movie" data-duration="118" data-east-asian="true" data-backdrop="https://image.tmdb.org/t/p/original/brnfCYyz8EMbBrHgmh8sCwBi5i1.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/vNVFt6dtcqnI7hqa6LFBUibuFiw.jpg" alt="Train to Busan" loading="lazy">
+            <span class="movie-card__score">★ 8.4</span>
+            <span class="badge-studio" style="background:rgba(218,41,28,0.9);color:#f5c518;">East Asian</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.4 · Zombie Thriller</p>
+              <button type="button" class="button button--primary quick-view" data-title="Train to Busan (부산행)">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Train to Busan (부산행)" data-tmdb="396535" data-type="movie" data-trailer="pyWuHv2-Abk">▶ Play</button>
+            </div>
+          </div>
+          <h3>Train to Busan (부산행)</h3>
+          <p>2016 · Gong Yoo Thriller Masterpiece</p>
+        </article>
+
+        <article class="movie-card" data-title="Crouching Tiger, Hidden Dragon" data-genre="Action" data-genres="Action Adventure Drama Martial Arts" data-mood="adrenaline mind-bending" data-tmdb="146" data-trailer="gLpZ_5bE4Wk" data-type="movie" data-duration="120" data-east-asian="true" data-backdrop="https://image.tmdb.org/t/p/original/nSm9cij9VRrGDoZoS16CPnX0FqK.jpg">
+          <div class="movie-card__media image-shell is-loaded">
+            <img src="https://image.tmdb.org/t/p/w500/iNDVBFNz4XyYzM9Lwip6atSTFqf.jpg" alt="Crouching Tiger" loading="lazy">
+            <span class="movie-card__score">★ 8.3</span>
+            <span class="badge-studio" style="background:rgba(218,41,28,0.9);color:#f5c518;">East Asian</span>
+            <div class="movie-card__overlay">
+              <p>★ 8.3 · Wuxia Masterpiece</p>
+              <button type="button" class="button button--primary quick-view" data-title="Crouching Tiger, Hidden Dragon">Quick View</button>
+              <button type="button" class="button button--glass card-play-btn" data-title="Crouching Tiger, Hidden Dragon" data-tmdb="146" data-type="movie" data-trailer="gLpZ_5bE4Wk">▶ Play</button>
+            </div>
+          </div>
+          <h3>Crouching Tiger, Hidden Dragon</h3>
+          <p>2000 · Ang Lee 4x Oscar Classic</p>
+        </article>
+      </div>
+    </section>
+    
+    
+    
     <!-- 4. AI Films & Higgsfield Originals Section -->
     <section class="section container reveal" id="ai-cinema" aria-labelledby="ai-cinema-title">
       <div class="section__heading">
@@ -855,519 +1343,249 @@
         </article>
       </div>
     </section>
+    
+    
+    
+    <!-- 2.5 Watch Party Flagship Hub -->
+    <section class="section container reveal" id="watch-party-hub" aria-labelledby="party-hub-title">
+      <div class="party-hub-card">
+        <div class="party-hub-content">
+          <div class="party-badge-glow">🍿 BioscopeBD Flagship · Live Cinema Experience</div>
+          <h2 id="party-hub-title">Watch Party with Friends.<br><span>Zero Delay. Host-Controlled Playback.</span></h2>
+          <p class="party-hub-lead">Stream movies together in real-time. No browser extensions needed, zero buffering chaos, and a unified cinema experience.</p>
+          
+          <div class="party-rules-grid">
+            <div class="party-rule">
+              <span class="party-rule__icon">👑</span>
+              <div>
+                <strong>Host Authority</strong>
+                <p>Only the room host can Play, Pause, or Seek so nobody interrupts the movie flow.</p>
+              </div>
+            </div>
+            <div class="party-rule">
+              <span class="party-rule__icon">📺</span>
+              <div>
+                <strong>Live TV Sync</strong>
+                <p>Friends watch synchronized like a live TV broadcast with real-time video alignment.</p>
+              </div>
+            </div>
+            <div class="party-rule">
+              <span class="party-rule__icon">✋</span>
+              <div>
+                <strong>Request to Pause</strong>
+                <p>Need a snack or washroom break? Friends click "Request Pause" to alert the host!</p>
+              </div>
+            </div>
+          </div>
 
-    <!-- 5. Trending carousel -->
-    <section class="section container reveal" id="trending" aria-labelledby="trending-title">
-      <div class="section__heading">
-        <div>
-          <p class="eyebrow">The conversation starts here</p>
-          <h2 id="trending-title">Trending Now</h2>
+          <!-- Active Hall Persistent Banner (if user already has a hall open) -->
+          <div class="active-hall-banner" id="active-hall-banner" hidden>
+            <div class="active-hall-info">
+              <span class="active-hall-tag"><span class="pulse-dot"></span> HALL IS LIVE</span>
+              <h4 id="active-hall-banner-title">Dune: Part Two · Room: BIOSCOPE-7892</h4>
+            </div>
+            <div class="active-hall-btns">
+              <button type="button" class="button button--primary button--sm" id="btn-resume-active-hall">
+                🎬 Re-Enter Theatre
+              </button>
+              <button type="button" class="button button--danger button--sm" id="btn-dismiss-active-hall">
+                🛑 Dismiss Hall
+              </button>
+            </div>
+          </div>
+
+          <!-- Watch Party Dedicated Interactive Lounge (Zero Popups) -->
+          <div class="party-lounge-sector" id="party-lounge-sector">
+            <nav class="party-lounge-nav" role="tablist" aria-label="Watch Party Modes">
+              <button type="button" class="party-lounge-tab party-action-btn is-active" id="hub-tab-halls" role="tab" aria-selected="true" data-tab="halls">
+                <span class="btn-party-title">🏛️ Active Cinema Rooms <span class="hub-count-pill" id="hub-halls-count">4</span></span>
+                <span class="btn-party-sub">browse &amp; enter live halls</span>
+              </button>
+              <button type="button" class="party-lounge-tab party-action-btn" id="hub-host-party-btn" role="tab" aria-selected="false" data-tab="host">
+                <span class="btn-party-title">🍿 Host Party</span>
+                <span class="btn-party-sub">host room to watch with friends</span>
+              </button>
+              <button type="button" class="party-lounge-tab party-action-btn" id="hub-join-party-btn" role="tab" aria-selected="false" data-tab="join">
+                <span class="btn-party-title">🔗 Join Party</span>
+                <span class="btn-party-sub">enter room with invite code</span>
+              </button>
+            </nav>
+
+            <!-- Panel 1: Live Cinema Halls Directory -->
+            <div class="party-lounge-panel is-active" id="panel-lounge-halls" role="tabpanel">
+              <div class="box-office-header">
+                <div class="box-office-title">
+                  <span class="box-office-live-indicator"></span>
+                  <h3>Live Auditoriums &amp; Theatres</h3>
+                </div>
+                <div class="hall-filter-pills" id="hall-filter-pills">
+                  <button type="button" class="hall-pill is-active" data-filter="all">All Rooms</button>
+                  <button type="button" class="hall-pill" data-filter="public">🌐 Public Halls</button>
+                  <button type="button" class="hall-pill" data-filter="private">🔒 Private Rooms</button>
+                </div>
+              </div>
+              <p class="box-office-subtitle">See what movie is currently streaming inside each auditorium before entering. Drop into public halls with 1-click.</p>
+              <div class="box-office-grid" id="box-office-grid">
+                <!-- Dynamically populated room cards showing movie poster, title, status, viewers, and action button -->
+              </div>
+            </div>
+
+            <!-- Panel 2: Host Room (Create Public or Private Hall) -->
+            <div class="party-lounge-panel" id="panel-lounge-host" role="tabpanel" hidden>
+              <div class="party-create-card">
+                <div class="party-create-header">
+                  <h3>🍿 Create Your Cinema Hall</h3>
+                  <p class="party-desc">Launch an immersive Virtual Cinema Hall. Your room stays open until you dismiss it, and you can project and play ANY movie from the site catalog inside the hall.</p>
+                </div>
+
+                <!-- Visibility Selector: Public vs Private -->
+                <div class="party-visibility-toggle">
+                  <label class="visibility-option is-active" id="lbl-vis-public">
+                    <input type="radio" name="party-vis" id="vis-public-radio" value="public" checked>
+                    <div class="visibility-card">
+                      <div class="visibility-card__header">
+                        <span class="vis-icon">🌐</span>
+                        <strong>Public Cinema Hall</strong>
+                        <span class="vis-badge">No Code Needed</span>
+                      </div>
+                      <p>Displayed in "Active Cinema Rooms". Anyone on BioscopeBD can discover and enter with 1-click.</p>
+                    </div>
+                  </label>
+
+                  <label class="visibility-option" id="lbl-vis-private">
+                    <input type="radio" name="party-vis" id="vis-private-radio" value="private">
+                    <div class="visibility-card">
+                      <div class="visibility-card__header">
+                        <span class="vis-icon">🔒</span>
+                        <strong>Private Friends Hall</strong>
+                        <span class="vis-badge">Invite Code Only</span>
+                      </div>
+                      <p>Strictly for friends. Generates a permanent invite code. Only friends with your code can enter.</p>
+                    </div>
+                  </label>
+                </div>
+
+                <div class="party-input-group">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                    <label for="party-hall-name-input" style="margin:0;">Auditorium / Hall Name:</label>
+                    <button type="button" class="btn-text-action" id="btn-random-hall-name">🎲 Random Name</button>
+                  </div>
+                  <input type="text" id="party-hall-name-input" placeholder="e.g. Tanjir's Grand Cinema Lounge" maxlength="40">
+                </div>
+
+                <div class="party-input-group" style="margin-top:14px;">
+                  <label for="party-capacity-select">Auditorium Capacity:</label>
+                  <select id="party-capacity-select" class="party-select">
+                    <option value="5">VIP Suite (5 Seats)</option>
+                    <option value="10">Intimate Circle (10 Seats)</option>
+                    <option value="25" selected>Grand Hall (25 Seats)</option>
+                    <option value="50">IMAX Theatre (50 Seats)</option>
+                    <option value="Unlimited">Open Auditorium (Unlimited)</option>
+                  </select>
+                </div>
+
+                <!-- Private Hall Invite Code (Visible only when Private is selected) -->
+                <div class="party-room-code-box" id="party-private-code-box" hidden>
+                  <label>Private Room Invite Code (Share with Friends):</label>
+                  <div class="code-box" id="party-code-box">
+                    <strong id="party-room-code">BIOSCOPE-7892</strong>
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                      <button type="button" class="button button--glass button--sm" id="btn-generate-new-code" title="Generate New Room Code">🎲 New Code</button>
+                      <button type="button" class="button button--primary button--sm" id="btn-copy-room">📋 Copy Invite Link</button>
+                    </div>
+                  </div>
+                  <small class="code-hint">Friends enter this invite code in "Join Party" to enter your auditorium.</small>
+                  <div class="party-copy-status" id="party-copy-status" aria-live="polite"></div>
+                </div>
+
+                <div class="party-theatre-preview-card">
+                  <div class="theatre-preview-icon">🏛️</div>
+                  <div class="theatre-preview-info">
+                    <strong>Virtual Cinema Experience with Real-Time Projector</strong>
+                    <p>No need to pick movies right now. Once inside your hall, simply search and play ANY movie or AI film from our catalog and it will instantly project onto the big screen for all viewers.</p>
+                  </div>
+                </div>
+
+                <div class="party-create-footer-actions">
+                  <button type="button" class="button button--glass" id="btn-generate-ticket">
+                    🎟️ Generate Commemorative Hall Ticket
+                  </button>
+                  <button type="button" class="button button--primary button--large" id="btn-start-party">
+                    🎬 Launch &amp; Enter Cinema Theatre
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel 3: Join Private Room -->
+            <div class="party-lounge-panel" id="panel-lounge-join" role="tabpanel" hidden>
+              <div class="party-join-card">
+                <h3>🔗 Join a Private Cinema Room</h3>
+                <p class="party-desc">Enter any Hall Code or Invite Link shared by the host to take your seat in their live auditorium.</p>
+                <div class="join-input-group">
+                  <input type="text" id="join-room-input" placeholder="e.g. BIOSCOPE-7892" autocomplete="off">
+                  <button type="button" class="button button--primary button--large" id="btn-submit-join">🎬 Enter Hall</button>
+            </div>
+          </div>
         </div>
-        <div class="carousel__controls">
-          <button class="round-button" id="trending-prev" type="button" aria-label="Scroll trending movies left">←</button>
-          <button class="round-button" id="trending-next" type="button" aria-label="Scroll trending movies right">→</button>
-        </div>
-      </div>
-      <div class="carousel" id="trending-carousel" aria-label="Trending movies">
-        <article class="movie-card" data-title="Oppenheimer" data-genre="Thriller" data-mood="mind-bending" data-tmdb="872585" data-trailer="uYPbbksJxIg" data-type="movie">
-          <div class="movie-card__media image-shell">
-            <img src="https://images.unsplash.com/photo-1440404653325-ab127d49abc1?auto=format&fit=crop&w=480&q=80" alt="Poster for Oppenheimer" loading="lazy" decoding="async">
-            <span class="movie-card__score">★ 8.9</span>
-          </div>
-          <h3>Oppenheimer</h3>
-          <p>2023 · Thriller · Mind-Bending</p>
-        </article>
-
-        <article class="movie-card" data-title="Avatar: The Way of Water" data-genre="Sci-Fi" data-mood="family feel-good" data-tmdb="76600" data-trailer="d9MyW72ELq0" data-type="movie">
-          <div class="movie-card__media image-shell">
-            <img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=480&q=80" alt="Poster for Avatar" loading="lazy" decoding="async">
-            <span class="movie-card__score">★ 7.8</span>
-          </div>
-          <h3>Avatar: The Way of Water</h3>
-          <p>2022 · Sci-Fi · Family Safe</p>
-        </article>
-
-        <article class="movie-card" data-title="Hawa (হাওয়া)" data-genre="Drama" data-genres="Drama Mystery Thriller Bangla" data-mood="rainy mind-bending" data-tmdb="1009187" data-trailer="K9W52rpdlLQ" data-type="bangla" data-bangla="true">
-          <div class="movie-card__media image-shell">
-            <img src="https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=480&q=80" alt="Poster for Hawa" loading="lazy" decoding="async">
-            <span class="movie-card__score">★ 8.5</span>
-          </div>
-          <h3>Hawa (হাওয়া)</h3>
-          <p>2022 · Bangla Cinema · Rainy Vibe</p>
-        </article>
-
-        <article class="movie-card" data-title="John Wick: Chapter 4" data-genre="Action" data-mood="adrenaline" data-tmdb="603692" data-trailer="qEVUtrk8_B4" data-type="movie">
-          <div class="movie-card__media image-shell">
-            <img src="https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=480&q=80" alt="Poster for John Wick 4" loading="lazy" decoding="async">
-            <span class="movie-card__score">★ 7.7</span>
-          </div>
-          <h3>John Wick: Chapter 4</h3>
-          <p>2023 · Action · Adrenaline</p>
-        </article>
-
-        <article class="movie-card" data-title="Priyotoma (প্রিয়তমা)" data-genre="Romance" data-genres="Romance Drama Action Bangla" data-mood="feel-good rainy" data-tmdb="1147573" data-trailer="oy7FY3k3TJc" data-type="bangla" data-bangla="true">
-          <div class="movie-card__media image-shell">
-            <img src="https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=480&q=80" alt="Poster for Priyotoma" loading="lazy" decoding="async">
-            <span class="movie-card__score">★ 8.2</span>
-          </div>
-          <h3>Priyotoma (প্রিয়তমা)</h3>
-          <p>2023 · Bangla Cinema · Feel Good</p>
-        </article>
-
-        <article class="movie-card" data-title="Spider-Man: Across the Spider-Verse" data-genre="Animation" data-mood="family adrenaline" data-tmdb="569094" data-trailer="cqGjhVJWtEg" data-type="movie">
-          <div class="movie-card__media image-shell">
-            <img src="https://images.unsplash.com/photo-1635805737707-575885ab0820?auto=format&fit=crop&w=480&q=80" alt="Poster for Spider-Man" loading="lazy" decoding="async">
-            <span class="movie-card__score">★ 8.7</span>
-          </div>
-          <h3>Spider-Man: Spider-Verse</h3>
-          <p>2023 · Animation · Family Safe</p>
-        </article>
       </div>
     </section>
-
-    <!-- 6. Bangla & South Asian Cinema Gems -->
-    <section class="section container reveal" id="bangla-cinema" aria-labelledby="bangla-title">
-      <div class="section__heading">
+    
+    
+    
+    <!-- 3. Smart Discovery: Mood & Vibe Search -->
+    <section class="mood-section container reveal" id="mood-section" aria-labelledby="mood-title">
+      <div class="mood-section__header">
         <div>
-          <p class="eyebrow"><span class="eyebrow__line"></span> Local Roots · Global Stage</p>
-          <h2 id="bangla-title">Bangla &amp; South Asian Gems</h2>
+          <p class="eyebrow"><span class="eyebrow__line"></span> AI Smart Discovery</p>
+          <h2 id="mood-title">How's your mood today?</h2>
         </div>
-        <div class="carousel__controls">
-          <button class="round-button" id="bangla-prev" type="button" aria-label="Scroll Bangla movies left">←</button>
-          <button class="round-button" id="bangla-next" type="button" aria-label="Scroll Bangla movies right">→</button>
-        </div>
+        <p class="mood-section__sub" id="mood-sub">Skip the 30-minute scrolling fatigue. Choose your current feeling:</p>
       </div>
-      <div class="carousel" id="bangla-carousel" aria-label="Bangla and South Asian movies">
-        <article class="movie-card" data-title="Hawa (হাওয়া)" data-genre="Drama" data-genres="Drama Mystery Thriller Bangla" data-mood="rainy mind-bending" data-tmdb="1009187" data-trailer="K9W52rpdlLQ" data-type="bangla" data-bangla="true" data-duration="135">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/oE17i5QGzK2oO65hJqGfB4WpL1d.jpg" alt="Hawa" loading="lazy">
-            <span class="movie-card__score">★ 8.5</span>
-            <div class="movie-card__overlay">
-              <p>★ 8.5 · Mystery</p>
-              <button type="button" class="button button--primary quick-view" data-title="Hawa (হাওয়া)">Quick View</button>
-              <button type="button" class="button button--glass card-play-btn" data-title="Hawa (হাওয়া)" data-tmdb="1009187" data-type="bangla" data-trailer="K9W52rpdlLQ">▶ Play</button>
-            </div>
-          </div>
-          <h3>Hawa (হাওয়া)</h3>
-          <p>2022 · Bangla Cinema · Mystery</p>
-        </article>
+      <div class="mood-chips" role="toolbar" aria-label="Filter by mood">
+        <button type="button" class="mood-chip is-active" data-mood="all">
+          <span class="mood-chip__emoji">✨</span>
+          <span class="mood-chip__text"><strong>All Stories</strong><small>সব সিনেমা</small></span>
+        </button>
+        <button type="button" class="mood-chip" data-mood="rainy">
+          <span class="mood-chip__emoji">🌧️</span>
+          <span class="mood-chip__text"><strong>Rainy Day Chill</strong><small>শান্ত বৃষ্টির দিন</small></span>
+        </button>
+        <button type="button" class="mood-chip" data-mood="mind-bending">
+          <span class="mood-chip__emoji">🤯</span>
+          <span class="mood-chip__text"><strong>Mind-Bending</strong><small>মাথা ঘোরানো থ্রিলার</small></span>
+        </button>
+        <button type="button" class="mood-chip" data-mood="adrenaline">
+          <span class="mood-chip__emoji">⚡</span>
+          <span class="mood-chip__text"><strong>High Adrenaline</strong><small>দমবন্ধ অ্যাকশন</small></span>
+        </button>
+        <button type="button" class="mood-chip" data-mood="family">
+          <span class="mood-chip__emoji">👨‍👩‍👧</span>
+          <span class="mood-chip__text"><strong>Family Safe</strong><small>পারিবারিক নির্ভেজাল</small></span>
+        </button>
+        <button type="button" class="mood-chip" data-mood="ai-cinema">
+          <span class="mood-chip__emoji">🤖</span>
+          <span class="mood-chip__text"><strong>Higgsfield AI</strong><small>ভবিষ্যতের সিনেমা</small></span>
+        </button>
+        <button type="button" class="mood-chip" data-mood="feel-good">
+          <span class="mood-chip__emoji">🍿</span>
+          <span class="mood-chip__text"><strong>Feel Good</strong><small>হাসিখুশি হালকা গল্প</small></span>
+        </button>
+      </div>
 
-        <article class="movie-card" data-title="Toofan (তুফান)" data-genre="Action" data-genres="Action Crime Thriller Bangla" data-mood="adrenaline" data-tmdb="1284004" data-trailer="E2rAePNkcMc" data-type="bangla" data-bangla="true" data-duration="145">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/k8U8UjY2lKk3B9Xo6Lq9R0Wz8Vz.jpg" alt="Toofan" loading="lazy">
-            <span class="movie-card__score">★ 8.6</span>
-            <div class="movie-card__overlay">
-              <p>★ 8.6 · Action Thriller</p>
-              <button type="button" class="button button--primary quick-view" data-title="Toofan (তুফান)">Quick View</button>
-              <button type="button" class="button button--glass card-play-btn" data-title="Toofan (তুফান)" data-tmdb="1284004" data-type="bangla" data-trailer="E2rAePNkcMc">▶ Play</button>
-            </div>
-          </div>
-          <h3>Toofan (তুফান)</h3>
-          <p>2024 · Shakib Khan Blockbuster</p>
-        </article>
-
-        <article class="movie-card" data-title="Priyotoma (প্রিয়তমা)" data-genre="Romance" data-genres="Romance Drama Action Bangla" data-mood="feel-good rainy" data-tmdb="1147573" data-trailer="oy7FY3k3TJc" data-type="bangla" data-bangla="true" data-duration="150">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/5M4j9Hq7z6a8S2CgCjKjJ7z8Yx7.jpg" alt="Priyotoma" loading="lazy">
-            <span class="movie-card__score">★ 8.2</span>
-            <div class="movie-card__overlay">
-              <p>★ 8.2 · Romance</p>
-              <button type="button" class="button button--primary quick-view" data-title="Priyotoma (প্রিয়তমা)">Quick View</button>
-              <button type="button" class="button button--glass card-play-btn" data-title="Priyotoma (প্রিয়তমা)" data-tmdb="1147573" data-type="bangla" data-trailer="oy7FY3k3TJc">▶ Play</button>
-            </div>
-          </div>
-          <h3>Priyotoma (প্রিয়তমা)</h3>
-          <p>2023 · Bangla Cinema · Romance</p>
-        </article>
-
-        <article class="movie-card" data-title="Surongo (সুরঙ্গ)" data-genre="Thriller" data-genres="Thriller Crime Mystery Bangla" data-mood="mind-bending adrenaline" data-tmdb="1139414" data-trailer="9OuJwweHJ_I" data-type="bangla" data-bangla="true" data-duration="150">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/4H5z6N7B8V9C0X1Z2A3S4D5F6G7.jpg" alt="Surongo" loading="lazy">
-            <span class="movie-card__score">★ 8.4</span>
-            <div class="movie-card__overlay">
-              <p>★ 8.4 · Bank Heist</p>
-              <button type="button" class="button button--primary quick-view" data-title="Surongo (সুরঙ্গ)">Quick View</button>
-              <button type="button" class="button button--glass card-play-btn" data-title="Surongo (সুরঙ্গ)" data-tmdb="1139414" data-type="bangla" data-trailer="9OuJwweHJ_I">▶ Play</button>
-            </div>
-          </div>
-          <h3>Surongo (সুরঙ্গ)</h3>
-          <p>2023 · Afran Nisho Thriller</p>
-        </article>
-
-        <article class="movie-card" data-title="Aynabaji (আয়নাবাজি)" data-genre="Thriller" data-genres="Thriller Crime Drama Bangla" data-mood="mind-bending" data-tmdb="419992" data-trailer="ytGQFKAJEaE" data-type="bangla" data-bangla="true" data-duration="144">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/1X2Y3Z4A5B6C7D8E9F0G1H2I3J4.jpg" alt="Aynabaji" loading="lazy">
-            <span class="movie-card__score">★ 8.9</span>
-            <div class="movie-card__overlay">
-              <p>★ 8.9 · Crime Mystery</p>
-              <button type="button" class="button button--primary quick-view" data-title="Aynabaji (আয়নাবাজি)">Quick View</button>
-              <button type="button" class="button button--glass card-play-btn" data-title="Aynabaji (আয়নাবাজি)" data-tmdb="419992" data-type="bangla" data-trailer="ytGQFKAJEaE">▶ Play</button>
-            </div>
-          </div>
-          <h3>Aynabaji (আয়নাবাজি)</h3>
-          <p>2016 · Chanchal Chowdhury Classic</p>
-        </article>
-
-        <article class="movie-card" data-title="Pather Panchali (পথের পাঁচালী)" data-genre="Drama" data-genres="Drama Classic History Bangla" data-mood="rainy family feel-good" data-tmdb="5900" data-trailer="f2B7dpPFuiY" data-type="bangla" data-bangla="true" data-duration="125">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/8gT1vB4w5eJ3k0eH9Vf7o2bN.jpg" alt="Pather Panchali" loading="lazy">
-            <span class="movie-card__score">★ 9.1</span>
-            <div class="movie-card__overlay">
-              <p>★ 9.1 · Satyajit Ray (Full Movie)</p>
-              <button type="button" class="button button--primary quick-view" data-title="Pather Panchali (পথের পাঁচালী)">Quick View</button>
-              <button type="button" class="button button--glass card-play-btn" data-title="Pather Panchali (পথের পাঁচালী)" data-tmdb="5900" data-type="bangla" data-trailer="f2B7dpPFuiY">▶ Play</button>
-            </div>
-          </div>
-          <h3>Pather Panchali (পথের পাঁচালী)</h3>
-          <p>1955 · All-Time Masterpiece (Full Film)</p>
-        </article>
-
-        <article class="movie-card" data-title="Monpura (মনপুরা)" data-genre="Drama" data-genres="Drama Romance Music Bangla" data-mood="rainy feel-good" data-tmdb="43336" data-trailer="iTdwwiwfHrU" data-type="bangla" data-bangla="true" data-duration="140">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/q5T1vB4w5eJ3k0eH9Vf7o2bN.jpg" alt="Monpura" loading="lazy">
-            <span class="movie-card__score">★ 8.7</span>
-            <div class="movie-card__overlay">
-              <p>★ 8.7 · Folk Romance (Full Movie)</p>
-              <button type="button" class="button button--primary quick-view" data-title="Monpura (মনপুরা)">Quick View</button>
-              <button type="button" class="button button--glass card-play-btn" data-title="Monpura (মনপুরা)" data-tmdb="43336" data-type="bangla" data-trailer="iTdwwiwfHrU">▶ Play</button>
-            </div>
-          </div>
-          <h3>Monpura (মনপুরা)</h3>
-          <p>2009 · Giasuddin Selim Classic (Full Film)</p>
-        </article>
-
-        <article class="movie-card" data-title="Poran (পরাণ)" data-genre="Romance" data-genres="Romance Crime Thriller Bangla" data-mood="adrenaline" data-tmdb="1003463" data-trailer="YonjB5ZZmKc" data-type="bangla" data-bangla="true" data-duration="138">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/p5T1vB4w5eJ3k0eH9Vf7o2bN.jpg" alt="Poran" loading="lazy">
-            <span class="movie-card__score">★ 8.1</span>
-            <div class="movie-card__overlay">
-              <p>★ 8.1 · Thriller Romance</p>
-              <button type="button" class="button button--primary quick-view" data-title="Poran (পরাণ)">Quick View</button>
-              <button type="button" class="button button--glass card-play-btn" data-title="Poran (পরাণ)" data-tmdb="1003463" data-type="bangla" data-trailer="YonjB5ZZmKc">▶ Play</button>
-            </div>
-          </div>
-          <h3>Poran (পরাণ)</h3>
-          <p>2022 · Bidya Sinha Mim Hit</p>
-        </article>
-
-        <article class="movie-card" data-title="Dipu Number Two (দিপু নাম্বার ২)" data-genre="Adventure" data-genres="Adventure Drama Family Bangla" data-mood="feel-good family" data-tmdb="12345671" data-trailer="-zz7T8waQbI" data-type="bangla" data-bangla="true" data-duration="154">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/m5T1vB4w5eJ3k0eH9Vf7o2bN.jpg" alt="Dipu Number Two" loading="lazy">
-            <span class="movie-card__score">★ 8.8</span>
-            <div class="movie-card__overlay">
-              <p>★ 8.8 · Adventure Classic (Full Movie)</p>
-              <button type="button" class="button button--primary quick-view" data-title="Dipu Number Two (দিপু নাম্বার ২)">Quick View</button>
-              <button type="button" class="button button--glass card-play-btn" data-title="Dipu Number Two (দিপু নাম্বার ২)" data-tmdb="12345671" data-type="bangla" data-trailer="-zz7T8waQbI">▶ Play</button>
-            </div>
-          </div>
-          <h3>Dipu Number Two (দিপু নাম্বার ২)</h3>
-          <p>1996 · Childhood Nostalgia Classic (Full Film)</p>
-        </article>
-
-        <article class="movie-card" data-title="Aguner Poroshmoni (আগুনের পরশমণি)" data-genre="Drama" data-genres="Drama War History Bangla" data-mood="mind-bending rainy" data-tmdb="12345672" data-trailer="N2_ZAY34Lc8" data-type="bangla" data-bangla="true" data-duration="132">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/8gT1vB4w5eJ3k0eH9Vf7o2bN.jpg" alt="Aguner Poroshmoni" loading="lazy">
-            <span class="movie-card__score">★ 9.0</span>
-            <div class="movie-card__overlay">
-              <p>★ 9.0 · 1971 National Award (Full Movie)</p>
-              <button type="button" class="button button--primary quick-view" data-title="Aguner Poroshmoni (আগুনের পরশমণি)">Quick View</button>
-              <button type="button" class="button button--glass card-play-btn" data-title="Aguner Poroshmoni (আগুনের পরশমণি)" data-tmdb="12345672" data-type="bangla" data-trailer="N2_ZAY34Lc8">▶ Play</button>
-            </div>
-          </div>
-          <h3>Aguner Poroshmoni (আগুনের পরশমণি)</h3>
-          <p>1994 · Humayun Ahmed Masterpiece (Full Film)</p>
-        </article>
-
-        <article class="movie-card" data-title="Chhutir Ghonta (ছুটির ঘণ্টা)" data-genre="Drama" data-genres="Drama Family Bangla" data-mood="rainy" data-tmdb="12345673" data-trailer="WlUtB3a2Kbo" data-type="bangla" data-bangla="true" data-duration="135">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/oE17i5QGzK2oO65hJqGfB4WpL1d.jpg" alt="Chhutir Ghonta" loading="lazy">
-            <span class="movie-card__score">★ 8.6</span>
-            <div class="movie-card__overlay">
-              <p>★ 8.6 · Heart-Touching Classic (Full Movie)</p>
-              <button type="button" class="button button--primary quick-view" data-title="Chhutir Ghonta (ছুটির ঘণ্টা)">Quick View</button>
-              <button type="button" class="button button--glass card-play-btn" data-title="Chhutir Ghonta (ছুটির ঘণ্টা)" data-tmdb="12345673" data-type="bangla" data-trailer="WlUtB3a2Kbo">▶ Play</button>
-            </div>
-          </div>
-          <h3>Chhutir Ghonta (ছুটির ঘণ্টা)</h3>
-          <p>1980 · Razzak &amp; Shabana Classic (Full Film)</p>
-        </article>
+      <!-- Time-Budget Quick Duration Filter -->
+      <div class="time-budget-wrap" id="time-budget-wrap">
+        <span class="time-budget-label"><span aria-hidden="true">⏱️</span> Time Budget:</span>
+        <div class="time-budget-chips" role="toolbar" aria-label="Filter by movie duration">
+          <button type="button" class="budget-chip is-active" data-duration="all">All Lengths</button>
+          <button type="button" class="budget-chip" data-duration="short">&lt; 30 Mins (AI / Shorts)</button>
+          <button type="button" class="budget-chip" data-duration="medium">&lt; 90 Mins (Quick Thrills)</button>
+          <button type="button" class="budget-chip" data-duration="epic">2+ Hour Epics</button>
+        </div>
       </div>
     </section>
-
-    <!-- 7. Bollywood & Hindi Blockbusters -->
-    <section class="section container reveal" id="hindi-cinema" aria-labelledby="hindi-title">
-      <div class="section__heading">
-        <div>
-          <p class="eyebrow"><span class="eyebrow__line"></span> Subcontinent Mega Hits · Hindi Cinema</p>
-          <h2 id="hindi-title">🔥 Bollywood &amp; Hindi Blockbusters</h2>
-        </div>
-        <div class="carousel__controls">
-          <button class="round-button" id="hindi-prev" type="button" aria-label="Scroll Hindi movies left">←</button>
-          <button class="round-button" id="hindi-next" type="button" aria-label="Scroll Hindi movies right">→</button>
-        </div>
-      </div>
-      <div class="carousel" id="hindi-carousel" aria-label="Bollywood and Hindi blockbusters">
-        <article class="movie-card" data-title="Jawan" data-genre="Action" data-genres="Action Thriller Hindi" data-mood="adrenaline" data-tmdb="872906" data-trailer="MWOlnZSnXJo" data-type="movie" data-duration="169" data-hindi="true">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/jFt1gS4BGHlK8xt76Y81Alp4dbt.jpg" alt="Jawan" loading="lazy">
-            <span class="movie-card__score">★ 7.8</span>
-            <div class="movie-card__overlay">
-              <p>★ 7.8 · Action</p>
-              <button type="button" class="button button--primary quick-view" data-title="Jawan">Quick View</button>
-              <button type="button" class="button button--glass card-play-btn" data-title="Jawan" data-tmdb="872906" data-type="movie" data-trailer="MWOlnZSnXJo">▶ Play</button>
-            </div>
-          </div>
-          <h3>Jawan</h3>
-          <p>2023 · Shah Rukh Khan Mega Hit</p>
-        </article>
-
-        <article class="movie-card" data-title="Pathaan" data-genre="Action" data-genres="Action Adventure Thriller Hindi" data-mood="adrenaline" data-tmdb="864692" data-trailer="yswBxKPFSvA" data-type="movie" data-duration="146" data-hindi="true">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/arf00BkwvXo0CFKbaD9OpqdE4Nu.jpg" alt="Pathaan" loading="lazy">
-            <span class="movie-card__score">★ 7.2</span>
-            <div class="movie-card__overlay">
-              <p>★ 7.2 · Spy Action</p>
-              <button type="button" class="button button--primary quick-view" data-title="Pathaan">Quick View</button>
-              <button type="button" class="button button--glass card-play-btn" data-title="Pathaan" data-tmdb="864692" data-type="movie" data-trailer="yswBxKPFSvA">▶ Play</button>
-            </div>
-          </div>
-          <h3>Pathaan</h3>
-          <p>2023 · YRF Spy Universe</p>
-        </article>
-
-        <article class="movie-card" data-title="Animal" data-genre="Action" data-genres="Action Crime Drama Hindi" data-mood="adrenaline mind-bending" data-tmdb="781732" data-trailer="8FkLRUJj-o0" data-type="movie" data-duration="204" data-hindi="true">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/hr9rjR3J0xBBKmlJ4n3gHId9ccx.jpg" alt="Animal" loading="lazy">
-            <span class="movie-card__score">★ 7.6</span>
-            <div class="movie-card__overlay">
-              <p>★ 7.6 · Crime Drama</p>
-              <button type="button" class="button button--primary quick-view" data-title="Animal">Quick View</button>
-              <button type="button" class="button button--glass card-play-btn" data-title="Animal" data-tmdb="781732" data-type="movie" data-trailer="8FkLRUJj-o0">▶ Play</button>
-            </div>
-          </div>
-          <h3>Animal</h3>
-          <p>2023 · Ranbir Kapoor Blockbuster</p>
-        </article>
-
-        <article class="movie-card" data-title="12th Fail" data-genre="Drama" data-genres="Biography Drama Hindi" data-mood="feel-good" data-tmdb="1163258" data-trailer="KjbtuqENvVE" data-type="movie" data-duration="147" data-hindi="true">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/eebUPRI4Z5e1Z7Hev4JZAwMIFkX.jpg" alt="12th Fail" loading="lazy">
-            <span class="movie-card__score">★ 8.6</span>
-            <div class="movie-card__overlay">
-              <p>★ 8.6 · Inspirational</p>
-              <button type="button" class="button button--primary quick-view" data-title="12th Fail">Quick View</button>
-              <button type="button" class="button button--glass card-play-btn" data-title="12th Fail" data-tmdb="1163258" data-type="movie" data-trailer="KjbtuqENvVE">▶ Play</button>
-            </div>
-          </div>
-          <h3>12th Fail</h3>
-          <p>2023 · True Story Masterpiece</p>
-        </article>
-
-        <article class="movie-card" data-title="Stree 2" data-genre="Comedy" data-genres="Comedy Horror Hindi" data-mood="adrenaline feel-good" data-tmdb="1112426" data-trailer="VlvOgk5BHS4" data-type="movie" data-duration="149" data-hindi="true">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/nfnhwfUEFuSOxxf4jDdBlY6Lccw.jpg" alt="Stree 2" loading="lazy">
-            <span class="movie-card__score">★ 7.7</span>
-            <div class="movie-card__overlay">
-              <p>★ 7.7 · Horror Comedy</p>
-              <button type="button" class="button button--primary quick-view" data-title="Stree 2">Quick View</button>
-              <button type="button" class="button button--glass card-play-btn" data-title="Stree 2" data-tmdb="1112426" data-type="movie" data-trailer="VlvOgk5BHS4">▶ Play</button>
-            </div>
-          </div>
-          <h3>Stree 2</h3>
-          <p>2024 · All-Time Box Office Record</p>
-        </article>
-
-        <article class="movie-card" data-title="Dangal" data-genre="Drama" data-genres="Action Biography Drama Hindi" data-mood="feel-good adrenaline" data-tmdb="360814" data-trailer="9jyD4Ykbq8Y" data-type="movie" data-duration="161" data-hindi="true">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/cJRPOLEexI7qp2DKtFfCh7YaaUG.jpg" alt="Dangal" loading="lazy">
-            <span class="movie-card__score">★ 8.4</span>
-            <div class="movie-card__overlay">
-              <p>★ 8.4 · Sports Biography</p>
-              <button type="button" class="button button--primary quick-view" data-title="Dangal">Quick View</button>
-              <button type="button" class="button button--glass card-play-btn" data-title="Dangal" data-tmdb="360814" data-type="movie" data-trailer="9jyD4Ykbq8Y">▶ Play</button>
-            </div>
-          </div>
-          <h3>Dangal</h3>
-          <p>2016 · Aamir Khan All-Time Highest</p>
-        </article>
-
-        <article class="movie-card" data-title="3 Idiots" data-genre="Comedy" data-genres="Comedy Drama Hindi" data-mood="feel-good family" data-tmdb="20453" data-trailer="22zjP29xZGM" data-type="movie" data-duration="170" data-hindi="true">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/66A9MqXOyVFCssoloscw79z8Tew.jpg" alt="3 Idiots" loading="lazy">
-            <span class="movie-card__score">★ 8.5</span>
-            <div class="movie-card__overlay">
-              <p>★ 8.5 · Comedy Drama</p>
-              <button type="button" class="button button--primary quick-view" data-title="3 Idiots">Quick View</button>
-              <button type="button" class="button button--glass card-play-btn" data-title="3 Idiots" data-tmdb="20453" data-type="movie" data-trailer="22zjP29xZGM">▶ Play</button>
-            </div>
-          </div>
-          <h3>3 Idiots</h3>
-          <p>2009 · Rajkumar Hirani Classic</p>
-        </article>
-
-        <article class="movie-card" data-title="K.G.F: Chapter 2" data-genre="Action" data-genres="Action Crime Drama Hindi" data-mood="adrenaline" data-tmdb="587412" data-trailer="Qah9sSIXJqk" data-type="movie" data-duration="168" data-hindi="true">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/khNVygolU0TxLIDWff5tQlAhZ23.jpg" alt="K.G.F: Chapter 2" loading="lazy">
-            <span class="movie-card__score">★ 8.3</span>
-            <div class="movie-card__overlay">
-              <p>★ 8.3 · Action Epic</p>
-              <button type="button" class="button button--primary quick-view" data-title="K.G.F: Chapter 2">Quick View</button>
-              <button type="button" class="button button--glass card-play-btn" data-title="K.G.F: Chapter 2" data-tmdb="587412" data-type="movie" data-trailer="Qah9sSIXJqk">▶ Play</button>
-            </div>
-          </div>
-          <h3>K.G.F: Chapter 2</h3>
-          <p>2022 · Monster Rocky Bhai</p>
-        </article>
-
-        <article class="movie-card" data-title="Brahmāstra Part One: Shiva" data-genre="Fantasy" data-genres="Action Adventure Fantasy Hindi" data-mood="adrenaline mind-bending" data-tmdb="496331" data-trailer="JwZRx6IGL_k" data-type="movie" data-duration="167" data-hindi="true">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/x61qdvHIsr9U53FwoLVDQqAGur0.jpg" alt="Brahmāstra Part One: Shiva" loading="lazy">
-            <span class="movie-card__score">★ 7.0</span>
-            <div class="movie-card__overlay">
-              <p>★ 7.0 · Fantasy Epic</p>
-              <button type="button" class="button button--primary quick-view" data-title="Brahmāstra Part One: Shiva">Quick View</button>
-              <button type="button" class="button button--glass card-play-btn" data-title="Brahmāstra Part One: Shiva" data-tmdb="496331" data-type="movie" data-trailer="JwZRx6IGL_k">▶ Play</button>
-            </div>
-          </div>
-          <h3>Brahmāstra Part One: Shiva</h3>
-          <p>2022 · Astraverse Fantasy</p>
-        </article>
-
-        <article class="movie-card" data-title="Kabir Singh" data-genre="Romance" data-genres="Drama Romance Hindi" data-mood="adrenaline" data-tmdb="577328" data-trailer="RiANSSgCuJk" data-type="movie" data-duration="173" data-hindi="true">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/iHPF4rt8HTuDZzNH1L2FCiPzN48.jpg" alt="Kabir Singh" loading="lazy">
-            <span class="movie-card__score">★ 7.1</span>
-            <div class="movie-card__overlay">
-              <p>★ 7.1 · Romantic Drama</p>
-              <button type="button" class="button button--primary quick-view" data-title="Kabir Singh">Quick View</button>
-              <button type="button" class="button button--glass card-play-btn" data-title="Kabir Singh" data-tmdb="577328" data-type="movie" data-trailer="RiANSSgCuJk">▶ Play</button>
-            </div>
-          </div>
-          <h3>Kabir Singh</h3>
-          <p>2019 · Shahid Kapoor Blockbuster</p>
-        </article>
-      </div>
-    </section>
-
-    <!-- 6.5 Mind-Bending Thrillers & Sci-Fi Epics -->
-    <section class="section container reveal" id="thrillers-cinema" aria-labelledby="thrillers-title">
-      <div class="section__heading">
-        <div>
-          <p class="eyebrow"><span class="eyebrow__line"></span> Deep Thoughts &amp; Infinite Twists</p>
-          <h2 id="thrillers-title">Mind-Bending Thrillers</h2>
-        </div>
-        <div class="carousel__controls">
-          <button class="round-button" id="thrillers-prev" type="button" aria-label="Scroll thriller movies left">←</button>
-          <button class="round-button" id="thrillers-next" type="button" aria-label="Scroll thriller movies right">→</button>
-        </div>
-      </div>
-      <div class="carousel" id="thrillers-carousel" aria-label="Mind-bending thriller movies">
-        <article class="movie-card" data-title="Inception" data-genre="Sci-Fi" data-genres="Sci-Fi Action Thriller" data-mood="mind-bending adrenaline" data-tmdb="27205" data-trailer="YoHD9XEInc0" data-type="movie" data-duration="148">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg" alt="Inception" loading="lazy">
-            <span class="movie-card__score">★ 8.8</span>
-            <div class="movie-card__overlay">
-              <p>★ 8.8 · Mind-Bending</p>
-              <button type="button" class="button button--primary quick-view" data-title="Inception">Quick View</button>
-            </div>
-          </div>
-          <h3>Inception</h3>
-          <p>2010 · Christopher Nolan</p>
-        </article>
-
-        <article class="movie-card" data-title="Shutter Island" data-genre="Thriller" data-genres="Thriller Mystery Drama" data-mood="mind-bending rainy" data-tmdb="11324" data-trailer="5iaYLCiq5RM" data-type="movie" data-duration="138">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/4GDy0PHYX3VRXUtwK5ysagvk2Te.jpg" alt="Shutter Island" loading="lazy">
-            <span class="movie-card__score">★ 8.2</span>
-            <div class="movie-card__overlay">
-              <p>★ 8.2 · Mystery</p>
-              <button type="button" class="button button--primary quick-view" data-title="Shutter Island">Quick View</button>
-            </div>
-          </div>
-          <h3>Shutter Island</h3>
-          <p>2010 · Martin Scorsese</p>
-        </article>
-
-        <article class="movie-card" data-title="Interstellar" data-genre="Sci-Fi" data-genres="Sci-Fi Adventure Drama" data-mood="mind-bending" data-tmdb="157336" data-trailer="zSWdZVtXT7E" data-type="movie" data-duration="169">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg" alt="Interstellar" loading="lazy">
-            <span class="movie-card__score">★ 8.7</span>
-            <div class="movie-card__overlay">
-              <p>★ 8.7 · Cosmic Sci-Fi</p>
-              <button type="button" class="button button--primary quick-view" data-title="Interstellar">Quick View</button>
-            </div>
-          </div>
-          <h3>Interstellar</h3>
-          <p>2014 · Christopher Nolan</p>
-        </article>
-
-        <article class="movie-card" data-title="Se7en" data-genre="Thriller" data-genres="Thriller Crime Mystery" data-mood="mind-bending rainy" data-tmdb="807" data-trailer="znmZoVkCjpI" data-type="movie" data-duration="127">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/6yoghtyTpznpBik8EngEmJskVUO.jpg" alt="Se7en" loading="lazy">
-            <span class="movie-card__score">★ 8.6</span>
-            <div class="movie-card__overlay">
-              <p>★ 8.6 · Crime Mystery</p>
-              <button type="button" class="button button--primary quick-view" data-title="Se7en">Quick View</button>
-            </div>
-          </div>
-          <h3>Se7en</h3>
-          <p>1995 · David Fincher</p>
-        </article>
-
-        <article class="movie-card" data-title="Parasite" data-genre="Comedy" data-genres="Comedy Thriller Drama" data-mood="mind-bending" data-tmdb="496243" data-trailer="5xH0R_fxysQ" data-type="movie" data-duration="132">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg" alt="Parasite" loading="lazy">
-            <span class="movie-card__score">★ 8.5</span>
-            <div class="movie-card__overlay">
-              <p>★ 8.5 · Dark Comedy</p>
-              <button type="button" class="button button--primary quick-view" data-title="Parasite">Quick View</button>
-            </div>
-          </div>
-          <h3>Parasite</h3>
-          <p>2019 · Bong Joon-ho Oscar Winner</p>
-        </article>
-
-        <article class="movie-card" data-title="Fight Club" data-genre="Drama" data-genres="Drama Thriller Action" data-mood="adrenaline mind-bending" data-tmdb="550" data-trailer="qtRKdVHc-cE" data-type="movie" data-duration="139">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg" alt="Fight Club" loading="lazy">
-            <span class="movie-card__score">★ 8.8</span>
-            <div class="movie-card__overlay">
-              <p>★ 8.8 · Cult Classic</p>
-              <button type="button" class="button button--primary quick-view" data-title="Fight Club">Quick View</button>
-            </div>
-          </div>
-          <h3>Fight Club</h3>
-          <p>1999 · David Fincher</p>
-        </article>
-
-        <article class="movie-card" data-title="The Prestige" data-genre="Thriller" data-genres="Thriller Drama Mystery" data-mood="mind-bending" data-tmdb="1124" data-trailer="o4gHCmTQDVI" data-type="movie" data-duration="130">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/bdN3gXu4zBvG4Vv1V3K3K9oN.jpg" alt="The Prestige" loading="lazy">
-            <span class="movie-card__score">★ 8.5</span>
-            <div class="movie-card__overlay">
-              <p>★ 8.5 · Mystery Illusion</p>
-              <button type="button" class="button button--primary quick-view" data-title="The Prestige">Quick View</button>
-            </div>
-          </div>
-          <h3>The Prestige</h3>
-          <p>2006 · Christopher Nolan</p>
-        </article>
-
-        <article class="movie-card" data-title="Memento" data-genre="Thriller" data-genres="Thriller Mystery Drama" data-mood="mind-bending" data-tmdb="77" data-trailer="4CV41hoyS8A" data-type="movie" data-duration="113">
-          <div class="movie-card__media image-shell is-loaded">
-            <img src="https://image.tmdb.org/t/p/w500/yuNs09hvpHVU19thMFdt9NmK2P4.jpg" alt="Memento" loading="lazy">
-            <span class="movie-card__score">★ 8.4</span>
-            <div class="movie-card__overlay">
-              <p>★ 8.4 · Reverse Mystery</p>
-              <button type="button" class="button button--primary quick-view" data-title="Memento">Quick View</button>
-            </div>
-          </div>
-          <h3>Memento</h3>
-          <p>2000 · Christopher Nolan</p>
-        </article>
-      </div>
-    </section>
-
+    
+    
     <!-- 7. High-Density Browse Grid with TMDB Pagination & Infinite Scroll -->
     <section class="section container reveal" id="top-rated" aria-labelledby="top-rated-title">
       <div class="section__heading">
