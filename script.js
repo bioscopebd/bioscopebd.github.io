@@ -335,9 +335,9 @@ function updateNavAuthUI() {
   if (isGuest) {
     navAuthBtn.innerHTML = `
       <span class="nav-auth-avatar">${currentUser.avatar || "🕶️"}</span>
-      <span class="nav-auth-text">Sign In <small style="opacity:0.7;">(Optional)</small></span>
+      <span class="nav-auth-text">Sign In</span>
     `;
-    navAuthBtn.title = "100% Free · Click to sign in or sync";
+    navAuthBtn.title = "Click to sign in or sync";
   } else {
     navAuthBtn.innerHTML = `
       <span class="nav-auth-avatar">${currentUser.avatar || "🕶️"}</span>
@@ -421,15 +421,25 @@ function handleAuthSuccess(name, email) {
 
 if (btnGoogleAuth) {
   btnGoogleAuth.addEventListener("click", () => {
-    handleAuthSuccess("Tanjir Rahman", "tanjir@bioscopebd.io");
+    const input = prompt("Enter your Name or Gmail to continue with Google:", "");
+    if (input && input.trim()) {
+      const clean = input.trim();
+      const isEmail = clean.includes("@");
+      const name = isEmail ? clean.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, c => c.toUpperCase()) : clean;
+      const email = isEmail ? clean : `${clean.toLowerCase().replace(/\s+/g, "")}@gmail.com`;
+      handleAuthSuccess(name, email);
+    }
   });
 }
 
 if (authForm) {
   authForm.addEventListener("submit", (e) => {
     e.preventDefault();
-    const email = authEmailInput?.value.trim() || "cinephile@bioscopebd.io";
-    const name = email.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+    const val = authEmailInput?.value.trim();
+    if (!val) return;
+    const isEmail = val.includes("@");
+    const name = isEmail ? val.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, c => c.toUpperCase()) : val;
+    const email = isEmail ? val : `${val.toLowerCase().replace(/\s+/g, "")}@bioscopebd.io`;
     handleAuthSuccess(name, email);
   });
 }
@@ -1227,7 +1237,15 @@ document.querySelectorAll("[data-genre-filter]").forEach(chip => {
     document.querySelectorAll("[data-genre-filter]").forEach(c => c.classList.toggle("is-active", c.dataset.genreFilter === activeGenre));
     filterCatalog();
     if (activeGenre) {
-      document.querySelector("#top-rated")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (activeGenre === "AI Cinema") {
+        document.querySelector("#ai-cinema")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else if (activeGenre === "Bangla") {
+        document.querySelector("#bangla-cinema")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else if (activeGenre === "Hindi" || activeGenre === "Bollywood") {
+        document.querySelector("#hindi-cinema")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else {
+        document.querySelector("#top-rated")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     }
   });
 });
@@ -3620,6 +3638,9 @@ if (btnDownloadReceipt && receiptCanvas) {
 const translations = {
   en: {
     movies: "Movies",
+    watchParty: "Watch Party",
+    bangla: "Bangla",
+    bollywood: "Bollywood",
     aiCinema: "AI Cinema",
     topRated: "Top Rated",
     moodSearch: "Mood Search",
@@ -3637,6 +3658,9 @@ const translations = {
   },
   bn: {
     movies: "সিনেমা",
+    watchParty: "ওয়াচ পার্টি",
+    bangla: "বাংলা",
+    bollywood: "বলিউড",
     aiCinema: "এআই সিনেমা",
     topRated: "সেরা রেটেড",
     moodSearch: "মুড সার্চ",
@@ -3656,14 +3680,22 @@ const translations = {
 
 function setLanguage(lang) {
   const t = translations[lang] || translations.en;
-  const navLinks = document.querySelectorAll("#nav-menu a");
-  if (navLinks.length >= 6) {
-    navLinks[0].textContent = t.movies;
-    navLinks[1].textContent = "🍿 Watch Party";
-    navLinks[2].innerHTML = `${t.aiCinema} <span class="badge-pill">NEW</span>`;
-    navLinks[3].textContent = t.topRated;
-    navLinks[4].textContent = t.moodSearch;
-  }
+  
+  const navTrending = document.querySelector('#nav-menu a[href="#trending"]');
+  const navParty = document.querySelector('#nav-menu a[href="#watch-party-hub"]');
+  const navBangla = document.querySelector('#nav-menu a[href="#bangla-cinema"]');
+  const navHindi = document.querySelector('#nav-menu a[href="#hindi-cinema"]');
+  const navAi = document.querySelector('#nav-menu a[href="#ai-cinema"]');
+  const navTopRated = document.querySelector('#nav-menu a[href="#top-rated"]');
+  const navMood = document.querySelector('#nav-menu a[href="#mood-section"]');
+
+  if (navTrending) navTrending.textContent = t.movies;
+  if (navParty) navParty.innerHTML = `🍿 ${t.watchParty} <span class="badge-pill">HOT</span>`;
+  if (navBangla) navBangla.textContent = `🇧🇩 ${t.bangla}`;
+  if (navHindi) navHindi.textContent = `🔥 ${t.bollywood}`;
+  if (navAi) navAi.innerHTML = `${t.aiCinema} <span class="badge-pill">NEW</span>`;
+  if (navTopRated) navTopRated.textContent = t.topRated;
+  if (navMood) navMood.textContent = t.moodSearch;
   const trendTitle = document.querySelector("#trending-title");
   if (trendTitle) trendTitle.textContent = t.trendingNow;
   const topRatedTitle = document.querySelector("#top-rated-title");

@@ -2172,37 +2172,33 @@
     </div>
   </dialog>
 
-  <!-- Guest-First + 1-Click Optional Authentication Dialog -->
+  <!-- Instant Cinephile Profile & Cross-Device Sync Dialog -->
   <dialog class="auth-dialog" id="auth-dialog" aria-labelledby="auth-dialog-title">
     <div class="auth-box">
       <button type="button" class="auth-close" id="auth-close-btn" aria-label="Close sign in">✕</button>
-      <div class="auth-badge">🍿 100% Free · No Payment Required</div>
+      <div class="auth-badge">🍿 100% Free · Instant Profile</div>
       <h3 id="auth-dialog-title">Sign In to BioscopeBD</h3>
-      <p class="auth-sub">Sync your Watchlist and continue watching across mobile, PC, and TV. Completely optional — you can always watch as a Guest!</p>
+      <p class="auth-sub">Save your Watchlist, favorite movies, and sync playback across mobile, PC, and TV.</p>
       
       <button type="button" class="button button--google button--full" id="btn-google-auth">
         <svg class="google-icon" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z"/><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.6h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.9z"/><path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3 0-.8.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12.3 0 15.2c0 2.8.7 5.5 1.9 7.9l3.7-2.9z"/><path fill="#34A853" d="M12 23.5c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2-6.4-4.8L1.9 16.9C3.7 20.6 7.5 23.5 12 23.5z"/></svg>
-        <span>1-Click Continue with Google</span>
+        <span>Continue with Google</span>
       </button>
 
-      <div class="auth-divider"><span>or sign in with email</span></div>
+      <div class="auth-divider"><span>or sign in with name / email</span></div>
 
       <form class="auth-form" id="auth-form">
         <div class="auth-field">
-          <label for="auth-email">Email Address:</label>
-          <input type="email" id="auth-email" placeholder="cinephile@example.com" required>
-        </div>
-        <div class="auth-field">
-          <label for="auth-pass">Password (optional):</label>
-          <input type="password" id="auth-pass" placeholder="••••••••">
+          <label for="auth-email">Name or Email Address:</label>
+          <input type="text" id="auth-email" placeholder="e.g. Shakib or cinephile@example.com" required>
         </div>
         <button type="submit" class="button button--primary button--full" id="btn-submit-auth">
-          Sign In / Create Free Profile
+          Sign In / Create Profile
         </button>
       </form>
 
       <button type="button" class="auth-guest-btn" id="btn-continue-guest">
-        ⚡ Continue as Guest (Zero Signup)
+        ⚡ Continue as Guest
       </button>
     </div>
   </dialog>
@@ -2361,7 +2357,7 @@
   <div class="contextual-toast" id="contextual-toast" hidden>
     <div class="contextual-toast__content">
       <span class="contextual-toast__icon">💡</span>
-      <span class="contextual-toast__text">Want to access your Watchlist on your phone or TV? Sign in with 1 click (Optional).</span>
+      <span class="contextual-toast__text">Want to access your Watchlist on your phone or TV? Sign in with 1 click.</span>
     </div>
     <div class="contextual-toast__actions">
       <button type="button" class="button button--primary button--sm" id="toast-signin-btn">Sign In</button>
