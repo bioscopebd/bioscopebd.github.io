@@ -2547,6 +2547,35 @@ body.theatre-mode-active {
   overflow: hidden !important;
 }
 
+/* Party Hub Buttons */
+.party-action-btn {
+  display: inline-flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 10px 22px !important;
+  gap: 3px !important;
+  text-align: center;
+  min-height: 54px;
+  cursor: pointer;
+}
+.btn-party-title {
+  font-size: 1.02rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1.1;
+}
+.btn-party-sub {
+  font-size: 0.7rem !important;
+  font-weight: 500 !important;
+  opacity: 0.85;
+  text-transform: none !important;
+  letter-spacing: 0.2px;
+  line-height: 1;
+}
+
 /* Active Hall Banner in Homepage Lobby */
 .active-hall-banner {
   margin-top: 24px;
