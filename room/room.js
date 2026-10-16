@@ -85,6 +85,8 @@ const theatreCornerChat = document.querySelector("#theatre-corner-chat");
 const btnTheatreChatToggle = document.querySelector("#btn-theatre-chat-toggle");
 const btnDockChatToggle = document.querySelector("#btn-dock-chat-toggle");
 const playerDockChatLabel = document.querySelector("#player-dock-chat-label");
+const btnDockServer = document.querySelector("#btn-dock-server");
+const playerDockServerLabel = document.querySelector("#player-dock-server-label");
 const btnDockResync = document.querySelector("#btn-dock-resync");
 const btnDockPauseReq = document.querySelector("#btn-dock-pause-req");
 const playerDockTitle = document.querySelector("#player-dock-title");
@@ -926,9 +928,12 @@ function loadTheatreScreen(title, tmdbId, type = "movie", trailerId = "", startS
 
   if (isYoutube) {
     const yId = trailerId || catalogEntry?.trailerId || "K9W52rpdlLQ";
-    url = `https://www.youtube-nocookie.com/embed/${yId}?autoplay=1&controls=1&rel=0&modestbranding=1&enablejsapi=1${startParam}&origin=${encodeURIComponent(window.location.origin)}`;
+    const originParam = window.location.origin && window.location.origin.startsWith("http") ? `&origin=${encodeURIComponent(window.location.origin)}` : "";
+    url = `https://www.youtube.com/embed/${yId}?autoplay=1&controls=1&rel=0&modestbranding=1&enablejsapi=1&widget_referrer=${encodeURIComponent(window.location.href)}${startParam}${originParam}`;
   } else {
-    url = (typeof CONFIG !== "undefined" && CONFIG.STREAM_SERVERS) ? CONFIG.STREAM_SERVERS[0].getUrl(tmdbId, type) : `https://vidsrc.me/embed/${tmdbId}`;
+    const servers = (typeof CONFIG !== "undefined" && CONFIG.STREAM_SERVERS) ? CONFIG.STREAM_SERVERS : [];
+    const serverObj = servers[currentTheatreServerIndex] || servers[0];
+    url = serverObj ? serverObj.getUrl(tmdbId, type) : `https://player.videasy.net/movie/${tmdbId}`;
   }
 
   theatrePlayerFrame.src = url;
@@ -1221,7 +1226,25 @@ function toggleTheatreChat(forceShow) {
   }
 }
 
+let currentTheatreServerIndex = 0;
+
 if (btnDockChatToggle) btnDockChatToggle.addEventListener("click", () => toggleTheatreChat());
+if (btnDockServer) {
+  btnDockServer.addEventListener("click", () => {
+    const servers = (typeof CONFIG !== "undefined" && CONFIG.STREAM_SERVERS) ? CONFIG.STREAM_SERVERS : [];
+    if (!servers.length) return;
+    currentTheatreServerIndex = (currentTheatreServerIndex + 1) % servers.length;
+    const nextServer = servers[currentTheatreServerIndex];
+    if (playerDockServerLabel) playerDockServerLabel.textContent = `Server ${currentTheatreServerIndex + 1}`;
+
+    if (currentHallSession && currentHallSession.tmdbId && theatrePlayerFrame) {
+      theatrePlayerFrame.src = nextServer.getUrl(currentHallSession.tmdbId, currentHallSession.type || "movie");
+      notify(`⚡ Switched Cinema Projector to ${nextServer.name} (Mirror ${currentTheatreServerIndex + 1})`);
+    } else {
+      notify(`⚡ Fast Cinema Mirror: ${nextServer.name}`);
+    }
+  });
+}
 if (btnDockResync) btnDockResync.addEventListener("click", triggerTheatreResync);
 if (btnDockPauseReq) {
   btnDockPauseReq.addEventListener("click", () => {

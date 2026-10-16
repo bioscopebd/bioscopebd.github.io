@@ -29,9 +29,9 @@
 
   // Auto-Server Stream Failover Providers (Strictly Zero Ads & No Popups)
   STREAM_SERVERS: [
-    { id: "1", name: "Bioscope Primary", getUrl: (id, type) => type === "tv" ? `https://embedwave.cc/embed/tv/${id}/1/1` : `https://embedwave.cc/embed/movie/${id}` },
-    { id: "2", name: "Bioscope Ultra Mirror", getUrl: (id, type) => type === "tv" ? `https://player.videasy.net/tv/${id}/1/1` : `https://player.videasy.net/movie/${id}` },
-    { id: "3", name: "Bioscope Fast Mirror", getUrl: (id, type) => type === "tv" ? `https://vidlink.pro/tv/${id}/1/1?primaryColor=f5c518&secondaryColor=111111` : `https://vidlink.pro/movie/${id}?primaryColor=f5c518&secondaryColor=111111` },
+    { id: "1", name: "Bioscope Primary (Fast CDN)", getUrl: (id, type) => type === "tv" ? `https://player.videasy.net/tv/${id}/1/1` : `https://player.videasy.net/movie/${id}` },
+    { id: "2", name: "Bioscope Ultra Mirror (VidLink)", getUrl: (id, type) => type === "tv" ? `https://vidlink.pro/tv/${id}/1/1?primaryColor=f5c518&secondaryColor=111111` : `https://vidlink.pro/movie/${id}?primaryColor=f5c518&secondaryColor=111111` },
+    { id: "3", name: "Bioscope Global Mirror (EmbedWave)", getUrl: (id, type) => type === "tv" ? `https://embedwave.cc/embed/tv/${id}/1/1` : `https://embedwave.cc/embed/movie/${id}` },
     { id: "4", name: "Bioscope Cloud Backup", getUrl: (id, type) => type === "tv" ? `https://embedwave.cc/embed/tv/${id}/1/1?server=1` : `https://embedwave.cc/embed/movie/${id}?server=1` },
     { id: "5", name: "Bioscope Alternative", getUrl: (id, type) => type === "tv" ? `https://player.videasy.net/tv/${id}/1/1` : `https://player.videasy.net/movie/${id}` }
   ]

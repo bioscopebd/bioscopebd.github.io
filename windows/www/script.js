@@ -146,9 +146,9 @@
 var CONFIG = window.BIOSCOPE_CONFIG || {
   TMDB_API_KEY: "8265bd1679663a7ea12ac168da84d2e8",
   STREAM_SERVERS: [
-    { id: "1", name: "Bioscope Primary", getUrl: (id, type) => type === "tv" ? `https://embedwave.cc/embed/tv/${id}/1/1` : `https://embedwave.cc/embed/movie/${id}` },
-    { id: "2", name: "Bioscope Ultra Mirror", getUrl: (id, type) => type === "tv" ? `https://player.videasy.net/tv/${id}/1/1` : `https://player.videasy.net/movie/${id}` },
-    { id: "3", name: "Bioscope Fast Mirror", getUrl: (id, type) => type === "tv" ? `https://vidlink.pro/tv/${id}/1/1?primaryColor=f5c518&secondaryColor=111111` : `https://vidlink.pro/movie/${id}?primaryColor=f5c518&secondaryColor=111111` },
+    { id: "1", name: "Bioscope Primary (Fast CDN)", getUrl: (id, type) => type === "tv" ? `https://player.videasy.net/tv/${id}/1/1` : `https://player.videasy.net/movie/${id}` },
+    { id: "2", name: "Bioscope Ultra Mirror (VidLink)", getUrl: (id, type) => type === "tv" ? `https://vidlink.pro/tv/${id}/1/1?primaryColor=f5c518&secondaryColor=111111` : `https://vidlink.pro/movie/${id}?primaryColor=f5c518&secondaryColor=111111` },
+    { id: "3", name: "Bioscope Global Mirror (EmbedWave)", getUrl: (id, type) => type === "tv" ? `https://embedwave.cc/embed/tv/${id}/1/1` : `https://embedwave.cc/embed/movie/${id}` },
     { id: "4", name: "Bioscope Cloud Backup", getUrl: (id, type) => type === "tv" ? `https://embedwave.cc/embed/tv/${id}/1/1?server=1` : `https://embedwave.cc/embed/movie/${id}?server=1` },
     { id: "5", name: "Bioscope Alternative", getUrl: (id, type) => type === "tv" ? `https://player.videasy.net/tv/${id}/1/1` : `https://player.videasy.net/movie/${id}` }
   ]
@@ -1458,12 +1458,12 @@ function loadCustomWhitelabelStream(videoId, durationSeconds = 0) {
 
   if (customYtFrame) {
     const originParam = window.location.origin && window.location.origin.startsWith("http") ? `&origin=${encodeURIComponent(window.location.origin)}` : "";
-    customYtFrame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&playsinline=1&enablejsapi=1${originParam}`;
+    customYtFrame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&playsinline=1&enablejsapi=1&widget_referrer=${encodeURIComponent(window.location.href)}${originParam}`;
     startYtHandshake();
   }
 
   const engineBadge = document.querySelector("#stream-engine-badge");
-  if (engineBadge) engineBadge.textContent = "BioscopeBD Cinema Engine";
+  if (engineBadge) engineBadge.textContent = "BioscopeBD Cinema Engine (Buffer-Free Adaptive)";
 }
 
 function stopCustomWhitelabelStream() {
@@ -1559,16 +1559,16 @@ const btnQualityTool = document.querySelector("#btn-quality-tool");
 const toolbarQualityLabel = document.querySelector("#toolbar-quality-label");
 
 const QUALITY_RESOLUTIONS = [
+  { val: "auto", label: "Auto (Buffer-Free Adaptive)", yt: "default" },
+  { val: "1080p", label: "1080p (Full HD)", yt: "hd1080" },
+  { val: "720p", label: "720p (HD Fast)", yt: "hd720" },
   { val: "4k", label: "4K (Ultra HD)", yt: "highres" },
   { val: "1440p", label: "1440p (QHD)", yt: "hd1440" },
-  { val: "1080p", label: "1080p (Full HD)", yt: "hd1080" },
-  { val: "720p", label: "720p (HD)", yt: "hd720" },
   { val: "480p", label: "480p (SD)", yt: "large" },
-  { val: "360p", label: "360p (Low)", yt: "medium" },
-  { val: "auto", label: "Auto (Adaptive)", yt: "auto" }
+  { val: "360p", label: "360p (Low Data)", yt: "medium" }
 ];
 
-let activeStreamQuality = "1080p";
+let activeStreamQuality = "auto";
 
 function setStreamQuality(qualityVal, notifyUser = true) {
   activeStreamQuality = qualityVal;
@@ -1577,7 +1577,7 @@ function setStreamQuality(qualityVal, notifyUser = true) {
 
   const engineBadge = document.querySelector("#stream-engine-badge");
   if (engineBadge) {
-    if (qualityVal === "auto") engineBadge.textContent = "Auto-Optimized Stream (1080p)";
+    if (qualityVal === "auto") engineBadge.textContent = "Auto-Optimized Stream (Buffer-Free)";
     else engineBadge.textContent = `Stream Resolution (${qualityVal.toUpperCase()})`;
   }
 
@@ -1585,8 +1585,13 @@ function setStreamQuality(qualityVal, notifyUser = true) {
 
   // If YouTube / Custom Player is active, apply quality range to YouTube API
   if (customPlayerStage && !customPlayerStage.hidden) {
-    sendYtCommand("setPlaybackQuality", [qItem.yt]);
-    sendYtCommand("setPlaybackQualityRange", [qItem.yt, qItem.yt]);
+    if (qualityVal === "auto") {
+      // Auto-Adaptive: allow YouTube's dynamic bitrate engine to stream continuously without stalls
+      sendYtCommand("setPlaybackQuality", ["default"]);
+    } else {
+      sendYtCommand("setPlaybackQuality", [qItem.yt]);
+      sendYtCommand("setPlaybackQualityRange", [qItem.yt, qItem.yt]);
+    }
   }
 
   if (notifyUser) {
@@ -1602,7 +1607,7 @@ if (playerQualityPicker) {
 
 if (btnQualityTool) {
   btnQualityTool.addEventListener("click", () => {
-    // Cycle through: 4k -> 1440p -> 1080p -> 720p -> 480p -> 360p -> auto -> 4k
+    // Cycle through: auto -> 1080p -> 720p -> 4k -> 1440p -> 480p -> 360p -> auto
     const currentIndex = QUALITY_RESOLUTIONS.findIndex(q => q.val === activeStreamQuality);
     const nextIndex = (currentIndex + 1) % QUALITY_RESOLUTIONS.length;
     const nextQuality = QUALITY_RESOLUTIONS[nextIndex].val;
@@ -1622,7 +1627,7 @@ function updateStreamResolutionBadge(quality = "1080p") {
   else if (q.includes("240") || q.includes("144") || q === "small" || q === "tiny") matched = "360p";
 
   if (playerQualityPicker && playerQualityPicker.value === "auto") {
-    if (toolbarQualityLabel) toolbarQualityLabel.textContent = matched.toUpperCase();
+    if (toolbarQualityLabel) toolbarQualityLabel.textContent = `AUTO (${matched.toUpperCase()})`;
     const engineBadge = document.querySelector("#stream-engine-badge");
     if (engineBadge) engineBadge.textContent = `Auto-Optimized Stream (${matched.toUpperCase()})`;
   }
@@ -1640,8 +1645,17 @@ window.addEventListener("message", (event) => {
         customDuration = Math.round(data.info.duration);
       }
       if (typeof data.info.playerState === "number") {
-        if (data.info.playerState === 1 && !isCustomPlaying) setCustomPlayingState(true);
-        else if ((data.info.playerState === 2 || data.info.playerState === 0) && isCustomPlaying) setCustomPlayingState(false);
+        if (data.info.playerState === 1) {
+          // Playing: resume ticker and clear buffering state
+          if (!isCustomPlaying) setCustomPlayingState(true);
+          else startCustomTimeTicker();
+        } else if (data.info.playerState === 3) {
+          // Buffering: stop incrementing synthetic timer to prevent desync!
+          stopCustomTimeTicker();
+        } else if (data.info.playerState === 2 || data.info.playerState === 0) {
+          // Paused or Ended
+          if (isCustomPlaying) setCustomPlayingState(false);
+        }
       }
       if (typeof data.info.videoLoadedFraction === "number" && customTimelineLoaded) {
         customTimelineLoaded.style.width = `${Math.min(100, data.info.videoLoadedFraction * 100)}%`;

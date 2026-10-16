@@ -1954,13 +1954,13 @@
           <div class="quality-selector-wrap" id="quality-selector-wrap" title="Select Stream Resolution">
             <span class="badge-dot"></span>
             <select id="player-quality-picker" class="quality-picker-select" aria-label="Select stream resolution">
+              <option value="auto" selected>⚡ Auto (Buffer-Free)</option>
+              <option value="1080p">1080p (Full HD)</option>
+              <option value="720p">720p (HD Fast)</option>
               <option value="4k">4K (Ultra HD)</option>
               <option value="1440p">1440p (QHD)</option>
-              <option value="1080p" selected>1080p (Full HD)</option>
-              <option value="720p">720p (HD)</option>
               <option value="480p">480p (SD)</option>
-              <option value="360p">360p (Low)</option>
-              <option value="auto">Auto (Adaptive)</option>
+              <option value="360p">360p (Low Data)</option>
             </select>
           </div>
           <span class="stream-badge stream-badge--engine" id="stream-engine-badge">Auto-Optimized Stream</span>
@@ -2162,7 +2162,7 @@
         </button>
         <button type="button" class="player-tool-btn" id="btn-quality-tool" title="Cycle Resolution (360p - 4K)">
           <span class="tool-icon">⚙️</span>
-          <span class="tool-label">Quality: <strong id="toolbar-quality-label">1080p</strong></span>
+          <span class="tool-label">Quality: <strong id="toolbar-quality-label">AUTO</strong></span>
         </button>
         <button type="button" class="player-tool-btn" id="btn-server-tool" title="Switch Cinema Server Mirror">
           <span class="tool-icon">🔄</span>
