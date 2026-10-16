@@ -3,6 +3,90 @@
 // Real-Time Multi-Client Live Sync, Zero Fake Rooms, Global TMDB Projector
 // ==========================================================================
 
+// 0. 100% Anti-Popup & Anti-Redirect Master Shield (Zero-Ad Guarantee)
+(function enforceAdShield() {
+  const neutralizedOpen = function(url) {
+    console.warn("🛡️ BioscopeBD Master Shield: Neutralized popup attempt to:", url);
+    return null;
+  };
+
+  try {
+    Object.defineProperty(window, "open", {
+      value: neutralizedOpen,
+      writable: false,
+      configurable: false
+    });
+  } catch (_) {
+    try { window.open = neutralizedOpen; } catch (_) {}
+  }
+
+  try {
+    if (typeof Window !== "undefined" && Window.prototype) {
+      Object.defineProperty(Window.prototype, "open", {
+        value: neutralizedOpen,
+        writable: false,
+        configurable: false
+      });
+    }
+  } catch (_) {}
+
+  try {
+    window.showModalDialog = function() { return null; };
+  } catch (_) {}
+
+  try {
+    const originalAnchorClick = HTMLAnchorElement.prototype.click;
+    HTMLAnchorElement.prototype.click = function() {
+      const href = (this.getAttribute("href") || "").trim();
+      const target = this.getAttribute("target");
+      const isInternal = !href || href.startsWith("#") || href.startsWith("/") || href.startsWith(window.location.origin);
+      const isSafeProtocol = href.startsWith("blob:") || href.startsWith("data:") || href.startsWith("magnet:");
+      const isWhitelisted = href.includes("github.com/bioscopebd") || href.includes("themoviedb.org");
+
+      if (target === "_blank" || (!isInternal && !isSafeProtocol && !isWhitelisted)) {
+        console.warn("🛡️ BioscopeBD Master Shield: Blocked programmatic anchor click to:", href);
+        return;
+      }
+      return originalAnchorClick.apply(this, arguments);
+    };
+  } catch (_) {}
+
+  try {
+    const origFormSubmit = HTMLFormElement.prototype.submit;
+    HTMLFormElement.prototype.submit = function() {
+      const target = this.getAttribute("target");
+      const action = (this.getAttribute("action") || "").trim();
+      const isInternal = !action || action.startsWith("#") || action.startsWith("/") || action.startsWith(window.location.origin);
+      if (target === "_blank" || !isInternal) {
+        console.warn("🛡️ BioscopeBD Master Shield: Blocked programmatic form popup submit to:", action);
+        return;
+      }
+      return origFormSubmit.apply(this, arguments);
+    };
+  } catch (_) {}
+
+  ["click", "auxclick", "contextmenu", "mouseup", "pointerup"].forEach(eventType => {
+    window.addEventListener(eventType, function(event) {
+      const link = event.target && event.target.closest ? event.target.closest("a") : null;
+      if (link) {
+        const href = (link.getAttribute("href") || "").trim();
+        const target = link.getAttribute("target");
+        const isInternal = !href || href.startsWith("#") || href.startsWith("/") || href.startsWith(window.location.origin);
+        const isSafeProtocol = href.startsWith("blob:") || href.startsWith("data:") || href.startsWith("magnet:");
+        const isWhitelisted = href.includes("github.com/bioscopebd") || href.includes("themoviedb.org");
+
+        if (target === "_blank" || (!isInternal && !isSafeProtocol && !isWhitelisted)) {
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+          console.warn("🛡️ BioscopeBD Master Shield: Intercepted unauthorized link click:", href);
+          return false;
+        }
+      }
+    }, true);
+  });
+})();
+
 // 1. User State & Toast Helpers
 let currentUser = { id: "usr_guest", name: "Cinephile Guest", avatar: "🍿" };
 try {
@@ -933,9 +1017,10 @@ function loadTheatreScreen(title, tmdbId, type = "movie", trailerId = "", startS
   } else {
     const servers = (typeof CONFIG !== "undefined" && CONFIG.STREAM_SERVERS) ? CONFIG.STREAM_SERVERS : [];
     const serverObj = servers[currentTheatreServerIndex] || servers[0];
-    url = serverObj ? serverObj.getUrl(tmdbId, type) : `https://player.videasy.net/movie/${tmdbId}`;
+    url = serverObj ? serverObj.getUrl(tmdbId, type) : (type === "tv" ? `https://vidlink.pro/tv/${tmdbId}/1/1?primaryColor=f5c518&secondaryColor=111111` : `https://vidlink.pro/movie/${tmdbId}?primaryColor=f5c518&secondaryColor=111111`);
   }
 
+  theatrePlayerFrame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-presentation allow-downloads");
   theatrePlayerFrame.src = url;
   theatrePlayerFrame.onload = () => {
     if (theatreProjectorShield) theatreProjectorShield.hidden = true;

@@ -1,5 +1,5 @@
 /* Offline app shell; remote sample artwork is cached as it is viewed. */
-const VERSION = "bioscopebd-v17";
+const VERSION = "bioscopebd-v18";
 const SHELL = `${VERSION}-shell`;
 const MEDIA = `${VERSION}-media`;
 const APP_FILES = ["./", "./index.html", "./style.css", "./config.js", "./script.js", "./manifest.json",
