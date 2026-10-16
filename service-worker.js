@@ -1,10 +1,10 @@
 /* Offline app shell; remote sample artwork is cached as it is viewed. */
-const VERSION = "bioscopebd-v23";
+const VERSION = "bioscopebd-v24";
 const SHELL = `${VERSION}-shell`;
 const MEDIA = `${VERSION}-media`;
 const APP_FILES = ["./", "./index.html", "./style.css", "./config.js", "./script.js", "./manifest.json",
   "./room/", "./room/index.html", "./room/room.js", "./room.html",
-  "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon-180.png"];
+  "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon-180.png", "./bioscopebd.apk"];
 
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(SHELL).then(cache => cache.addAll(APP_FILES)).then(() => self.skipWaiting()));

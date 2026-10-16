@@ -5,18 +5,33 @@ import { join, resolve } from "node:path";
 const root = resolve(import.meta.dirname, "..");
 const source = join(root, "00-shared-web");
 const targets = ["pwa", "android/app/www", "ios/app/www", "windows/www"];
-const files = ["index.html", "style.css", "script.js", "config.js", "manifest.json", "service-worker.js", "room.html"];
+const files = [
+  "index.html",
+  "style.css",
+  "script.js",
+  "config.js",
+  "manifest.json",
+  "service-worker.js",
+  "room.html",
+  "bioscopebd.apk",
+  "_headers",
+  "_redirects"
+];
 
-for (const file of files) {
-  if (!existsSync(join(source, file))) throw new Error(`Missing shared file: ${file}`);
-}
 for (const target of targets) {
   const destination = join(root, target);
   mkdirSync(join(destination, "icons"), { recursive: true });
   mkdirSync(join(destination, "room"), { recursive: true });
-  for (const file of files) cpSync(join(source, file), join(destination, file), { force: true });
-  for (const icon of readdirSync(join(source, "icons"))) {
-    cpSync(join(source, "icons", icon), join(destination, "icons", icon), { force: true });
+  for (const file of files) {
+    const srcFile = join(source, file);
+    if (existsSync(srcFile)) {
+      cpSync(srcFile, join(destination, file), { force: true });
+    }
+  }
+  if (existsSync(join(source, "icons"))) {
+    for (const icon of readdirSync(join(source, "icons"))) {
+      cpSync(join(source, "icons", icon), join(destination, "icons", icon), { force: true });
+    }
   }
   if (existsSync(join(source, "room"))) {
     cpSync(join(source, "room"), join(destination, "room"), { recursive: true, force: true });
@@ -26,7 +41,10 @@ for (const target of targets) {
 
 // Also sync to root for GitHub Pages deployment
 for (const file of files) {
-  cpSync(join(source, file), join(root, file), { force: true });
+  const srcFile = join(source, file);
+  if (existsSync(srcFile)) {
+    cpSync(srcFile, join(root, file), { force: true });
+  }
 }
 if (existsSync(join(source, "icons"))) {
   mkdirSync(join(root, "icons"), { recursive: true });

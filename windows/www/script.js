@@ -319,8 +319,11 @@ const navAuthBtn = document.querySelector("#nav-auth-btn");
 const authDialog = document.querySelector("#auth-dialog");
 const authCloseBtn = document.querySelector("#auth-close-btn");
 const btnGoogleAuth = document.querySelector("#btn-google-auth");
+const btnYahooAuth = document.querySelector("#btn-yahoo-auth");
+const btnMicrosoftAuth = document.querySelector("#btn-microsoft-auth");
 const authForm = document.querySelector("#auth-form");
 const authEmailInput = document.querySelector("#auth-email");
+const authPasswordInput = document.querySelector("#auth-password");
 const btnContinueGuest = document.querySelector("#btn-continue-guest");
 
 const profileDialog = document.querySelector("#profile-dialog");
@@ -417,7 +420,7 @@ if (profileCloseBtn && profileDialog) {
   profileDialog.addEventListener("click", (e) => { if (e.target === profileDialog) profileDialog.close(); });
 }
 
-function handleAuthSuccess(name, email) {
+function handleAuthSuccess(name, email, provider = "account") {
   // Merge existing guest data seamlessly into cloud profile
   currentUser = {
     id: "usr_" + Math.random().toString(36).substring(2, 9),
@@ -425,6 +428,7 @@ function handleAuthSuccess(name, email) {
     email: email,
     avatar: currentUser.avatar || "🕶️",
     isGuest: false,
+    provider: provider,
     rank: getCinephileRank(currentUser.watchCount || continueWatching.length),
     watchCount: Math.max(continueWatching.length, currentUser.watchCount || 1)
   };
@@ -432,18 +436,44 @@ function handleAuthSuccess(name, email) {
   updateNavAuthUI();
   if (authDialog) authDialog.close();
   if (contextualToast) contextualToast.hidden = true;
-  notify(`🎉 Welcome ${name}! Your Watchlist and playback history are synced.`);
+  notify(`🎉 Signed in with ${provider.toUpperCase()}: Welcome ${name}! Your Watchlist is synced.`);
 }
 
 if (btnGoogleAuth) {
   btnGoogleAuth.addEventListener("click", () => {
-    const input = prompt("Enter your Name or Gmail to continue with Google:", "");
+    const input = prompt("Enter your Name or Gmail to sign in with Google:", "");
     if (input && input.trim()) {
       const clean = input.trim();
       const isEmail = clean.includes("@");
       const name = isEmail ? clean.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, c => c.toUpperCase()) : clean;
       const email = isEmail ? clean : `${clean.toLowerCase().replace(/\s+/g, "")}@gmail.com`;
-      handleAuthSuccess(name, email);
+      handleAuthSuccess(name, email, "google");
+    }
+  });
+}
+
+if (btnYahooAuth) {
+  btnYahooAuth.addEventListener("click", () => {
+    const input = prompt("Enter your Name or Yahoo Mail to sign in with Yahoo:", "");
+    if (input && input.trim()) {
+      const clean = input.trim();
+      const isEmail = clean.includes("@");
+      const name = isEmail ? clean.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, c => c.toUpperCase()) : clean;
+      const email = isEmail ? clean : `${clean.toLowerCase().replace(/\s+/g, "")}@yahoo.com`;
+      handleAuthSuccess(name, email, "yahoo");
+    }
+  });
+}
+
+if (btnMicrosoftAuth) {
+  btnMicrosoftAuth.addEventListener("click", () => {
+    const input = prompt("Enter your Name or Microsoft Email (Outlook/Hotmail):", "");
+    if (input && input.trim()) {
+      const clean = input.trim();
+      const isEmail = clean.includes("@");
+      const name = isEmail ? clean.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, c => c.toUpperCase()) : clean;
+      const email = isEmail ? clean : `${clean.toLowerCase().replace(/\s+/g, "")}@outlook.com`;
+      handleAuthSuccess(name, email, "microsoft");
     }
   });
 }
@@ -456,7 +486,7 @@ if (authForm) {
     const isEmail = val.includes("@");
     const name = isEmail ? val.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, c => c.toUpperCase()) : val;
     const email = isEmail ? val : `${val.toLowerCase().replace(/\s+/g, "")}@bioscopebd.io`;
-    handleAuthSuccess(name, email);
+    handleAuthSuccess(name, email, "email");
   });
 }
 
@@ -1579,10 +1609,8 @@ function loadCustomWhitelabelStream(videoId, durationSeconds = 0) {
   }
 
   customCurrentTime = 0;
-  const initialDuration = durationSeconds > 0
-    ? durationSeconds
-    : (activeStream?.duration > 0 ? activeStream.duration : 0);
-  customDuration = initialDuration;
+  const isFull = Boolean(activeStream?.isFullMovie || activeStream?.fullMovie);
+  customDuration = isFull && durationSeconds > 0 ? durationSeconds : 0;
   setCustomPlayingState(true);
   updateCustomProgressUI();
 
@@ -1773,7 +1801,9 @@ window.addEventListener("message", (event) => {
         customCurrentTime = data.info.currentTime;
       }
       if (typeof data.info.duration === "number" && data.info.duration > 0) {
-        customDuration = Math.round(data.info.duration);
+        if (!activeStream?.isFullMovie || customDuration === 0) {
+          customDuration = Math.round(data.info.duration);
+        }
       }
       if (typeof data.info.playerState === "number") {
         if (data.info.playerState === 1) {
@@ -1783,9 +1813,14 @@ window.addEventListener("message", (event) => {
         } else if (data.info.playerState === 3) {
           // Buffering: stop incrementing synthetic timer to prevent desync!
           stopCustomTimeTicker();
-        } else if (data.info.playerState === 2 || data.info.playerState === 0) {
-          // Paused or Ended
+        } else if (data.info.playerState === 2) {
+          // Paused
           if (isCustomPlaying) setCustomPlayingState(false);
+        } else if (data.info.playerState === 0) {
+          // Video Ended: halt playback, stop synthetic clock, no 2-hour loop
+          stopCustomTimeTicker();
+          setCustomPlayingState(false);
+          if (customDuration > 0) customCurrentTime = customDuration;
         }
       }
       if (typeof data.info.videoLoadedFraction === "number" && customTimelineLoaded) {
@@ -2100,7 +2135,8 @@ async function openStream(title, tmdbId, type = "movie", trailerId = "", isTrail
     )
   );
 
-  activeStream = { title, tmdbId, type: isTv ? "tv" : type, trailerId, isTrailer, isBangla, duration: streamDurationSeconds, season: sNum, episode: eNum };
+  const isFull = Boolean(catalogEntry?.fullMovie || catalogEntry?.isFullMovie);
+  activeStream = { title, tmdbId, type: isTv ? "tv" : type, trailerId, isTrailer, isBangla, duration: streamDurationSeconds, season: sNum, episode: eNum, isFullMovie: isFull };
   currentFailoverIndex = 0;
 
   if (videoTitle) {
@@ -2128,9 +2164,11 @@ async function openStream(title, tmdbId, type = "movie", trailerId = "", isTrail
     activeStream.trailerId = videoKey;
     updateSourceToggleUI(true);
     if (videoKey) {
-      loadCustomWhitelabelStream(videoKey, streamDurationSeconds);
+      loadCustomWhitelabelStream(videoKey, isFull ? streamDurationSeconds : 0);
       const engineBadge = document.querySelector("#stream-engine-badge");
-      if (engineBadge) engineBadge.textContent = "BioscopeBD Cinema Engine (HD)";
+      if (engineBadge) {
+        engineBadge.textContent = isFull ? "BioscopeBD Cinema Engine (Full Film)" : "BioscopeBD Official HD Trailer";
+      }
     } else {
       notify("⚠️ Video stream for this title is currently updating.");
     }
@@ -4776,4 +4814,103 @@ function initNavContentTabs() {
 }
 
 initNavContentTabs();
+
+// ==========================================================================
+// Floating Scroll-To-Top Button Controller
+// ==========================================================================
+const scrollToTopBtn = document.querySelector("#scroll-to-top-btn");
+
+if (scrollToTopBtn) {
+  let scrollTicking = false;
+  window.addEventListener("scroll", () => {
+    if (!scrollTicking) {
+      window.requestAnimationFrame(() => {
+        if (window.scrollY > 380) {
+          scrollToTopBtn.classList.add("is-visible");
+        } else {
+          scrollToTopBtn.classList.remove("is-visible");
+        }
+        scrollTicking = false;
+      });
+      scrollTicking = true;
+    }
+  }, { passive: true });
+
+  scrollToTopBtn.addEventListener("click", () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+  });
+}
+
+// ==========================================================================
+// Smart Mobile App Install Prompt & APK Downloader
+// ==========================================================================
+let deferredPwaPrompt = null;
+const mobileAppBanner = document.querySelector("#mobile-app-banner");
+const bannerCloseBtn = document.querySelector("#banner-close-btn");
+const bannerPwaBtn = document.querySelector("#banner-pwa-btn");
+const bannerApkBtn = document.querySelector("#banner-apk-btn");
+const footerInstallBtn = document.querySelector("#footer-install-btn");
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPwaPrompt = e;
+  if (footerInstallBtn) footerInstallBtn.hidden = false;
+  if (bannerPwaBtn) bannerPwaBtn.hidden = false;
+});
+
+window.addEventListener("appinstalled", () => {
+  deferredPwaPrompt = null;
+  if (mobileAppBanner) mobileAppBanner.classList.remove("is-active");
+  notify("🎉 BioscopeBD installed successfully on your device!");
+});
+
+async function triggerPwaInstall() {
+  if (deferredPwaPrompt) {
+    deferredPwaPrompt.prompt();
+    const { outcome } = await deferredPwaPrompt.userChoice;
+    if (outcome === "accepted") {
+      deferredPwaPrompt = null;
+      if (mobileAppBanner) mobileAppBanner.classList.remove("is-active");
+    }
+  } else {
+    notify("📱 To install, tap your browser's menu (⋮ or Share) and select 'Add to Home screen' or 'Install App'.");
+  }
+}
+
+if (bannerPwaBtn) bannerPwaBtn.addEventListener("click", triggerPwaInstall);
+if (footerInstallBtn) footerInstallBtn.addEventListener("click", triggerPwaInstall);
+
+if (bannerCloseBtn && mobileAppBanner) {
+  bannerCloseBtn.addEventListener("click", () => {
+    mobileAppBanner.classList.remove("is-active");
+    try {
+      localStorage.setItem("bioscope_app_banner_dismissed", String(Date.now()));
+    } catch (_) {}
+  });
+}
+
+function checkAndShowMobileBanner() {
+  if (!mobileAppBanner) return;
+  const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  if (!isMobile) return;
+
+  try {
+    const dismissedAt = parseInt(localStorage.getItem("bioscope_app_banner_dismissed") || "0", 10);
+    // Don't show again if dismissed within last 24 hours
+    if (Date.now() - dismissedAt < 86400000) return;
+  } catch (_) {}
+
+  setTimeout(() => {
+    mobileAppBanner.hidden = false;
+    requestAnimationFrame(() => {
+      mobileAppBanner.classList.add("is-active");
+    });
+  }, 2200);
+}
+
+checkAndShowMobileBanner();
+
 
