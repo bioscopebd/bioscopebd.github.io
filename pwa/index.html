@@ -125,7 +125,7 @@
       </a>
       <div class="nav__menu" id="nav-menu">
         <a href="#trending">Movies</a>
-        <a href="room/" id="nav-rooms-link">🏛️ Rooms <span class="badge-pill">LIVE</span></a>
+        <a href="room/index.html" id="nav-rooms-link" onclick="window.location.href='room/index.html';">🏛️ Rooms <span class="badge-pill">LIVE</span></a>
         <a href="#bangla-cinema">🇧🇩 Bangla</a>
         <a href="#hindi-cinema">🔥 Bollywood</a>
         <a href="#ai-cinema">AI Cinema <span class="badge-pill">NEW</span></a>
@@ -141,7 +141,7 @@
         <div class="search-dropdown" id="search-dropdown" role="listbox" aria-label="Search recommendations" hidden></div>
       </form>
       <div class="nav__actions">
-        <a href="room/" class="button button--outline nav__party-btn" id="open-party-btn" aria-label="Open Cinema Rooms">
+        <a href="room/index.html" class="button button--outline nav__party-btn" id="open-party-btn" aria-label="Open Cinema Rooms" onclick="window.location.href='room/index.html';">
           <span aria-hidden="true">🏛️</span>
           <span>Rooms</span>
         </a>
@@ -384,12 +384,15 @@
                   </div>
                 </div>
 
-                <!-- Permanent Hall Invite Code (Visible only when Private is selected) -->
+                <!-- Private Hall Invite Code (Visible only when Private is selected) -->
                 <div class="party-room-code-box" id="party-private-code-box" hidden>
-                  <label>Permanent Hall Invite Code (Fixed for Friends):</label>
+                  <label>Private Room Invite Code (Share with Friends):</label>
                   <div class="code-box" id="party-code-box">
                     <strong id="party-room-code">BIOSCOPE-7892</strong>
-                    <button type="button" class="button button--primary button--sm" id="btn-copy-room">📋 Copy Invite Link</button>
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                      <button type="button" class="button button--glass button--sm" id="btn-generate-new-code" title="Generate New Room Code">🎲 New Code</button>
+                      <button type="button" class="button button--primary button--sm" id="btn-copy-room">📋 Copy Invite Link</button>
+                    </div>
                   </div>
                   <small class="code-hint">Friends enter this invite code in "Join Party" to enter your auditorium.</small>
                   <div class="party-copy-status" id="party-copy-status" aria-live="polite"></div>
@@ -1841,7 +1844,7 @@
           </div>
         </div>
         <div class="footer__column"><h3>Explore</h3><a href="#trending">Movies</a><a href="#ai-cinema">AI Cinema</a><a href="#top-rated">Top Rated</a><a href="#upcoming">Upcoming</a></div>
-        <div class="footer__column"><h3>Discover</h3><a href="#mood-section">Mood Search</a><a href="#open-party-btn">Watch Party</a><a href="#news">News</a></div>
+        <div class="footer__column"><h3>Discover</h3><a href="#mood-section">Mood Search</a><a href="room/index.html">Cinema Rooms</a><a href="#news">News</a></div>
         <div class="footer__column"><h3>About</h3><a href="#footer-note">Our Story</a><a href="#footer-note">Higgsfield AI Lab</a><a href="#footer-note">Contact</a><a href="#footer-note">Press</a></div>
         <div class="footer__column"><h3>Help & Legal</h3><a href="#footer-note">Help Center</a><a href="#footer-note">Zero Pop-up Policy</a><a href="#footer-note">Terms</a><a href="#footer-note">Accessibility</a></div>
       </div>

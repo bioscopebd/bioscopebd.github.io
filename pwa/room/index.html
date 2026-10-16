@@ -134,7 +134,7 @@
   <!-- Top Dedicated Rooms Navbar -->
   <header class="room-header">
     <div class="container room-header__container">
-      <a href="../" class="room-brand" title="Return to BioscopeBD Home">
+      <a href="../index.html" class="room-brand" title="Return to BioscopeBD Home">
         <div class="room-brand__logo">
           🍿 BIOSCOPE<span>BD</span>
         </div>
@@ -142,7 +142,7 @@
       </a>
 
       <div class="room-header__actions">
-        <a href="../" class="button button--outline button--sm" id="btn-back-home" title="Go back to Movie Directory">
+        <a href="../index.html" class="button button--outline button--sm" id="btn-back-home" title="Go back to Movie Directory">
           <span>🏠 Back to Movies</span>
         </a>
         <button type="button" class="icon-button" id="theme-toggle" aria-label="Toggle Theme">🌓</button>
@@ -274,12 +274,15 @@
               </div>
             </div>
 
-            <!-- Permanent Hall Invite Code (Visible only when Private is selected) -->
+            <!-- Private Hall Invite Code (Visible only when Private is selected) -->
             <div class="party-room-code-box" id="party-private-code-box" hidden>
-              <label>Permanent Hall Invite Code (Fixed for Friends):</label>
+              <label>Private Room Invite Code (Share with Friends):</label>
               <div class="code-box" id="party-code-box">
                 <strong id="party-room-code">BIOSCOPE-7892</strong>
-                <button type="button" class="button button--primary button--sm" id="btn-copy-room">📋 Copy Invite Link</button>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                  <button type="button" class="button button--glass button--sm" id="btn-generate-new-code" title="Generate New Room Code">🎲 New Code</button>
+                  <button type="button" class="button button--primary button--sm" id="btn-copy-room">📋 Copy Invite Link</button>
+                </div>
               </div>
               <small class="code-hint">Friends enter this invite code in "Join with Code" to enter your auditorium.</small>
               <div class="party-copy-status" id="party-copy-status" aria-live="polite"></div>

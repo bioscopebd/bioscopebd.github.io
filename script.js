@@ -2491,6 +2491,7 @@ const lblVisPrivate = document.querySelector("#lbl-vis-private");
 const partyPrivateCodeBox = document.querySelector("#party-private-code-box");
 const partyRoomCodeEl = document.querySelector("#party-room-code");
 const btnCopyRoom = document.querySelector("#btn-copy-room");
+const btnGenerateNewCode = document.querySelector("#btn-generate-new-code");
 const partyHallNameInput = document.querySelector("#party-hall-name-input");
 const btnRandomHallName = document.querySelector("#btn-random-hall-name");
 const partyLangSelect = document.querySelector("#party-lang-select");
@@ -2581,20 +2582,42 @@ const hallChannel = typeof BroadcastChannel !== "undefined" ? new BroadcastChann
 
 const DEFAULT_BOX_OFFICE_HALLS = [];
 
-// Persistent Host Room Code (Stays fixed until dismissed!)
-function getPersistentHostRoomCode() {
+// Host Room Code Management
+let currentHostDraftCode = "";
+
+function getRandomRoomCode() {
+  return `BIOSCOPE-${Math.floor(1000 + Math.random() * 9000)}`;
+}
+
+function getHostRoomCode() {
   if (activeHall && activeHall.roomCode) return activeHall.roomCode;
-  let code = "";
-  try {
-    code = localStorage.getItem("bioscope_persistent_host_code");
-    if (!code) {
-      code = `BIOSCOPE-${Math.floor(1000 + Math.random() * 9000)}`;
-      localStorage.setItem("bioscope_persistent_host_code", code);
-    }
-  } catch (_) {
-    code = "BIOSCOPE-7892";
+  if (!currentHostDraftCode) {
+    currentHostDraftCode = getRandomRoomCode();
   }
-  return code;
+  return currentHostDraftCode;
+}
+
+function getPersistentHostRoomCode() {
+  return getHostRoomCode();
+}
+
+function generateNewHostRoomCode() {
+  let nextCode = getRandomRoomCode();
+  while (nextCode === currentHostDraftCode) {
+    nextCode = getRandomRoomCode();
+  }
+  currentHostDraftCode = nextCode;
+  try {
+    localStorage.setItem("bioscope_persistent_host_code", currentHostDraftCode);
+  } catch (_) {}
+  if (partyRoomCodeEl) {
+    partyRoomCodeEl.textContent = currentHostDraftCode;
+    partyRoomCodeEl.classList.remove("code-pop");
+    void partyRoomCodeEl.offsetWidth;
+    partyRoomCodeEl.classList.add("code-pop");
+  }
+  notify(`🎲 Generated new private room code: ${currentHostDraftCode}`);
+  return currentHostDraftCode;
 }
 
 function loadActiveHallState() {
@@ -2671,23 +2694,30 @@ function updateVisibilityToggle() {
   if (partyPrivateCodeBox) {
     partyPrivateCodeBox.hidden = !isPrivate;
   }
-  const code = getPersistentHostRoomCode();
+  const code = partyRoomCodeEl?.textContent?.trim() || getHostRoomCode();
   if (partyRoomCodeEl) partyRoomCodeEl.textContent = code;
 }
 
 if (visPublicRadio) visPublicRadio.addEventListener("change", updateVisibilityToggle);
 if (visPrivateRadio) visPrivateRadio.addEventListener("change", updateVisibilityToggle);
 
+// Generate New Code button trigger
+if (btnGenerateNewCode) {
+  btnGenerateNewCode.addEventListener("click", () => {
+    generateNewHostRoomCode();
+  });
+}
+
 // Navigate to Watch Party Section (Navigates directly to dedicated room/ page!)
 function navigateToWatchParty(tab = "halls") {
-  const target = "room/" + (tab !== "halls" ? `?tab=${tab}` : "");
+  const query = (tab && tab !== "halls") ? `?tab=${encodeURIComponent(tab)}` : "";
+  const target = `room/index.html${query}`;
   window.location.href = target;
 }
 
 // Global Watch Party Navigation Triggers
 document.querySelectorAll("#open-party-btn, #nav-rooms-link").forEach(b => {
-  b.addEventListener("click", (e) => {
-    e.preventDefault();
+  b.addEventListener("click", () => {
     navigateToWatchParty("halls");
   });
 });
@@ -2710,7 +2740,7 @@ if (btnRandomHallName && partyHallNameInput) {
 
 // Copy Invite Link
 async function copyHallInviteLink(code) {
-  const roomCode = code || partyRoomCodeEl?.textContent?.trim() || activeHall?.roomCode || getPersistentHostRoomCode();
+  const roomCode = code || partyRoomCodeEl?.textContent?.trim() || activeHall?.roomCode || getHostRoomCode();
   const link = `${window.location.origin}${window.location.pathname}?room=${encodeURIComponent(roomCode)}`;
   try {
     await navigator.clipboard.writeText(link);
@@ -2728,7 +2758,9 @@ if (btnTheatreShare) btnTheatreShare.addEventListener("click", () => copyHallInv
 if (btnStartParty) {
   btnStartParty.addEventListener("click", () => {
     const isPublic = visPublicRadio ? visPublicRadio.checked : true;
-    const roomCode = getPersistentHostRoomCode();
+    const roomCode = (!isPublic && partyRoomCodeEl?.textContent?.trim())
+      ? partyRoomCodeEl.textContent.trim()
+      : getHostRoomCode();
     const hallName = partyHallNameInput?.value?.trim() || `${(currentUser && currentUser.name) ? currentUser.name.split(" ")[0] : "VIP"}'s Grand Cinema`;
     const language = partyLangSelect?.value || "all";
     const capacity = partyCapacitySelect?.value || "unlimited";
@@ -2780,8 +2812,10 @@ function dismissActiveHall() {
 
   try {
     localStorage.removeItem("bioscope_persistent_host_code");
+    localStorage.removeItem("bioscope_active_hall");
   } catch (_) {}
 
+  currentHostDraftCode = "";
   activeHall = null;
   saveActiveHallState();
   leaveTheatreHall();

@@ -54,6 +54,7 @@ const lblVisPrivate = document.querySelector("#lbl-vis-private");
 const partyPrivateCodeBox = document.querySelector("#party-private-code-box");
 const partyRoomCodeEl = document.querySelector("#party-room-code");
 const btnCopyRoom = document.querySelector("#btn-copy-room");
+const btnGenerateNewCode = document.querySelector("#btn-generate-new-code");
 const partyHallNameInput = document.querySelector("#party-hall-name-input");
 const btnRandomHallName = document.querySelector("#btn-random-hall-name");
 const partyLangSelect = document.querySelector("#party-lang-select");
@@ -145,20 +146,42 @@ const RANDOM_HALL_NAMES = [
   "Balaka Cine Lounge"
 ];
 
-// Persistent Host Room Code
-function getPersistentHostRoomCode() {
+// Host Room Code Management
+let currentHostDraftCode = "";
+
+function getRandomRoomCode() {
+  return `BIOSCOPE-${Math.floor(1000 + Math.random() * 9000)}`;
+}
+
+function getHostRoomCode() {
   if (activeHall && activeHall.roomCode) return activeHall.roomCode;
-  let code = "";
-  try {
-    code = localStorage.getItem("bioscope_persistent_host_code");
-    if (!code) {
-      code = `BIOSCOPE-${Math.floor(1000 + Math.random() * 9000)}`;
-      localStorage.setItem("bioscope_persistent_host_code", code);
-    }
-  } catch (_) {
-    code = "BIOSCOPE-7892";
+  if (!currentHostDraftCode) {
+    currentHostDraftCode = getRandomRoomCode();
   }
-  return code;
+  return currentHostDraftCode;
+}
+
+function getPersistentHostRoomCode() {
+  return getHostRoomCode();
+}
+
+function generateNewHostRoomCode() {
+  let nextCode = getRandomRoomCode();
+  while (nextCode === currentHostDraftCode) {
+    nextCode = getRandomRoomCode();
+  }
+  currentHostDraftCode = nextCode;
+  try {
+    localStorage.setItem("bioscope_persistent_host_code", currentHostDraftCode);
+  } catch (_) {}
+  if (partyRoomCodeEl) {
+    partyRoomCodeEl.textContent = currentHostDraftCode;
+    partyRoomCodeEl.classList.remove("code-pop");
+    void partyRoomCodeEl.offsetWidth;
+    partyRoomCodeEl.classList.add("code-pop");
+  }
+  notify(`🎲 Generated new private room code: ${currentHostDraftCode}`);
+  return currentHostDraftCode;
 }
 
 function loadActiveHallState() {
@@ -529,12 +552,19 @@ function updateVisibilityToggle() {
   if (partyPrivateCodeBox) {
     partyPrivateCodeBox.hidden = !isPrivate;
   }
-  const code = getPersistentHostRoomCode();
+  const code = partyRoomCodeEl?.textContent?.trim() || getHostRoomCode();
   if (partyRoomCodeEl) partyRoomCodeEl.textContent = code;
 }
 
 if (visPublicRadio) visPublicRadio.addEventListener("change", updateVisibilityToggle);
 if (visPrivateRadio) visPrivateRadio.addEventListener("change", updateVisibilityToggle);
+
+// Generate New Code button trigger
+if (btnGenerateNewCode) {
+  btnGenerateNewCode.addEventListener("click", () => {
+    generateNewHostRoomCode();
+  });
+}
 
 // Random Hall Name Generator
 if (btnRandomHallName && partyHallNameInput) {
@@ -548,7 +578,7 @@ if (btnRandomHallName && partyHallNameInput) {
 
 // Copy Invite Link
 async function copyHallInviteLink(code) {
-  const roomCode = code || partyRoomCodeEl?.textContent?.trim() || activeHall?.roomCode || getPersistentHostRoomCode();
+  const roomCode = code || partyRoomCodeEl?.textContent?.trim() || activeHall?.roomCode || getHostRoomCode();
   const link = `${window.location.origin}${window.location.pathname}?room=${encodeURIComponent(roomCode)}`;
   try {
     await navigator.clipboard.writeText(link);
@@ -566,7 +596,9 @@ if (btnTheatreShare) btnTheatreShare.addEventListener("click", () => copyHallInv
 if (btnStartParty) {
   btnStartParty.addEventListener("click", () => {
     const isPublic = visPublicRadio ? visPublicRadio.checked : true;
-    const roomCode = getPersistentHostRoomCode();
+    const roomCode = (!isPublic && partyRoomCodeEl?.textContent?.trim())
+      ? partyRoomCodeEl.textContent.trim()
+      : getHostRoomCode();
     const hallName = partyHallNameInput?.value?.trim() || `${(currentUser && currentUser.name) ? currentUser.name.split(" ")[0] : "VIP"}'s Grand Cinema`;
     const language = partyLangSelect?.value || "English";
     const capacity = partyCapacitySelect?.value || "Unlimited";
@@ -621,6 +653,7 @@ function dismissActiveHall() {
 
   discoveredRooms.delete(dismissedCode);
   activeHall = null;
+  currentHostDraftCode = "";
   saveActiveHallState();
   leaveTheatreHall(true);
   notify("🛑 Cinema Hall has been dismissed and ended.");
@@ -814,6 +847,7 @@ function leaveTheatreHall(isKickedOrDismissed = false) {
         localStorage.removeItem("bioscope_active_hall");
         localStorage.removeItem("bioscope_persistent_host_code");
       } catch (_) {}
+      currentHostDraftCode = "";
       notify("🚪 You left the hall. No co-host was assigned, so the room has automatically closed.");
     }
   } else if (!wasHost && !isKickedOrDismissed) {
@@ -1695,11 +1729,19 @@ initGlobalMqttRelay();
 
 window.addEventListener("DOMContentLoaded", () => {
   loadActiveHallState();
+  if (!activeHall) {
+    currentHostDraftCode = getRandomRoomCode();
+    if (partyRoomCodeEl) partyRoomCodeEl.textContent = currentHostDraftCode;
+  }
   renderBoxOfficeHalls();
 
   try {
     const urlParams = new URLSearchParams(window.location.search);
     const roomParam = urlParams.get("room") || urlParams.get("code") || urlParams.get("join");
+    const tabParam = urlParams.get("tab");
+    if (tabParam && (tabParam === "host" || tabParam === "join" || tabParam === "halls")) {
+      switchLoungeTab(tabParam);
+    }
     if (roomParam) {
       if (activeHall && activeHall.roomCode.toUpperCase() === roomParam.toUpperCase()) {
         enterTheatreHall(activeHall);
