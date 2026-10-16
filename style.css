@@ -2890,6 +2890,25 @@ body.theatre-mode-active {
   background: #ffa502;
   color: #000;
 }
+.theatre-head-btn--chat {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ddd;
+  border-color: rgba(255, 255, 255, 0.16);
+}
+.theatre-head-btn--chat:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+.theatre-head-btn--chat.is-active {
+  background: rgba(245, 197, 24, 0.18);
+  color: #ffd84d;
+  border-color: rgba(245, 197, 24, 0.45);
+}
+.theatre-head-btn--chat.is-active:hover {
+  background: rgba(245, 197, 24, 0.28);
+  color: #fff;
+  border-color: #f5c518;
+}
 
 .btn-text-action {
   background: none;
@@ -3029,7 +3048,7 @@ body.theatre-mode-active {
 /* Compact Semi-Transparent In-Player Corner Chat (Non-Disturbing Glassmorphism) */
 .theatre-corner-chat {
   position: absolute;
-  bottom: 14px;
+  bottom: 56px; /* Raised above video player control bar (timeline, speed, subtitles, quality, fullscreen) */
   right: 14px;
   width: 290px;
   max-height: 330px;
@@ -3087,31 +3106,7 @@ body.theatre-mode-active {
 }
 
 .theatre-show-chat-pill {
-  position: absolute;
-  bottom: 14px;
-  right: 14px;
-  z-index: 35;
-  background: rgba(12, 14, 22, 0.65);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(245, 197, 24, 0.45);
-  color: #fff;
-  border-radius: 20px;
-  padding: 8px 16px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.theatre-show-chat-pill:hover {
-  background: rgba(245, 197, 24, 0.25);
-  border-color: #f5c518;
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(245, 197, 24, 0.3);
+  display: none !important; /* Replaced by seamless top marquee header button */
 }
 
 .corner-chat__header {
@@ -3535,7 +3530,7 @@ body.theatre-mode-active {
   }
   .theatre-corner-chat {
     width: 240px;
-    bottom: 8px;
+    bottom: 50px;
     right: 8px;
   }
   .theatre-host-deck {

@@ -81,6 +81,7 @@ const theatrePlayerFrame = document.querySelector("#theatre-player-frame");
 const theatreProjectorShield = document.querySelector("#theatre-projector-shield");
 const theatreFloatingReactions = document.querySelector("#theatre-floating-reactions");
 const theatreCornerChat = document.querySelector("#theatre-corner-chat");
+const btnTheatreChatToggle = document.querySelector("#btn-theatre-chat-toggle");
 const btnHideCornerChat = document.querySelector("#btn-hide-corner-chat");
 const btnShowCornerChat = document.querySelector("#btn-show-corner-chat");
 const theatreRosterCount = document.querySelector("#theatre-roster-count");
@@ -631,6 +632,13 @@ function enterTheatreHall(hallData, startSeconds = 0) {
   document.body.classList.add("theatre-mode-active");
   theatreRoomView.hidden = false;
 
+  // Reset chat state to active & visible
+  if (theatreCornerChat) theatreCornerChat.classList.remove("is-chat-hidden");
+  if (btnTheatreChatToggle) {
+    btnTheatreChatToggle.classList.add("is-active");
+    btnTheatreChatToggle.innerHTML = "<span>💬 Chat</span>";
+  }
+
   // Cinematic dimming lights transition
   if (theatreCurtain) {
     theatreCurtain.classList.add("is-dimming");
@@ -980,15 +988,28 @@ function toggleTheatreChat(forceShow) {
   const shouldHide = typeof forceShow === "boolean" ? !forceShow : !isCurrentlyHidden;
 
   theatreCornerChat.classList.toggle("is-chat-hidden", shouldHide);
+
+  // Permanently suppress floating screen popup button so video controls are never blocked
   if (btnShowCornerChat) {
-    btnShowCornerChat.hidden = !shouldHide;
+    btnShowCornerChat.hidden = true;
+  }
+
+  // Update top marquee action button state
+  if (btnTheatreChatToggle) {
+    btnTheatreChatToggle.classList.toggle("is-active", !shouldHide);
+    btnTheatreChatToggle.innerHTML = shouldHide
+      ? `<span>💬 Show Chat</span>`
+      : `<span>💬 Chat</span>`;
   }
 
   if (shouldHide) {
-    notify("👁️ Chat hidden for full-screen immersion. Press 'C' or tap 'Show Chat' to restore.");
+    notify("👁️ Chat hidden. Tap '💬 Show Chat' in the top bar or press 'C' to restore.");
+  } else {
+    notify("💬 Cinema Hall Chat restored.");
   }
 }
 
+if (btnTheatreChatToggle) btnTheatreChatToggle.addEventListener("click", () => toggleTheatreChat());
 if (btnHideCornerChat) btnHideCornerChat.addEventListener("click", () => toggleTheatreChat(false));
 if (btnShowCornerChat) btnShowCornerChat.addEventListener("click", () => toggleTheatreChat(true));
 
