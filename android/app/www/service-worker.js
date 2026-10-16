@@ -1,8 +1,9 @@
 /* Offline app shell; remote sample artwork is cached as it is viewed. */
-const VERSION = "bioscopebd-v8";
+const VERSION = "bioscopebd-v9";
 const SHELL = `${VERSION}-shell`;
 const MEDIA = `${VERSION}-media`;
 const APP_FILES = ["./", "./index.html", "./style.css", "./config.js", "./script.js", "./manifest.json",
+  "./room/", "./room/index.html", "./room/room.js", "./room.html",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon-180.png"];
 
 self.addEventListener("install", event => {

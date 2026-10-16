@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cinema Rooms &amp; Watch Party — BioscopeBD</title>
+  <meta name="description" content="Dedicated Virtual Cinema Rooms & Watch Party on BioscopeBD. Watch live movies together in real-time with friends.">
+  <link rel="icon" type="image/png" href="../icons/icon-192.png">
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    /* Dedicated Room Page Scoped Enhancements */
+    body.room-page-body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: radial-gradient(circle at 50% 0%, rgba(245, 197, 24, 0.05) 0%, var(--color-bg) 60%);
+    }
+
+    .room-header {
+      position: sticky;
+      top: 0;
+      z-index: 80;
+      background: rgba(11, 11, 15, 0.88);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--color-line);
+      padding: 12px 0;
+    }
+
+    .room-header__container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .room-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .room-brand__logo {
+      font-family: "Bebas Neue", Impact, sans-serif;
+      font-size: 1.85rem;
+      letter-spacing: 0.05em;
+      color: var(--color-text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .room-brand__logo span {
+      color: var(--color-accent);
+    }
+
+    .room-badge-pill {
+      font-family: Inter, sans-serif;
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(229, 9, 20, 0.2);
+      color: #ff5252;
+      border: 1px solid rgba(229, 9, 20, 0.4);
+      letter-spacing: 0.06em;
+    }
+
+    .room-header__actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .room-hero {
+      padding: 44px 0 20px;
+      text-align: center;
+    }
+
+    .room-hero__title {
+      font-size: clamp(2.4rem, 6vw, 4.2rem);
+      margin-bottom: 8px;
+      line-height: 1.05;
+    }
+
+    .room-hero__desc {
+      max-width: 680px;
+      margin: 0 auto 24px;
+      font-size: 1.05rem;
+      color: var(--color-muted);
+    }
+
+    .server-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(46, 204, 113, 0.12);
+      border: 1px solid rgba(46, 204, 113, 0.3);
+      color: #2ecc71;
+      padding: 4px 14px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .server-status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #2ecc71;
+      box-shadow: 0 0 10px #2ecc71;
+      animation: pulseGlow 1.8s infinite;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .room-footer {
+      margin-top: auto;
+      padding: 30px 0;
+      border-top: 1px solid var(--color-line);
+      text-align: center;
+      color: var(--color-muted);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body class="room-page-body" data-theme="dark">
+
+  <!-- Top Dedicated Rooms Navbar -->
+  <header class="room-header">
+    <div class="container room-header__container">
+      <a href="../" class="room-brand" title="Return to BioscopeBD Home">
+        <div class="room-brand__logo">
+          🍿 BIOSCOPE<span>BD</span>
+        </div>
+        <span class="room-badge-pill">ROOMS · LIVE</span>
+      </a>
+
+      <div class="room-header__actions">
+        <a href="../" class="button button--outline button--sm" id="btn-back-home" title="Go back to Movie Directory">
+          <span>🏠 Back to Movies</span>
+        </a>
+        <button type="button" class="icon-button" id="theme-toggle" aria-label="Toggle Theme">🌓</button>
+        <div class="user-chip" id="user-chip" style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);padding:4px 10px;border-radius:999px;font-size:0.8rem;">
+          <span id="user-chip-avatar">🍿</span>
+          <span id="user-chip-name" style="font-weight:700;">Guest</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Room Hero Header -->
+    <section class="room-hero container">
+      <div class="server-status-pill" id="live-server-badge">
+        <span class="server-status-dot"></span>
+        <span id="server-status-text">LIVE CINEMA SERVER ONLINE</span>
+      </div>
+      <h1 class="room-hero__title">VIRTUAL CINEMA ROOMS</h1>
+      <p class="room-hero__desc">
+        Watch synchronized movies live together with friends and cinephiles worldwide in real-time. Host your own custom auditorium or enter a live screening with zero lag.
+      </p>
+    </section>
+
+    <!-- Main In-Page Cinema Lounge Hub -->
+    <section class="watch-party-hub container" id="watch-party-hub" aria-label="Cinema Lounge Hub">
+      <div class="party-lounge-sector">
+        <!-- Lounge Header Tabs & Status -->
+        <div class="party-lounge-nav" role="tablist">
+          <button type="button" class="party-lounge-tab is-active" id="hub-tab-halls" role="tab" aria-selected="true" aria-controls="panel-lounge-halls">
+            <span class="tab-icon">🔴</span>
+            <span class="tab-label">Live Auditoriums</span>
+            <span class="hub-count-pill" id="hub-halls-count">0</span>
+          </button>
+          <button type="button" class="party-lounge-tab" id="hub-host-party-btn" role="tab" aria-selected="false" aria-controls="panel-lounge-host">
+            <span class="tab-icon">🍿</span>
+            <span class="tab-label">Host a Room</span>
+            <span class="tab-sub">Open Auditorium</span>
+          </button>
+          <button type="button" class="party-lounge-tab" id="hub-join-party-btn" role="tab" aria-selected="false" aria-controls="panel-lounge-join">
+            <span class="tab-icon">🔑</span>
+            <span class="tab-label">Join with Code</span>
+            <span class="tab-sub">Private Invite</span>
+          </button>
+        </div>
+
+        <!-- Panel 1: Live Cinema Halls Directory -->
+        <div class="party-lounge-panel is-active" id="panel-lounge-halls" role="tabpanel">
+          <div class="box-office-header">
+            <div>
+              <h3 class="box-office-title">🔴 Live Auditoriums &amp; Theatres</h3>
+              <p class="box-office-subtitle">Select any live public room to take a seat with 1-click, or enter private invite code.</p>
+            </div>
+            <!-- Category Filter Pills: All / Public / Private -->
+            <div class="hall-filter-pills" id="hall-filter-pills" role="toolbar" aria-label="Filter halls">
+              <button type="button" class="hall-pill is-active" data-filter="all">All Rooms</button>
+              <button type="button" class="hall-pill" data-filter="public">🌐 Public Rooms</button>
+              <button type="button" class="hall-pill" data-filter="private">🔒 Private Rooms</button>
+            </div>
+          </div>
+
+          <!-- Dynamic Box Office Rooms Grid (Populated ONLY by Real Users!) -->
+          <div class="box-office-grid" id="box-office-grid">
+            <!-- Dynamic room cards or empty state rendered via JavaScript -->
+          </div>
+        </div>
+
+        <!-- Panel 2: Host Room (Create Public or Private Hall) -->
+        <div class="party-lounge-panel" id="panel-lounge-host" role="tabpanel" hidden>
+          <div class="party-create-card">
+            <div class="party-create-header">
+              <h3>🍿 Create Your Cinema Hall</h3>
+              <p class="party-desc">Launch an immersive Virtual Cinema Hall. Your room stays open until you dismiss it, and you can project and play ANY movie from the site catalog inside the hall.</p>
+            </div>
+
+            <!-- Visibility Selector: Public vs Private -->
+            <div class="party-visibility-toggle">
+              <label class="visibility-option is-active" id="lbl-vis-public">
+                <input type="radio" name="party-vis" id="vis-public-radio" value="public" checked>
+                <div class="visibility-card">
+                  <div class="visibility-card__header">
+                    <span class="vis-icon">🌐</span>
+                    <strong>Public Cinema Hall</strong>
+                    <span class="vis-badge">No Code Needed</span>
+                  </div>
+                  <p>Displayed in "Live Auditoriums". Anyone on BioscopeBD can discover and enter with 1-click.</p>
+                </div>
+              </label>
+
+              <label class="visibility-option" id="lbl-vis-private">
+                <input type="radio" name="party-vis" id="vis-private-radio" value="private">
+                <div class="visibility-card">
+                  <div class="visibility-card__header">
+                    <span class="vis-icon">🔒</span>
+                    <strong>Private Friends Hall</strong>
+                    <span class="vis-badge">Invite Code Only</span>
+                  </div>
+                  <p>Strictly for friends. Generates a permanent invite code. Only friends with your code can enter.</p>
+                </div>
+              </label>
+            </div>
+
+            <div class="party-input-group">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <label for="party-hall-name-input" style="margin:0;">Auditorium / Hall Name:</label>
+                <button type="button" class="btn-text-action" id="btn-random-hall-name">🎲 Random Name</button>
+              </div>
+              <input type="text" id="party-hall-name-input" placeholder="e.g. Tanjir's Grand Cinema Lounge" maxlength="40">
+            </div>
+
+            <div class="party-settings-row">
+              <div class="party-input-group" style="flex:1;">
+                <label for="party-lang-select">Cinema Audio Language:</label>
+                <select id="party-lang-select" class="party-select">
+                  <option value="Bangla">🇧🇩 Bangla Cinema</option>
+                  <option value="English" selected>🎬 English (Global)</option>
+                  <option value="Hindi">🔥 Hindi / Bollywood</option>
+                </select>
+              </div>
+              <div class="party-input-group" style="flex:1;">
+                <label for="party-capacity-select">Auditorium Capacity:</label>
+                <select id="party-capacity-select" class="party-select">
+                  <option value="5">VIP Suite (5 Seats)</option>
+                  <option value="10">Intimate Circle (10 Seats)</option>
+                  <option value="25" selected>Grand Hall (25 Seats)</option>
+                  <option value="50">IMAX Theatre (50 Seats)</option>
+                  <option value="Unlimited">Open Auditorium (Unlimited)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Permanent Hall Invite Code (Visible only when Private is selected) -->
+            <div class="party-room-code-box" id="party-private-code-box" hidden>
+              <label>Permanent Hall Invite Code (Fixed for Friends):</label>
+              <div class="code-box" id="party-code-box">
+                <strong id="party-room-code">BIOSCOPE-7892</strong>
+                <button type="button" class="button button--primary button--sm" id="btn-copy-room">📋 Copy Invite Link</button>
+              </div>
+              <small class="code-hint">Friends enter this invite code in "Join with Code" to enter your auditorium.</small>
+              <div class="party-copy-status" id="party-copy-status" aria-live="polite"></div>
+            </div>
+
+            <div class="party-theatre-preview-card">
+              <div class="theatre-preview-icon">🏛️</div>
+              <div class="theatre-preview-info">
+                <strong>Virtual Cinema Experience with Real-Time Projector</strong>
+                <p>No need to pick movies right now. Once inside your hall, simply search and play ANY movie or AI film from our catalog and it will instantly project onto the big screen for all viewers.</p>
+              </div>
+            </div>
+
+            <div class="party-create-footer-actions">
+              <button type="button" class="button button--glass" id="btn-generate-ticket">
+                🎟️ Generate Commemorative Hall Ticket
+              </button>
+              <button type="button" class="button button--primary button--large" id="btn-start-party">
+                🎬 Launch &amp; Enter Cinema Theatre
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel 3: Join Private Room -->
+        <div class="party-lounge-panel" id="panel-lounge-join" role="tabpanel" hidden>
+          <div class="party-join-card">
+            <h3>🔗 Join a Private Cinema Room</h3>
+            <p class="party-desc">Enter any Hall Code or Invite Link shared by the host to take your seat in their live auditorium.</p>
+            <div class="join-input-group">
+              <input type="text" id="join-room-input" placeholder="e.g. BIOSCOPE-7892" autocomplete="off">
+              <button type="button" class="button button--primary button--large" id="btn-submit-join">🎬 Enter Hall</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========================================================================== -->
+  <!-- DEDICATED FULL-SCREEN VIRTUAL CINEMA THEATRE VIEWPORT -->
+  <!-- ========================================================================== -->
+  <section class="theatre-room-view" id="theatre-room-view" aria-label="Grand Cinema Theatre" hidden>
+    <div class="theatre-curtain" id="theatre-curtain"></div>
+
+    <!-- Top Cinema Marquee & Header Bar -->
+    <header class="theatre-marquee">
+      <div class="theatre-marquee__left">
+        <span class="theatre-live-indicator"><span class="pulse-dot"></span> LIVE AUDITORIUM</span>
+        <span class="theatre-hall-badge" id="theatre-hall-badge">🎬 BIOSCOPE GRAND HALL</span>
+      </div>
+
+      <div class="theatre-marquee__center">
+        <span class="theatre-now-tag">NOW SCREENING:</span>
+        <h3 class="theatre-movie-title" id="theatre-movie-title">Dune: Part Two (2024)</h3>
+        <div class="theatre-code-pill" id="theatre-code-pill" title="Click to copy hall invite link">
+          <span>ROOM:</span>
+          <strong id="theatre-current-code">BIOSCOPE-7892</strong>
+          <span class="pill-copy-glyph">📋</span>
+        </div>
+      </div>
+
+      <div class="theatre-marquee__right">
+        <button type="button" class="theatre-head-btn theatre-head-btn--resync" id="btn-theatre-resync" title="Re-sync video stream with Host (Zero Delay)">
+          <span>⚡ Re-Sync</span>
+        </button>
+        <button type="button" class="theatre-head-btn theatre-head-btn--pause-req" id="btn-theatre-pause-req" title="Request host for a quick pause break">
+          <span>✋ Request Pause</span>
+        </button>
+        <button type="button" class="theatre-head-btn theatre-head-btn--share" id="btn-theatre-share" title="Copy Invite Link">
+          <span>📋 Copy Invite</span>
+        </button>
+        <button type="button" class="theatre-head-btn theatre-head-btn--lobby" id="btn-theatre-leave" title="Exit to Room Lobby">
+          <span>🚪 Lobby</span>
+        </button>
+        <button type="button" class="theatre-head-btn theatre-head-btn--dismiss" id="btn-theatre-dismiss" title="Host Only: Dismiss hall for everyone" hidden>
+          <span>🛑 Dismiss Hall</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Auditorium Viewing Arena -->
+    <div class="theatre-auditorium">
+      <div class="theatre-proscenium">
+        <!-- Dynamic Cinema Screen Backlight (Ambilight) -->
+        <div class="theatre-ambilight" id="theatre-ambilight"></div>
+
+        <!-- The Cinema Screen Viewport -->
+        <div class="theatre-screen-viewport" id="theatre-screen-viewport">
+          <!-- Hardware Sandboxed Video Player -->
+          <iframe id="theatre-player-frame" class="theatre-player-frame" src="" sandbox="allow-scripts allow-same-origin allow-presentation" allowfullscreen allow="autoplay; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="no-referrer-when-downgrade"></iframe>
+
+          <!-- Projector Tuning Overlay -->
+          <div class="theatre-projector-shield" id="theatre-projector-shield" hidden>
+            <div class="projector-glow-ring"></div>
+            <span id="theatre-projector-text">Tuning Cinema Projector &amp; Synced Stream...</span>
+          </div>
+
+          <!-- Floating Emoji Reactions Canvas -->
+          <div class="theatre-floating-reactions" id="theatre-floating-reactions" aria-hidden="true"></div>
+
+          <!-- 100% Transparent In-Player Corner Chat (Non-Disturbing Glassmorphism) -->
+          <aside class="theatre-corner-chat" id="theatre-corner-chat" aria-label="Auditorium Lounge Chat">
+            <div class="corner-chat__header" id="corner-chat-header">
+              <div class="corner-chat__title-wrap">
+                <span class="chat-live-dot"></span>
+                <strong>Lounge Chat</strong>
+              </div>
+              <div class="corner-chat__actions">
+                <button type="button" class="corner-chat__roster-btn" id="btn-toggle-roster" title="Click to view all members in this hall">
+                  👥 <span id="theatre-roster-count">1 Watching</span>
+                </button>
+                <button type="button" class="corner-chat__min-btn" id="btn-min-corner-chat" title="Minimize / Expand Chat" aria-label="Toggle chat">▾</button>
+                <button type="button" class="corner-chat__hide-btn" id="btn-hide-corner-chat" title="Hide chat for full immersion (Press C)" aria-label="Hide chat">👁️ Hide</button>
+              </div>
+            </div>
+
+            <!-- Audience Member Roster Dropdown Flyout -->
+            <div class="theatre-roster-popover" id="theatre-roster-popover" hidden>
+              <div class="roster-popover-header">
+                <span>Audience in Hall (<strong id="roster-popover-count">1</strong>)</span>
+              </div>
+              <ul class="roster-popover-list" id="theatre-roster-list">
+                <!-- Dynamic audience list -->
+              </ul>
+            </div>
+
+            <!-- Chat Message Stream -->
+            <div class="corner-chat__body" id="theatre-chat-body">
+              <div class="c-msg c-msg--system">
+                🎬 <em>Welcome to the Virtual Cinema Hall! Chat with friends and react in real-time.</em>
+              </div>
+            </div>
+
+            <!-- Quick 1-Tap Emoji Reactions Bar -->
+            <div class="corner-chat__quick-emojis">
+              <button type="button" class="quick-emoji-btn" data-emoji="🍿" title="Popcorn">🍿</button>
+              <button type="button" class="quick-emoji-btn" data-emoji="🔥" title="Fire">🔥</button>
+              <button type="button" class="quick-emoji-btn" data-emoji="😂" title="Laugh">😂</button>
+              <button type="button" class="quick-emoji-btn" data-emoji="😱" title="Shocked">😱</button>
+              <button type="button" class="quick-emoji-btn" data-emoji="👏" title="Applause">👏</button>
+              <button type="button" class="quick-emoji-btn" data-emoji="❤️" title="Love">❤️</button>
+            </div>
+
+            <!-- Chat Input Form -->
+            <form class="corner-chat__form" id="theatre-chat-form">
+              <input type="text" id="theatre-chat-input" placeholder="Say something in the hall..." autocomplete="off" maxlength="160">
+              <button type="submit" id="btn-theatre-chat-send" aria-label="Send message">➤</button>
+            </form>
+          </aside>
+
+          <!-- Floating button to bring back chat when hidden -->
+          <button type="button" class="theatre-show-chat-pill" id="btn-show-corner-chat" title="Show chat overlay (Press C)" hidden>
+            💬 <span>Show Chat</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Virtual Auditorium Seating Row -->
+      <div class="theatre-seating-section">
+        <div class="seating-ambient-glow"></div>
+        <div class="seating-bar-header">
+          <span class="cinema-aisle-tag">AUDITORIUM FRONT ROW · VIP CINEMA SEATS</span>
+          <span class="cinema-aisle-sync" id="cinema-sync-status">All seats synced with Host Projector</span>
+        </div>
+        <div class="theatre-seats-track" id="theatre-seats-track">
+          <!-- Dynamically populated seats -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Host Projector Booth Controls (Shown only to the host) -->
+    <footer class="theatre-host-deck" id="theatre-host-deck" hidden>
+      <div class="host-deck__label">
+        <span class="host-crown">👑</span>
+        <div>
+          <strong>Host Projector Booth</strong>
+          <small id="theatre-host-sub">You have playback &amp; movie switching authority</small>
+        </div>
+      </div>
+      <div class="host-deck__search-project">
+        <label for="theatre-projector-search">🔍 Project Any Movie:</label>
+        <div class="theatre-search-box">
+          <input type="text" id="theatre-projector-search" placeholder="Search any movie or AI film to project on big screen..." autocomplete="off">
+          <div class="theatre-search-dropdown" id="theatre-projector-results" hidden></div>
+        </div>
+      </div>
+      <div class="host-deck__movie-select">
+        <label for="theatre-switch-movie">Quick Pick:</label>
+        <select id="theatre-switch-movie">
+          <!-- Dynamically populated movies -->
+        </select>
+      </div>
+      <button type="button" class="button button--glass button--sm" id="btn-host-playpause">
+        ⏸️ Pause Stream
+      </button>
+      <button type="button" class="button button--glass button--sm" id="btn-host-resync">
+        ⚡ Force Sync Viewers
+      </button>
+      <button type="button" class="button button--danger button--sm" id="btn-host-dismiss-bar">
+        🛑 Dismiss Hall / End Show
+      </button>
+    </footer>
+  </section>
+
+  <!-- Digital Cinema Ticket Modal -->
+  <dialog class="modal-dialog ticket-dialog" id="ticket-dialog" aria-labelledby="ticket-dialog-title">
+    <div class="ticket-dialog__inner">
+      <div class="ticket-dialog__header">
+        <h3 id="ticket-dialog-title">🎟️ Your Commemorative Movie Ticket</h3>
+        <button type="button" class="icon-button modal-close-btn" id="ticket-close-btn" aria-label="Close dialog">✕</button>
+      </div>
+      <div class="ticket-canvas-wrap">
+        <canvas id="ticket-canvas" width="600" height="280"></canvas>
+      </div>
+      <div class="ticket-dialog__actions">
+        <button type="button" class="button button--outline" id="btn-download-ticket">⬇️ Download Ticket (PNG)</button>
+        <button type="button" class="button button--primary" id="btn-share-ticket">📋 Copy Invite Link</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Footer -->
+  <footer class="room-footer container">
+    <p>🍿 BioscopeBD Cinema Lounge · Real-time synchronized playback and community watch parties.</p>
+  </footer>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+  <script src="../config.js"></script>
+  <script src="room.js"></script>
+</body>
+</html>

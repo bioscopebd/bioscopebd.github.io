@@ -5,7 +5,7 @@ import { join, resolve } from "node:path";
 const root = resolve(import.meta.dirname, "..");
 const source = join(root, "00-shared-web");
 const targets = ["pwa", "android/app/www", "ios/app/www", "windows/www"];
-const files = ["index.html", "style.css", "script.js", "config.js", "manifest.json", "service-worker.js"];
+const files = ["index.html", "style.css", "script.js", "config.js", "manifest.json", "service-worker.js", "room.html"];
 
 for (const file of files) {
   if (!existsSync(join(source, file))) throw new Error(`Missing shared file: ${file}`);
@@ -13,9 +13,13 @@ for (const file of files) {
 for (const target of targets) {
   const destination = join(root, target);
   mkdirSync(join(destination, "icons"), { recursive: true });
+  mkdirSync(join(destination, "room"), { recursive: true });
   for (const file of files) cpSync(join(source, file), join(destination, file), { force: true });
   for (const icon of readdirSync(join(source, "icons"))) {
     cpSync(join(source, "icons", icon), join(destination, "icons", icon), { force: true });
+  }
+  if (existsSync(join(source, "room"))) {
+    cpSync(join(source, "room"), join(destination, "room"), { recursive: true, force: true });
   }
   console.log(`Synced ${target}`);
 }
@@ -29,5 +33,9 @@ if (existsSync(join(source, "icons"))) {
   for (const icon of readdirSync(join(source, "icons"))) {
     cpSync(join(source, "icons", icon), join(root, "icons", icon), { force: true });
   }
+}
+if (existsSync(join(source, "room"))) {
+  mkdirSync(join(root, "room"), { recursive: true });
+  cpSync(join(source, "room"), join(root, "room"), { recursive: true, force: true });
 }
 console.log("Synced root (GitHub Pages)");

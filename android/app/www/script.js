@@ -2579,44 +2579,7 @@ let currentHallSession = null;
 let hallAudience = [];
 const hallChannel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("bioscope_theatre_sync") : null;
 
-const DEFAULT_BOX_OFFICE_HALLS = [
-  {
-    roomCode: "BIOSCOPE-4K01",
-    hallName: "IMAX Laser Cinema Hall #1",
-    movieTitle: "Dune: Part Two",
-    poster: "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
-    hostName: "Tanjir (VIP)",
-    hostAvatar: "👑",
-    viewers: 8,
-    tmdbId: "693134",
-    type: "movie",
-    trailerId: "Way9Dexny3w"
-  },
-  {
-    roomCode: "BIOSCOPE-8820",
-    hallName: "Christopher Nolan Retro Hall",
-    movieTitle: "Oppenheimer",
-    poster: "https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
-    hostName: "CinephileBD",
-    hostAvatar: "🍿",
-    viewers: 14,
-    tmdbId: "872585",
-    type: "movie",
-    trailerId: "uYPbbksJxIg"
-  },
-  {
-    roomCode: "BIOSCOPE-AI09",
-    hallName: "Higgsfield AI Originals Hall",
-    movieTitle: "The Trigger (AI Action Cinema)",
-    poster: "https://picsum.photos/seed/trigger/500/750",
-    hostName: "Higgsfield AI",
-    hostAvatar: "🤖",
-    viewers: 6,
-    tmdbId: "",
-    type: "youtube",
-    trailerId: "IAl240xpSGM"
-  }
-];
+const DEFAULT_BOX_OFFICE_HALLS = [];
 
 // Persistent Host Room Code (Stays fixed until dismissed!)
 function getPersistentHostRoomCode() {
@@ -2715,13 +2678,10 @@ function updateVisibilityToggle() {
 if (visPublicRadio) visPublicRadio.addEventListener("change", updateVisibilityToggle);
 if (visPrivateRadio) visPrivateRadio.addEventListener("change", updateVisibilityToggle);
 
-// Navigate to Watch Party Section (Used by Nav buttons & Hero)
+// Navigate to Watch Party Section (Navigates directly to dedicated room/ page!)
 function navigateToWatchParty(tab = "halls") {
-  const hub = document.querySelector("#watch-party-hub");
-  if (hub) {
-    hub.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-  switchLoungeTab(tab);
+  const target = "room/" + (tab !== "halls" ? `?tab=${tab}` : "");
+  window.location.href = target;
 }
 
 // Global Watch Party Navigation Triggers
@@ -3200,18 +3160,7 @@ function initHallAudience(hall) {
     });
   }
 
-  // Pre-seed 2-3 friendly simulated cinephile attendees for public halls
-  if (hall.isPublic !== false) {
-    const companions = [
-      { id: "comp_1", name: "Rahim", avatar: "🕶️", isHost: false, seat: "A3" },
-      { id: "comp_2", name: "Sarah K.", avatar: "🐱", isHost: false, seat: "A4" },
-      { id: "comp_3", name: "Tanvir", avatar: "🤖", isHost: false, seat: "A5" }
-    ];
-    companions.forEach(c => {
-      if (!hallAudience.some(m => m.id === c.id)) hallAudience.push(c);
-    });
-  }
-
+  // Zero fake companions: Only real connected users are shown!
   renderHallAudienceSeats();
 }
 
@@ -3518,37 +3467,6 @@ function renderBoxOfficeHalls() {
     });
   }
 
-  // Add default public halls
-  DEFAULT_BOX_OFFICE_HALLS.forEach(h => {
-    if (!list.some(item => item.roomCode === h.roomCode)) {
-      list.push({
-        ...h,
-        isPublic: true,
-        language: "all",
-        capacity: "unlimited"
-      });
-    }
-  });
-
-  // Sample private hall so visitors can see both public & private rooms in the list
-  if (!list.some(item => !item.isPublic)) {
-    list.push({
-      roomCode: "BIOSCOPE-7721",
-      hallName: "Rahim's VIP Private Cinema",
-      movieTitle: "Interstellar (2014)",
-      poster: "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
-      hostName: "Rahim",
-      hostAvatar: "🚀",
-      viewers: 4,
-      tmdbId: "157336",
-      type: "movie",
-      trailerId: "2LqzF5WauS2",
-      isPublic: false,
-      language: "en",
-      capacity: "10"
-    });
-  }
-
   const countEl = document.querySelector("#hub-halls-count");
   if (countEl) countEl.textContent = list.length;
 
@@ -3563,9 +3481,9 @@ function renderBoxOfficeHalls() {
     grid.innerHTML = `
       <div class="box-office-empty">
         <div class="box-office-empty-icon">🏛️</div>
-        <h4>No rooms found in this category</h4>
-        <p>Host your own room and watch together with friends!</p>
-        <button type="button" class="button button--primary button--sm" onclick="switchLoungeTab('host')">🍿 Host Room Now</button>
+        <h4>বর্তমানে কোনো লাইভ সিনেমা রুম চালু নেই</h4>
+        <p>কোনো রুম চালু নেই। আপনি এখনই নিজের একটি পাবলিক বা প্রাইভেট সিনেমা রুম হোস্ট করুন!</p>
+        <button type="button" class="button button--primary button--sm" onclick="switchLoungeTab('host')">🍿 Host First Room Now</button>
       </div>
     `;
     return;
