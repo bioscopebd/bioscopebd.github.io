@@ -162,11 +162,11 @@
 var CONFIG = window.BIOSCOPE_CONFIG || {
   TMDB_API_KEY: "8265bd1679663a7ea12ac168da84d2e8",
   STREAM_SERVERS: [
-    { id: "1", name: "Bioscope Primary (Fast CDN)", getUrl: (id, type) => type === "tv" ? `https://player.videasy.net/tv/${id}/1/1` : `https://player.videasy.net/movie/${id}` },
-    { id: "2", name: "Bioscope Global Mirror (AutoEmbed)", getUrl: (id, type) => type === "tv" ? `https://autoembed.co/tv/tmdb/${id}/1/1` : `https://autoembed.co/movie/tmdb/${id}` },
-    { id: "3", name: "Bioscope Ultra Mirror (VidLink)", getUrl: (id, type) => type === "tv" ? `https://vidlink.pro/tv/${id}/1/1?primaryColor=f5c518&secondaryColor=111111` : `https://vidlink.pro/movie/${id}?primaryColor=f5c518&secondaryColor=111111` },
-    { id: "4", name: "Bioscope Cloud Backup (VidSrc)", getUrl: (id, type) => type === "tv" ? `https://vidsrc.pm/embed/tv/${id}/1/1` : `https://vidsrc.pm/embed/movie/${id}` },
-    { id: "5", name: "Bioscope Alternative", getUrl: (id, type) => type === "tv" ? `https://vidsrc.cc/v2/embed/tv/${id}/1/1` : `https://vidsrc.cc/v2/embed/movie/${id}` }
+    { id: "1", name: "Bioscope Primary (Fast Cloud)", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://vidsrc.pm/embed/tv/${id}/${s}/${e}` : `https://vidsrc.pm/embed/movie/${id}` },
+    { id: "2", name: "Bioscope Ultra (2Embed Prime)", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}` : `https://www.2embed.cc/embed/${id}` },
+    { id: "3", name: "Bioscope Global Mirror (2Embed)", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://www.2embed.skin/embedtv/${id}&s=${s}&e=${e}` : `https://www.2embed.skin/embed/${id}` },
+    { id: "4", name: "Bioscope Multi-Stream", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}` : `https://multiembed.mov/?video_id=${id}&tmdb=1` },
+    { id: "5", name: "Bioscope Alternative (VidSrc)", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://vidsrc.xyz/embed/tv/${id}/${s}/${e}` : `https://vidsrc.xyz/embed/movie/${id}` }
   ]
 };
 
@@ -1689,8 +1689,9 @@ window.addEventListener("message", (event) => {
 function loadSilentStreamEndpoint(failoverIndex = 0) {
   clearTimeout(failoverTimer);
   currentFailoverIndex = failoverIndex;
-  const servers = CONFIG.STREAM_SERVERS;
-  const currentProvider = servers[failoverIndex] || servers[0];
+  const servers = (typeof CONFIG !== "undefined" && CONFIG.STREAM_SERVERS) ? CONFIG.STREAM_SERVERS : [];
+  if (!servers.length) return;
+  const currentProvider = servers[failoverIndex % servers.length];
 
   if (streamLoadingShield) {
     streamLoadingShield.hidden = false;
@@ -1701,18 +1702,34 @@ function loadSilentStreamEndpoint(failoverIndex = 0) {
   if (engineBadge) engineBadge.textContent = "Auto-Optimized Stream (1080p)";
 
   const toolbarServerLabel = document.querySelector("#toolbar-server-label");
-  if (toolbarServerLabel) toolbarServerLabel.textContent = `Mirror ${failoverIndex + 1}`;
+  if (toolbarServerLabel) toolbarServerLabel.textContent = `Mirror ${(failoverIndex % servers.length) + 1}`;
 
   if (videoFrame) {
     videoFrame.hidden = false;
-    videoFrame.removeAttribute("sandbox");
-    videoFrame.src = currentProvider.getUrl(activeStream.tmdbId, activeStream.type);
-  }
+    videoFrame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-presentation allow-downloads");
 
-  // 3.5s Smart Failover Timer: remove loading shield once connection handshakes
-  failoverTimer = setTimeout(() => {
-    if (streamLoadingShield) streamLoadingShield.hidden = true;
-  }, 3500);
+    let hasHandshaked = false;
+    videoFrame.onload = () => {
+      hasHandshaked = true;
+      if (streamLoadingShield) streamLoadingShield.hidden = true;
+    };
+    videoFrame.onerror = () => {
+      handleStreamErrorOrTimeout();
+    };
+
+    videoFrame.src = currentProvider.getUrl(activeStream.tmdbId, activeStream.type);
+
+    // Auto Server Failover: smoothly switch to next mirror if server handshake stalls past 6.5s
+    failoverTimer = setTimeout(() => {
+      if (!hasHandshaked && currentFailoverIndex < servers.length - 1) {
+        console.warn(`[Stream] Server ${currentProvider.name} timed out, auto-switching to next mirror...`);
+        notify(`⚡ Server ${currentProvider.name} busy. Auto-switching to Mirror ${currentFailoverIndex + 2}...`);
+        loadSilentStreamEndpoint(currentFailoverIndex + 1);
+      } else {
+        if (streamLoadingShield) streamLoadingShield.hidden = true;
+      }
+    }, 6500);
+  }
 }
 
 function updateSourceToggleUI(isTrailerActive) {
@@ -1757,8 +1774,10 @@ async function getTmdbTrailerId(tmdbId, type = "movie") {
 
 function handleStreamErrorOrTimeout() {
   clearTimeout(failoverTimer);
-  if (currentFailoverIndex < CONFIG.STREAM_SERVERS.length - 1) {
+  const servers = (typeof CONFIG !== "undefined" && CONFIG.STREAM_SERVERS) ? CONFIG.STREAM_SERVERS : [];
+  if (currentFailoverIndex < servers.length - 1) {
     currentFailoverIndex++;
+    notify(`⚡ Auto-switching to backup Mirror ${currentFailoverIndex + 1}...`);
     loadSilentStreamEndpoint(currentFailoverIndex);
   } else {
     // If all failover mirrors exhaust, fallback cleanly without defaulting to Dune 2
@@ -2525,7 +2544,6 @@ const btnCopyRoom = document.querySelector("#btn-copy-room");
 const btnGenerateNewCode = document.querySelector("#btn-generate-new-code");
 const partyHallNameInput = document.querySelector("#party-hall-name-input");
 const btnRandomHallName = document.querySelector("#btn-random-hall-name");
-const partyLangSelect = document.querySelector("#party-lang-select");
 const partyCapacitySelect = document.querySelector("#party-capacity-select");
 const btnStartParty = document.querySelector("#btn-start-party");
 const btnGenerateTicket = document.querySelector("#btn-generate-ticket");
@@ -2793,7 +2811,7 @@ if (btnStartParty) {
       ? partyRoomCodeEl.textContent.trim()
       : getHostRoomCode();
     const hallName = partyHallNameInput?.value?.trim() || `${(currentUser && currentUser.name) ? currentUser.name.split(" ")[0] : "VIP"}'s Grand Cinema`;
-    const language = partyLangSelect?.value || "all";
+    const language = "";
     const capacity = partyCapacitySelect?.value || "unlimited";
     
     const initialMovie = (activeHall && activeHall.movieTitle) ? activeHall : {
@@ -3038,7 +3056,7 @@ function loadTheatreScreen(title, tmdbId, type = "movie", trailerId = "", startS
     url = CONFIG.STREAM_SERVERS[0].getUrl(tmdbId, type);
   }
 
-  theatrePlayerFrame.removeAttribute("sandbox");
+  theatrePlayerFrame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-presentation allow-downloads");
   theatrePlayerFrame.src = url;
   theatrePlayerFrame.onload = () => {
     if (theatreProjectorShield) theatreProjectorShield.hidden = true;

@@ -152,7 +152,6 @@ const btnCopyRoom = document.querySelector("#btn-copy-room");
 const btnGenerateNewCode = document.querySelector("#btn-generate-new-code");
 const partyHallNameInput = document.querySelector("#party-hall-name-input");
 const btnRandomHallName = document.querySelector("#btn-random-hall-name");
-const partyLangSelect = document.querySelector("#party-lang-select");
 const partyCapacitySelect = document.querySelector("#party-capacity-select");
 const btnStartParty = document.querySelector("#btn-start-party");
 const btnGenerateTicket = document.querySelector("#btn-generate-ticket");
@@ -570,7 +569,7 @@ function publishHostHeartbeat() {
     isPublic: activeHall.isPublic,
     hostName: activeHall.hostName,
     hostAvatar: activeHall.hostAvatar,
-    language: activeHall.language || "English",
+    language: activeHall.language || "",
     capacity: activeHall.capacity || "Unlimited",
     viewers: hallAudience.length || 1,
     tmdbId: activeHall.tmdbId,
@@ -697,7 +696,7 @@ if (btnStartParty) {
       ? partyRoomCodeEl.textContent.trim()
       : getHostRoomCode();
     const hallName = partyHallNameInput?.value?.trim() || `${(currentUser && currentUser.name) ? currentUser.name.split(" ")[0] : "VIP"}'s Grand Cinema`;
-    const language = partyLangSelect?.value || "English";
+    const language = "";
     const capacity = partyCapacitySelect?.value || "Unlimited";
 
     const initialMovie = (activeHall && activeHall.movieTitle) ? activeHall : {
@@ -995,6 +994,20 @@ window.addEventListener("pagehide", () => {
   }
 });
 
+let currentTheatreServerIndex = 0;
+
+function autoSwitchTheatreServer() {
+  const servers = (typeof CONFIG !== "undefined" && CONFIG.STREAM_SERVERS) ? CONFIG.STREAM_SERVERS : [];
+  if (!servers.length) return;
+  currentTheatreServerIndex = (currentTheatreServerIndex + 1) % servers.length;
+  const nextServer = servers[currentTheatreServerIndex];
+  if (playerDockServerLabel) playerDockServerLabel.textContent = `Server ${currentTheatreServerIndex + 1}`;
+  if (theatrePlayerFrame && currentHallSession && currentHallSession.tmdbId) {
+    theatrePlayerFrame.src = nextServer.getUrl(currentHallSession.tmdbId, currentHallSession.type || "movie");
+    notify(`⚡ Auto-switching Cinema Projector to ${nextServer.name} (Mirror ${currentTheatreServerIndex + 1})...`);
+  }
+}
+
 // Load Cinema Screen Video Stream with Live Sync Offset
 function loadTheatreScreen(title, tmdbId, type = "movie", trailerId = "", startSeconds = 0) {
   if (!theatrePlayerFrame) return;
@@ -1028,12 +1041,14 @@ function loadTheatreScreen(title, tmdbId, type = "movie", trailerId = "", startS
   } else {
     const servers = (typeof CONFIG !== "undefined" && CONFIG.STREAM_SERVERS) ? CONFIG.STREAM_SERVERS : [];
     const serverObj = servers[currentTheatreServerIndex] || servers[0];
-    url = serverObj ? serverObj.getUrl(tmdbId, type) : (type === "tv" ? `https://vidlink.pro/tv/${tmdbId}/1/1?primaryColor=f5c518&secondaryColor=111111` : `https://vidlink.pro/movie/${tmdbId}?primaryColor=f5c518&secondaryColor=111111`);
+    url = serverObj ? serverObj.getUrl(tmdbId, type) : (type === "tv" ? `https://vidsrc.pm/embed/tv/${tmdbId}/1/1` : `https://vidsrc.pm/embed/movie/${tmdbId}`);
   }
 
-  theatrePlayerFrame.removeAttribute("sandbox");
+  theatrePlayerFrame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-presentation allow-downloads");
   theatrePlayerFrame.src = url;
+  let theatreHandshake = false;
   theatrePlayerFrame.onload = () => {
+    theatreHandshake = true;
     if (theatreProjectorShield) theatreProjectorShield.hidden = true;
     if (startSeconds > 0 && isYoutube) {
       setTimeout(() => {
@@ -1041,9 +1056,15 @@ function loadTheatreScreen(title, tmdbId, type = "movie", trailerId = "", startS
       }, 500);
     }
   };
+  theatrePlayerFrame.onerror = () => {
+    if (!isYoutube && typeof autoSwitchTheatreServer === "function") autoSwitchTheatreServer();
+  };
   setTimeout(() => {
     if (theatreProjectorShield) theatreProjectorShield.hidden = true;
-  }, 2400);
+    if (!isYoutube && !theatreHandshake && typeof autoSwitchTheatreServer === "function") {
+      autoSwitchTheatreServer();
+    }
+  }, 6500);
 }
 
 // Host Play/Pause Authority Controller
@@ -1322,24 +1343,9 @@ function toggleTheatreChat(forceShow) {
   }
 }
 
-let currentTheatreServerIndex = 0;
-
 if (btnDockChatToggle) btnDockChatToggle.addEventListener("click", () => toggleTheatreChat());
 if (btnDockServer) {
-  btnDockServer.addEventListener("click", () => {
-    const servers = (typeof CONFIG !== "undefined" && CONFIG.STREAM_SERVERS) ? CONFIG.STREAM_SERVERS : [];
-    if (!servers.length) return;
-    currentTheatreServerIndex = (currentTheatreServerIndex + 1) % servers.length;
-    const nextServer = servers[currentTheatreServerIndex];
-    if (playerDockServerLabel) playerDockServerLabel.textContent = `Server ${currentTheatreServerIndex + 1}`;
-
-    if (currentHallSession && currentHallSession.tmdbId && theatrePlayerFrame) {
-      theatrePlayerFrame.src = nextServer.getUrl(currentHallSession.tmdbId, currentHallSession.type || "movie");
-      notify(`⚡ Switched Cinema Projector to ${nextServer.name} (Mirror ${currentTheatreServerIndex + 1})`);
-    } else {
-      notify(`⚡ Fast Cinema Mirror: ${nextServer.name}`);
-    }
-  });
+  btnDockServer.addEventListener("click", () => autoSwitchTheatreServer());
 }
 if (btnDockResync) btnDockResync.addEventListener("click", triggerTheatreResync);
 if (btnDockPauseReq) {
@@ -1476,7 +1482,7 @@ function renderBoxOfficeHalls() {
       trailerId: activeHall.trailerId,
       isPublic: activeHall.isPublic ?? true,
       isMyHall: true,
-      language: activeHall.language || "English",
+      language: activeHall.language || "",
       capacity: activeHall.capacity || "Unlimited"
     });
   }
