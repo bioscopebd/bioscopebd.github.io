@@ -103,6 +103,17 @@
     }, true);
   });
 
+  // Rapid Refocus Shield: If an external player attempts to steal window focus for popups,
+  // immediately restore focus back to the parent application
+  window.addEventListener("blur", function() {
+    const active = document.activeElement;
+    if (active && (active.tagName === "IFRAME" || (active.id && (active.id.includes("player") || active.id.includes("frame"))))) {
+      setTimeout(() => {
+        try { window.focus(); } catch (_) {}
+      }, 50);
+    }
+  });
+
   // Watchdog DOM MutationObserver: Neutralizes rogue ad scripts, popup tags, or transparent clickjack overlays
   try {
     const adObserver = new MutationObserver((mutations) => {
@@ -151,11 +162,11 @@
 var CONFIG = window.BIOSCOPE_CONFIG || {
   TMDB_API_KEY: "8265bd1679663a7ea12ac168da84d2e8",
   STREAM_SERVERS: [
-    { id: "1", name: "Bioscope Ultra (VidLink Pro)", getUrl: (id, type) => type === "tv" ? `https://vidlink.pro/tv/${id}/1/1?primaryColor=f5c518&secondaryColor=111111` : `https://vidlink.pro/movie/${id}?primaryColor=f5c518&secondaryColor=111111` },
-    { id: "2", name: "Bioscope Cloud (VidSrc PM)", getUrl: (id, type) => type === "tv" ? `https://vidsrc.pm/embed/tv/${id}/1/1` : `https://vidsrc.pm/embed/movie/${id}` },
-    { id: "3", name: "Bioscope Mirror (VidSrc IO)", getUrl: (id, type) => type === "tv" ? `https://vidsrc.io/embed/tv/${id}/1/1` : `https://vidsrc.io/embed/movie/${id}` },
-    { id: "4", name: "Bioscope Global (VidSrc Me)", getUrl: (id, type) => type === "tv" ? `https://vidsrc.me/embed/tv?tmdb=${id}&season=1&episode=1` : `https://vidsrc.me/embed/movie?tmdb=${id}` },
-    { id: "5", name: "Bioscope Backup (AutoEmbed)", getUrl: (id, type) => type === "tv" ? `https://autoembed.co/tv/tmdb/${id}/1/1` : `https://autoembed.co/movie/tmdb/${id}` }
+    { id: "1", name: "Bioscope Primary (Fast CDN)", getUrl: (id, type) => type === "tv" ? `https://player.videasy.net/tv/${id}/1/1` : `https://player.videasy.net/movie/${id}` },
+    { id: "2", name: "Bioscope Global Mirror (AutoEmbed)", getUrl: (id, type) => type === "tv" ? `https://autoembed.co/tv/tmdb/${id}/1/1` : `https://autoembed.co/movie/tmdb/${id}` },
+    { id: "3", name: "Bioscope Ultra Mirror (VidLink)", getUrl: (id, type) => type === "tv" ? `https://vidlink.pro/tv/${id}/1/1?primaryColor=f5c518&secondaryColor=111111` : `https://vidlink.pro/movie/${id}?primaryColor=f5c518&secondaryColor=111111` },
+    { id: "4", name: "Bioscope Cloud Backup (VidSrc)", getUrl: (id, type) => type === "tv" ? `https://vidsrc.pm/embed/tv/${id}/1/1` : `https://vidsrc.pm/embed/movie/${id}` },
+    { id: "5", name: "Bioscope Alternative", getUrl: (id, type) => type === "tv" ? `https://vidsrc.cc/v2/embed/tv/${id}/1/1` : `https://vidsrc.cc/v2/embed/movie/${id}` }
   ]
 };
 
@@ -1694,7 +1705,7 @@ function loadSilentStreamEndpoint(failoverIndex = 0) {
 
   if (videoFrame) {
     videoFrame.hidden = false;
-    videoFrame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-presentation allow-downloads");
+    videoFrame.removeAttribute("sandbox");
     videoFrame.src = currentProvider.getUrl(activeStream.tmdbId, activeStream.type);
   }
 
@@ -3027,7 +3038,7 @@ function loadTheatreScreen(title, tmdbId, type = "movie", trailerId = "", startS
     url = CONFIG.STREAM_SERVERS[0].getUrl(tmdbId, type);
   }
 
-  theatrePlayerFrame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-presentation allow-downloads");
+  theatrePlayerFrame.removeAttribute("sandbox");
   theatrePlayerFrame.src = url;
   theatrePlayerFrame.onload = () => {
     if (theatreProjectorShield) theatreProjectorShield.hidden = true;

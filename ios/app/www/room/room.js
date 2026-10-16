@@ -85,6 +85,17 @@
       }
     }, true);
   });
+
+  // Rapid Refocus Shield: If an external player attempts to steal window focus for popups,
+  // immediately restore focus back to the parent application
+  window.addEventListener("blur", function() {
+    const active = document.activeElement;
+    if (active && (active.tagName === "IFRAME" || (active.id && (active.id.includes("player") || active.id.includes("frame"))))) {
+      setTimeout(() => {
+        try { window.focus(); } catch (_) {}
+      }, 50);
+    }
+  });
 })();
 
 // 1. User State & Toast Helpers
@@ -1020,7 +1031,7 @@ function loadTheatreScreen(title, tmdbId, type = "movie", trailerId = "", startS
     url = serverObj ? serverObj.getUrl(tmdbId, type) : (type === "tv" ? `https://vidlink.pro/tv/${tmdbId}/1/1?primaryColor=f5c518&secondaryColor=111111` : `https://vidlink.pro/movie/${tmdbId}?primaryColor=f5c518&secondaryColor=111111`);
   }
 
-  theatrePlayerFrame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-presentation allow-downloads");
+  theatrePlayerFrame.removeAttribute("sandbox");
   theatrePlayerFrame.src = url;
   theatrePlayerFrame.onload = () => {
     if (theatreProjectorShield) theatreProjectorShield.hidden = true;

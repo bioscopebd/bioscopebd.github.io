@@ -29,11 +29,11 @@
 
   // Auto-Server Stream Failover Providers (Strictly Zero Ads & No Popups)
   STREAM_SERVERS: [
-    { id: "1", name: "Bioscope Ultra (VidLink Pro)", getUrl: (id, type) => type === "tv" ? `https://vidlink.pro/tv/${id}/1/1?primaryColor=f5c518&secondaryColor=111111` : `https://vidlink.pro/movie/${id}?primaryColor=f5c518&secondaryColor=111111` },
-    { id: "2", name: "Bioscope Cloud (VidSrc PM)", getUrl: (id, type) => type === "tv" ? `https://vidsrc.pm/embed/tv/${id}/1/1` : `https://vidsrc.pm/embed/movie/${id}` },
-    { id: "3", name: "Bioscope Mirror (VidSrc IO)", getUrl: (id, type) => type === "tv" ? `https://vidsrc.io/embed/tv/${id}/1/1` : `https://vidsrc.io/embed/movie/${id}` },
-    { id: "4", name: "Bioscope Global (VidSrc Me)", getUrl: (id, type) => type === "tv" ? `https://vidsrc.me/embed/tv?tmdb=${id}&season=1&episode=1` : `https://vidsrc.me/embed/movie?tmdb=${id}` },
-    { id: "5", name: "Bioscope Backup (AutoEmbed)", getUrl: (id, type) => type === "tv" ? `https://autoembed.co/tv/tmdb/${id}/1/1` : `https://autoembed.co/movie/tmdb/${id}` }
+    { id: "1", name: "Bioscope Primary (Fast CDN)", getUrl: (id, type) => type === "tv" ? `https://player.videasy.net/tv/${id}/1/1` : `https://player.videasy.net/movie/${id}` },
+    { id: "2", name: "Bioscope Global Mirror (AutoEmbed)", getUrl: (id, type) => type === "tv" ? `https://autoembed.co/tv/tmdb/${id}/1/1` : `https://autoembed.co/movie/tmdb/${id}` },
+    { id: "3", name: "Bioscope Ultra Mirror (VidLink)", getUrl: (id, type) => type === "tv" ? `https://vidlink.pro/tv/${id}/1/1?primaryColor=f5c518&secondaryColor=111111` : `https://vidlink.pro/movie/${id}?primaryColor=f5c518&secondaryColor=111111` },
+    { id: "4", name: "Bioscope Cloud Backup (VidSrc)", getUrl: (id, type) => type === "tv" ? `https://vidsrc.pm/embed/tv/${id}/1/1` : `https://vidsrc.pm/embed/movie/${id}` },
+    { id: "5", name: "Bioscope Alternative", getUrl: (id, type) => type === "tv" ? `https://vidsrc.cc/v2/embed/tv/${id}/1/1` : `https://vidsrc.cc/v2/embed/movie/${id}` }
   ]
 };
 
