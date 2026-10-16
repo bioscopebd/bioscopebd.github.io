@@ -2992,12 +2992,95 @@ body.theatre-mode-active {
   overflow: hidden;
   box-shadow: 0 10px 50px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.1);
   z-index: 5;
+  display: flex;
+  flex-direction: column;
 }
 .theatre-player-frame {
   width: 100%;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   border: none;
   display: block;
+}
+.theatre-player-dock {
+  height: 38px;
+  min-height: 38px;
+  background: rgba(10, 12, 18, 0.98);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  z-index: 25;
+  box-sizing: border-box;
+}
+.player-dock__left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.75rem;
+  color: #9aa0a6;
+  min-width: 0;
+}
+.player-dock__live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ff4757;
+  box-shadow: 0 0 8px #ff4757;
+  animation: pulse-dot 1.5s infinite;
+  flex-shrink: 0;
+}
+.player-dock__title {
+  color: #fff;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 280px;
+}
+.player-dock__sync-badge {
+  color: #00d2ff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: rgba(0, 210, 255, 0.1);
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 210, 255, 0.25);
+  white-space: nowrap;
+}
+.player-dock__right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.player-dock__btn {
+  background: transparent;
+  border: none;
+  color: #c7cbd3;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 5px 9px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+.player-dock__btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+.player-dock__btn.is-active {
+  color: #f5c518;
+  background: rgba(245, 197, 24, 0.12);
+}
+.player-dock__icon {
+  font-size: 0.88rem;
+  line-height: 1;
 }
 .theatre-projector-shield {
   position: absolute;
@@ -3048,7 +3131,7 @@ body.theatre-mode-active {
 /* Compact Semi-Transparent In-Player Corner Chat (Non-Disturbing Glassmorphism) */
 .theatre-corner-chat {
   position: absolute;
-  bottom: 56px; /* Raised above video player control bar (timeline, speed, subtitles, quality, fullscreen) */
+  bottom: 46px; /* Sits right above integrated player dock bar */
   right: 14px;
   width: 290px;
   max-height: 330px;

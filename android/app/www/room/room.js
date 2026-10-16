@@ -82,6 +82,11 @@ const theatreProjectorShield = document.querySelector("#theatre-projector-shield
 const theatreFloatingReactions = document.querySelector("#theatre-floating-reactions");
 const theatreCornerChat = document.querySelector("#theatre-corner-chat");
 const btnTheatreChatToggle = document.querySelector("#btn-theatre-chat-toggle");
+const btnDockChatToggle = document.querySelector("#btn-dock-chat-toggle");
+const playerDockChatLabel = document.querySelector("#player-dock-chat-label");
+const btnDockResync = document.querySelector("#btn-dock-resync");
+const btnDockPauseReq = document.querySelector("#btn-dock-pause-req");
+const playerDockTitle = document.querySelector("#player-dock-title");
 const btnHideCornerChat = document.querySelector("#btn-hide-corner-chat");
 const btnShowCornerChat = document.querySelector("#btn-show-corner-chat");
 const theatreRosterCount = document.querySelector("#theatre-roster-count");
@@ -661,12 +666,21 @@ function enterTheatreHall(hallData, startSeconds = 0) {
     if (btnTheatreDismiss) btnTheatreDismiss.hidden = false;
     if (theatreHostDeck) theatreHostDeck.hidden = false;
     if (btnTheatrePauseReq) btnTheatrePauseReq.hidden = true;
+    if (btnDockPauseReq) btnDockPauseReq.hidden = true;
     if (btnHostPlayPause) btnHostPlayPause.textContent = currentHallSession.isPlaying ? "⏸️ Pause Stream" : "▶️ Resume Stream";
     populateTheatreMovieSwitcher(hallData.movieTitle);
   } else {
     if (btnTheatreDismiss) btnTheatreDismiss.hidden = true;
     if (theatreHostDeck) theatreHostDeck.hidden = true;
     if (btnTheatrePauseReq) btnTheatrePauseReq.hidden = false;
+    if (btnDockPauseReq) btnDockPauseReq.hidden = false;
+  }
+
+  // Update Player Dock
+  if (playerDockTitle) playerDockTitle.textContent = hallData.movieTitle ? `🎬 ${hallData.movieTitle}` : "🎬 LIVE CINEMA STREAM";
+  if (btnDockChatToggle) {
+    btnDockChatToggle.classList.add("is-active");
+    if (playerDockChatLabel) playerDockChatLabel.textContent = "Chat";
   }
 
   // Initialize Audience Seating (Zero fake companions!)
@@ -1002,13 +1016,28 @@ function toggleTheatreChat(forceShow) {
       : `<span>💬 Chat</span>`;
   }
 
+  // Update integrated player bottom dock button state
+  if (btnDockChatToggle) {
+    btnDockChatToggle.classList.toggle("is-active", !shouldHide);
+    if (playerDockChatLabel) {
+      playerDockChatLabel.textContent = shouldHide ? "Show Chat" : "Chat";
+    }
+  }
+
   if (shouldHide) {
-    notify("👁️ Chat hidden. Tap '💬 Show Chat' in the top bar or press 'C' to restore.");
+    notify("👁️ Chat hidden. Tap '💬 Show Chat' in the player dock or press 'C' to restore.");
   } else {
     notify("💬 Cinema Hall Chat restored.");
   }
 }
 
+if (btnDockChatToggle) btnDockChatToggle.addEventListener("click", () => toggleTheatreChat());
+if (btnDockResync) btnDockResync.addEventListener("click", triggerTheatreResync);
+if (btnDockPauseReq) {
+  btnDockPauseReq.addEventListener("click", () => {
+    if (btnTheatrePauseReq) btnTheatrePauseReq.click();
+  });
+}
 if (btnTheatreChatToggle) btnTheatreChatToggle.addEventListener("click", () => toggleTheatreChat());
 if (btnHideCornerChat) btnHideCornerChat.addEventListener("click", () => toggleTheatreChat(false));
 if (btnShowCornerChat) btnShowCornerChat.addEventListener("click", () => toggleTheatreChat(true));

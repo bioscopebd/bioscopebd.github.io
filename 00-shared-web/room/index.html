@@ -433,6 +433,29 @@
               <button type="submit" id="btn-theatre-chat-send" aria-label="Send message">➤</button>
             </form>
           </aside>
+
+          <!-- Seamless Integrated Player Bottom Dock -->
+          <div class="theatre-player-dock" id="theatre-player-dock">
+            <div class="player-dock__left">
+              <span class="player-dock__live-dot"></span>
+              <span class="player-dock__title" id="player-dock-title">LIVE CINEMA STREAM</span>
+              <span class="player-dock__sync-badge" id="player-dock-sync">⚡ Synced with Host</span>
+            </div>
+            <div class="player-dock__right">
+              <button type="button" class="player-dock__btn is-active" id="btn-dock-chat-toggle" title="Toggle Cinema Hall Chat (Press C)">
+                <span class="player-dock__icon">💬</span>
+                <span id="player-dock-chat-label">Chat</span>
+              </button>
+              <button type="button" class="player-dock__btn" id="btn-dock-resync" title="Force Re-Sync with Host">
+                <span class="player-dock__icon">⚡</span>
+                <span>Re-Sync</span>
+              </button>
+              <button type="button" class="player-dock__btn" id="btn-dock-pause-req" title="Request Host for a Pause Break">
+                <span class="player-dock__icon">✋</span>
+                <span>Pause Req</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
