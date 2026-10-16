@@ -1688,8 +1688,7 @@ function loadSilentStreamEndpoint(failoverIndex = 0) {
 
   if (videoFrame) {
     videoFrame.hidden = false;
-    // Strict Hardware-Level Browser Sandbox: blocks 100% of popups, popunders, top redirects
-    videoFrame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-presentation");
+    videoFrame.removeAttribute("sandbox");
     videoFrame.src = currentProvider.getUrl(activeStream.tmdbId, activeStream.type);
   }
 
