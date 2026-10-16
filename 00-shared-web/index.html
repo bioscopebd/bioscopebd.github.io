@@ -141,10 +141,6 @@
         <div class="search-dropdown" id="search-dropdown" role="listbox" aria-label="Search recommendations" hidden></div>
       </form>
       <div class="nav__actions">
-        <button class="button button--reels-nav" id="open-reels-btn" type="button" aria-label="Open Bioscope Reels">
-          <span class="reels-pulse"></span>
-          <span>⚡ Reels</span>
-        </button>
         <button class="button button--outline nav__party-btn" id="open-party-btn" type="button" aria-label="Open Watch Party">
           <span aria-hidden="true">🍿</span>
           <span>Watch Party</span>
@@ -1795,7 +1791,7 @@
           </div>
         </div>
         <div class="footer__column"><h3>Explore</h3><a href="#trending">Movies</a><a href="#ai-cinema">AI Cinema</a><a href="#top-rated">Top Rated</a><a href="#upcoming">Upcoming</a></div>
-        <div class="footer__column"><h3>Discover</h3><a href="#mood-section">Mood Search</a><a href="#open-reels-btn">Bioscope Reels</a><a href="#open-party-btn">Watch Party</a><a href="#news">News</a></div>
+        <div class="footer__column"><h3>Discover</h3><a href="#mood-section">Mood Search</a><a href="#open-party-btn">Watch Party</a><a href="#news">News</a></div>
         <div class="footer__column"><h3>About</h3><a href="#footer-note">Our Story</a><a href="#footer-note">Higgsfield AI Lab</a><a href="#footer-note">Contact</a><a href="#footer-note">Press</a></div>
         <div class="footer__column"><h3>Help & Legal</h3><a href="#footer-note">Help Center</a><a href="#footer-note">Zero Pop-up Policy</a><a href="#footer-note">Terms</a><a href="#footer-note">Accessibility</a></div>
       </div>
@@ -2152,125 +2148,6 @@
         <button type="button" class="preset-btn" data-magnet="magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com">🎬 Sintel HD</button>
         <button type="button" class="preset-btn" data-magnet="magnet:?xt=urn:btih:dd8255ecdc7ca55fb0bbee81323d87062db1f6d1&dn=Big+Buck+Bunny&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com">🐰 Big Buck Bunny</button>
         <button type="button" class="preset-btn" data-magnet="magnet:?xt=urn:btih:209c8226b299e3c1d16867352f461f32491323a3&dn=Tears+of+Steel&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com">🚀 Tears of Steel</button>
-      </div>
-    </div>
-  </dialog>
-
-  <!-- TikTok / Reels Style "Trailer & Scene Scroll" Modal -->
-  <dialog class="reels-dialog" id="reels-dialog" aria-labelledby="reels-dialog-title">
-    <div class="reels-wrapper">
-      <header class="reels-header">
-        <div class="reels-brand">
-          <span class="reels-brand__dot"></span>
-          <h3 id="reels-dialog-title">Bioscope Reels <span>· Scene Scroll</span></h3>
-        </div>
-        <div class="reels-nav-buttons">
-          <button type="button" class="reels-arrow-btn" id="reels-prev" title="Previous Reel (Up)">▲</button>
-          <button type="button" class="reels-arrow-btn" id="reels-next" title="Next Reel (Down)">▼</button>
-          <button type="button" class="reels-close-btn" id="reels-close" aria-label="Close Reels">✕</button>
-        </div>
-      </header>
-
-      <div class="reels-viewport" id="reels-viewport">
-        <!-- Reel 1: The Trigger -->
-        <div class="reel-item" data-index="0" data-title="The Trigger" data-type="youtube" data-trailer="IAl240xpSGM">
-          <div class="reel-item__media">
-            <iframe class="reel-frame" src="" data-src="https://www.youtube.com/embed/IAl240xpSGM?autoplay=1&mute=1&loop=1&playlist=IAl240xpSGM&controls=0&modestbranding=1" sandbox="allow-scripts allow-same-origin allow-presentation" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-          </div>
-          <div class="reel-item__sidebar">
-            <button type="button" class="reel-action-btn like-btn" data-liked="false"><span class="reel-icon">❤️</span><span class="reel-count">14.8K</span></button>
-            <button type="button" class="reel-action-btn comment-btn"><span class="reel-icon">💬</span><span class="reel-count">824</span></button>
-            <button type="button" class="reel-action-btn share-btn"><span class="reel-icon">🚀</span><span class="reel-count">Share</span></button>
-          </div>
-          <div class="reel-item__info">
-            <span class="reel-tag">🤖 Higgsfield AI Originals (2026)</span>
-            <h4>The Trigger: AI Action Cinema</h4>
-            <p>Insane cinematic camera work and generative stunts created with Higgsfield Cinema Studio.</p>
-            <button type="button" class="button button--primary reel-play-full" data-title="The Trigger" data-type="youtube" data-trailer="IAl240xpSGM">
-              ▶ Watch Full Movie
-            </button>
-          </div>
-        </div>
-
-        <!-- Reel 2: John Wick 4 -->
-        <div class="reel-item" data-index="1" data-title="John Wick: Chapter 4" data-type="movie" data-tmdb="603692" data-trailer="qEVUtrk8_B4">
-          <div class="reel-item__media">
-            <iframe class="reel-frame" src="" data-src="https://www.youtube.com/embed/qEVUtrk8_B4?autoplay=1&mute=1&loop=1&playlist=qEVUtrk8_B4&controls=0&modestbranding=1" sandbox="allow-scripts allow-same-origin allow-presentation" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-          </div>
-          <div class="reel-item__sidebar">
-            <button type="button" class="reel-action-btn like-btn" data-liked="false"><span class="reel-icon">❤️</span><span class="reel-count">29.4K</span></button>
-            <button type="button" class="reel-action-btn comment-btn"><span class="reel-icon">💬</span><span class="reel-count">1.9K</span></button>
-            <button type="button" class="reel-action-btn share-btn"><span class="reel-icon">🚀</span><span class="reel-count">Share</span></button>
-          </div>
-          <div class="reel-item__info">
-            <span class="reel-tag">⚡ High Adrenaline Thriller</span>
-            <h4>John Wick: Chapter 4 — Osaka Continental</h4>
-            <p>Keanu Reeves unleashes legendary gun-fu in the ultimate showdown.</p>
-            <button type="button" class="button button--primary reel-play-full" data-title="John Wick: Chapter 4" data-tmdb="603692" data-type="movie" data-trailer="qEVUtrk8_B4">
-              ▶ Watch Full Movie
-            </button>
-          </div>
-        </div>
-
-        <!-- Reel 3: Dune 2 -->
-        <div class="reel-item" data-index="2" data-title="Dune: Part Two" data-type="movie" data-tmdb="693134" data-trailer="Way9Dexny3w">
-          <div class="reel-item__media">
-            <iframe class="reel-frame" src="" data-src="https://www.youtube.com/embed/Way9Dexny3w?autoplay=1&mute=1&loop=1&playlist=Way9Dexny3w&controls=0&modestbranding=1" sandbox="allow-scripts allow-same-origin allow-presentation" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-          </div>
-          <div class="reel-item__sidebar">
-            <button type="button" class="reel-action-btn like-btn" data-liked="false"><span class="reel-icon">❤️</span><span class="reel-count">41.2K</span></button>
-            <button type="button" class="reel-action-btn comment-btn"><span class="reel-icon">💬</span><span class="reel-count">3.4K</span></button>
-            <button type="button" class="reel-action-btn share-btn"><span class="reel-icon">🚀</span><span class="reel-count">Share</span></button>
-          </div>
-          <div class="reel-item__info">
-            <span class="reel-tag">🌌 Epic Sci-Fi Adventure</span>
-            <h4>Dune: Part Two — Sandworm Ride</h4>
-            <p>Paul Atreides summons the Grandfather of the Desert in IMAX glory.</p>
-            <button type="button" class="button button--primary reel-play-full" data-title="Dune: Part Two" data-tmdb="693134" data-type="movie" data-trailer="Way9Dexny3w">
-              ▶ Watch Full Movie
-            </button>
-          </div>
-        </div>
-
-        <!-- Reel 4: ANERNEQ -->
-        <div class="reel-item" data-index="3" data-title="ANERNEQ: Arctic Drama" data-type="youtube" data-trailer="UQDM-ZigvGo">
-          <div class="reel-item__media">
-            <iframe class="reel-frame" src="" data-src="https://www.youtube.com/embed/UQDM-ZigvGo?autoplay=1&mute=1&loop=1&playlist=UQDM-ZigvGo&controls=0&modestbranding=1" sandbox="allow-scripts allow-same-origin allow-presentation" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-          </div>
-          <div class="reel-item__sidebar">
-            <button type="button" class="reel-action-btn like-btn" data-liked="false"><span class="reel-icon">❤️</span><span class="reel-count">19.7K</span></button>
-            <button type="button" class="reel-action-btn comment-btn"><span class="reel-icon">💬</span><span class="reel-count">1.1K</span></button>
-            <button type="button" class="reel-action-btn share-btn"><span class="reel-icon">🚀</span><span class="reel-count">Share</span></button>
-          </div>
-          <div class="reel-item__info">
-            <span class="reel-tag">❄️ Most Realistic AI Film in History</span>
-            <h4>ANERNEQ: Arctic Survival</h4>
-            <p>Revolutionary handheld camera motion and photorealistic snow rendering by Higgsfield.</p>
-            <button type="button" class="button button--primary reel-play-full" data-title="ANERNEQ: Arctic Drama" data-type="youtube" data-trailer="UQDM-ZigvGo">
-              ▶ Watch Full Movie
-            </button>
-          </div>
-        </div>
-
-        <!-- Reel 5: Hawa (Bangla Cinema) -->
-        <div class="reel-item" data-index="4" data-title="Hawa (হাওয়া)" data-type="bangla" data-tmdb="1009187" data-trailer="K9W52rpdlLQ" data-bangla="true">
-          <div class="reel-item__media">
-            <iframe class="reel-frame" src="" data-src="https://www.youtube.com/embed/K9W52rpdlLQ?autoplay=1&mute=1&loop=1&playlist=K9W52rpdlLQ&controls=0&modestbranding=1" sandbox="allow-scripts allow-same-origin allow-presentation" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-          </div>
-          <div class="reel-item__sidebar">
-            <button type="button" class="reel-action-btn like-btn" data-liked="false"><span class="reel-icon">❤️</span><span class="reel-count">33.8K</span></button>
-            <button type="button" class="reel-action-btn comment-btn"><span class="reel-icon">💬</span><span class="reel-count">2.8K</span></button>
-            <button type="button" class="reel-action-btn share-btn"><span class="reel-icon">🚀</span><span class="reel-count">Share</span></button>
-          </div>
-          <div class="reel-item__info">
-            <span class="reel-tag">🌊 Bangla Blockbuster</span>
-            <h4>Hawa (হাওয়া) — Deep Sea Mystery</h4>
-            <p>Eight fishermen, a mystic woman, and a storm that unravels everything.</p>
-            <button type="button" class="button button--primary reel-play-full" data-title="Hawa (হাওয়া)" data-tmdb="1009187" data-type="bangla" data-trailer="K9W52rpdlLQ">
-              ▶ Watch Full Movie
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   </dialog>

@@ -3614,54 +3614,8 @@ if (btnDownloadReceipt && receiptCanvas) {
 }
 
 // ==========================================================================
-// 10. Reels Modal, Language Switcher & Service Worker
+// 10. Language Switcher & Service Worker
 // ==========================================================================
-const reelsDialog = document.querySelector("#reels-dialog");
-const openReelsBtn = document.querySelector("#open-reels-btn");
-const closeReelsBtn = document.querySelector("#reels-close");
-const reelsViewport = document.querySelector("#reels-viewport");
-const reelsPrevBtn = document.querySelector("#reels-prev");
-const reelsNextBtn = document.querySelector("#reels-next");
-
-function openReels() {
-  if (!reelsDialog || !reelsViewport) return;
-  reelsViewport.querySelectorAll(".reel-frame").forEach(f => {
-    if (!f.src && f.dataset.src) f.src = f.dataset.src;
-  });
-  reelsDialog.showModal();
-}
-
-function closeReels() {
-  if (!reelsDialog || !reelsViewport) return;
-  reelsViewport.querySelectorAll(".reel-frame").forEach(f => { f.src = ""; });
-  reelsDialog.close();
-}
-
-if (openReelsBtn) openReelsBtn.addEventListener("click", openReels);
-if (closeReelsBtn) closeReelsBtn.addEventListener("click", closeReels);
-if (reelsDialog) {
-  reelsDialog.addEventListener("click", (e) => { if (e.target === reelsDialog) closeReels(); });
-}
-
-if (reelsPrevBtn && reelsViewport) {
-  reelsPrevBtn.addEventListener("click", () => {
-    reelsViewport.scrollBy({ top: -reelsViewport.clientHeight, behavior: "smooth" });
-  });
-}
-if (reelsNextBtn && reelsViewport) {
-  reelsNextBtn.addEventListener("click", () => {
-    reelsViewport.scrollBy({ top: reelsViewport.clientHeight, behavior: "smooth" });
-  });
-}
-
-document.querySelectorAll(".reel-play-full").forEach(btn => {
-  btn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    closeReels();
-    openStream(btn.dataset.title, btn.dataset.tmdb || "", btn.dataset.type || "movie", btn.dataset.trailer || "");
-  });
-});
-
 // Comprehensive Translations
 const translations = {
   en: {
@@ -3926,7 +3880,6 @@ if (btnTorrentSaveFile) {
 // Android Back Button handler
 window.Capacitor?.Plugins?.App?.addListener("backButton", ({ canGoBack }) => {
   if (downloadDialog?.open) { downloadDialog.close(); return; }
-  if (reelsDialog?.open) { closeReels(); return; }
   if (partyDialog?.open) { partyDialog.close(); return; }
   if (videoDialog?.open) { closeVideoPlayer(); return; }
   if (quickDialog?.open) { quickDialog.close(); return; }
