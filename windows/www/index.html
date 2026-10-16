@@ -125,7 +125,7 @@
       </a>
       <div class="nav__menu" id="nav-menu">
         <a href="#trending">Movies</a>
-        <a href="#watch-party-hub">🍿 Watch Party <span class="badge-pill">HOT</span></a>
+        <a href="#watch-party-hub" id="nav-rooms-link">🏛️ Rooms <span class="badge-pill">LIVE</span></a>
         <a href="#bangla-cinema">🇧🇩 Bangla</a>
         <a href="#hindi-cinema">🔥 Bollywood</a>
         <a href="#ai-cinema">AI Cinema <span class="badge-pill">NEW</span></a>
@@ -141,9 +141,9 @@
         <div class="search-dropdown" id="search-dropdown" role="listbox" aria-label="Search recommendations" hidden></div>
       </form>
       <div class="nav__actions">
-        <button class="button button--outline nav__party-btn" id="open-party-btn" type="button" aria-label="Open Watch Party">
-          <span aria-hidden="true">🍿</span>
-          <span>Watch Party</span>
+        <button class="button button--outline nav__party-btn" id="open-party-btn" type="button" aria-label="Open Cinema Rooms">
+          <span aria-hidden="true">🏛️</span>
+          <span>Rooms</span>
         </button>
         <label class="sr-only" for="language">Language</label>
         <select id="language" aria-label="Language">
@@ -356,8 +356,32 @@
                 </div>
 
                 <div class="party-input-group">
-                  <label for="party-hall-name-input">Auditorium / Hall Name:</label>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                    <label for="party-hall-name-input" style="margin:0;">Auditorium / Hall Name:</label>
+                    <button type="button" class="btn-text-action" id="btn-random-hall-name">🎲 Random Name</button>
+                  </div>
                   <input type="text" id="party-hall-name-input" placeholder="e.g. Tanjir's Grand Cinema Lounge" maxlength="40">
+                </div>
+
+                <div class="party-settings-row">
+                  <div class="party-input-group" style="flex:1;">
+                    <label for="party-lang-select">Cinema Audio Language:</label>
+                    <select id="party-lang-select" class="party-select">
+                      <option value="Bangla">🇧🇩 Bangla Cinema</option>
+                      <option value="English" selected>🎬 English (Global)</option>
+                      <option value="Hindi">🔥 Hindi / Bollywood</option>
+                    </select>
+                  </div>
+                  <div class="party-input-group" style="flex:1;">
+                    <label for="party-capacity-select">Auditorium Capacity:</label>
+                    <select id="party-capacity-select" class="party-select">
+                      <option value="5">VIP Suite (5 Seats)</option>
+                      <option value="10">Intimate Circle (10 Seats)</option>
+                      <option value="25" selected>Grand Hall (25 Seats)</option>
+                      <option value="50">IMAX Theatre (50 Seats)</option>
+                      <option value="Unlimited">Open Auditorium (Unlimited)</option>
+                    </select>
+                  </div>
                 </div>
 
                 <!-- Permanent Hall Invite Code (Visible only when Private is selected) -->
@@ -2424,8 +2448,14 @@
       </div>
 
       <div class="theatre-marquee__right">
+        <button type="button" class="theatre-head-btn theatre-head-btn--resync" id="btn-theatre-resync" title="Re-sync video stream with Host (Zero Delay)">
+          <span>⚡ Re-Sync</span>
+        </button>
+        <button type="button" class="theatre-head-btn theatre-head-btn--pause-req" id="btn-theatre-pause-req" title="Request host for a quick pause break">
+          <span>✋ Request Pause</span>
+        </button>
         <button type="button" class="theatre-head-btn theatre-head-btn--share" id="btn-theatre-share" title="Copy Invite Link">
-          <span>🎟️ Copy Invite</span>
+          <span>📋 Copy Invite</span>
         </button>
         <button type="button" class="theatre-head-btn theatre-head-btn--lobby" id="btn-theatre-leave" title="Exit to Website Lobby">
           <span>🚪 Lobby</span>
@@ -2469,6 +2499,7 @@
                   👥 <span id="theatre-roster-count">1 Watching</span>
                 </button>
                 <button type="button" class="corner-chat__min-btn" id="btn-min-corner-chat" title="Minimize / Expand Chat" aria-label="Toggle chat">▾</button>
+                <button type="button" class="corner-chat__hide-btn" id="btn-hide-corner-chat" title="Hide chat for full immersion (Press C)" aria-label="Hide chat">👁️ Hide</button>
               </div>
             </div>
 
@@ -2505,6 +2536,11 @@
               <button type="submit" id="btn-theatre-chat-send" aria-label="Send message">➤</button>
             </form>
           </aside>
+
+          <!-- Floating button to bring back chat when hidden -->
+          <button type="button" class="theatre-show-chat-pill" id="btn-show-corner-chat" title="Show chat overlay (Press C)" hidden>
+            💬 <span>Show Chat</span>
+          </button>
         </div>
       </div>
 
@@ -2543,6 +2579,9 @@
             <!-- Dynamically populated movies -->
           </select>
         </div>
+        <button type="button" class="button button--glass button--sm" id="btn-host-playpause">
+          ⏸️ Pause Stream
+        </button>
         <button type="button" class="button button--glass button--sm" id="btn-host-resync">
           ⚡ Force Sync Viewers
         </button>

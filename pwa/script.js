@@ -2471,6 +2471,10 @@ if (heroWatchTrailerBtn) {
 // ==========================================================================
 // 9. Dedicated Virtual Cinema Theatre Room & Live Box Office System
 // ==========================================================================
+function openWatchParty() {
+  navigateToWatchParty("host");
+}
+
 const partyDialog = document.querySelector("#party-dialog"); // legacy fallback
 const tabLoungeHalls = document.querySelector("#hub-tab-halls");
 const tabLoungeHost = document.querySelector("#hub-host-party-btn");
@@ -2488,6 +2492,9 @@ const partyPrivateCodeBox = document.querySelector("#party-private-code-box");
 const partyRoomCodeEl = document.querySelector("#party-room-code");
 const btnCopyRoom = document.querySelector("#btn-copy-room");
 const partyHallNameInput = document.querySelector("#party-hall-name-input");
+const btnRandomHallName = document.querySelector("#btn-random-hall-name");
+const partyLangSelect = document.querySelector("#party-lang-select");
+const partyCapacitySelect = document.querySelector("#party-capacity-select");
 const btnStartParty = document.querySelector("#btn-start-party");
 const btnGenerateTicket = document.querySelector("#btn-generate-ticket");
 
@@ -2507,6 +2514,8 @@ const theatreHallBadge = document.querySelector("#theatre-hall-badge");
 const theatreMovieTitle = document.querySelector("#theatre-movie-title");
 const theatreCurrentCode = document.querySelector("#theatre-current-code");
 const theatreCodePill = document.querySelector("#theatre-code-pill");
+const btnTheatreResync = document.querySelector("#btn-theatre-resync");
+const btnTheatrePauseReq = document.querySelector("#btn-theatre-pause-req");
 const btnTheatreShare = document.querySelector("#btn-theatre-share");
 const btnTheatreLeave = document.querySelector("#btn-theatre-leave");
 const btnTheatreDismiss = document.querySelector("#btn-theatre-dismiss");
@@ -2514,6 +2523,8 @@ const theatrePlayerFrame = document.querySelector("#theatre-player-frame");
 const theatreProjectorShield = document.querySelector("#theatre-projector-shield");
 const theatreFloatingReactions = document.querySelector("#theatre-floating-reactions");
 const theatreCornerChat = document.querySelector("#theatre-corner-chat");
+const btnHideCornerChat = document.querySelector("#btn-hide-corner-chat");
+const btnShowCornerChat = document.querySelector("#btn-show-corner-chat");
 const theatreRosterCount = document.querySelector("#theatre-roster-count");
 const btnMinCornerChat = document.querySelector("#btn-min-corner-chat");
 const btnToggleRoster = document.querySelector("#btn-toggle-roster");
@@ -2528,8 +2539,39 @@ const theatreHostDeck = document.querySelector("#theatre-host-deck");
 const theatreSwitchMovie = document.querySelector("#theatre-switch-movie");
 const theatreProjectorSearch = document.querySelector("#theatre-projector-search");
 const theatreProjectorResults = document.querySelector("#theatre-projector-results");
+const btnHostPlayPause = document.querySelector("#btn-host-playpause");
 const btnHostResync = document.querySelector("#btn-host-resync");
 const btnHostDismissBar = document.querySelector("#btn-host-dismiss-bar");
+const navRoomsLink = document.querySelector("#nav-rooms-link");
+
+// YouTube iFrame API Helper for Seamless Remote Play/Pause/Seek
+function sendYouTubeCommand(iframe, command, args = []) {
+  if (!iframe || !iframe.contentWindow) return;
+  try {
+    iframe.contentWindow.postMessage(JSON.stringify({
+      event: "command",
+      func: command,
+      args: args
+    }), "*");
+  } catch (_) {}
+}
+
+const RANDOM_HALL_NAMES = [
+  "Star Cineplex VIP Lounge",
+  "Blockbuster Premier Hall",
+  "Modhumita 70mm Retro Hall",
+  "IMAX Laser Dolby Cinema",
+  "Midnight Cinephile Club",
+  "Shyamoli Cinema Gold Class",
+  "Chitramohol Classic Lounge",
+  "Bioscope Ultra 4K Premiere",
+  "Cyberpunk Sci-Fi Cinema",
+  "Dhallywood Nostalgia Room",
+  "Studio Ghibli Dream Hall",
+  "Christopher Nolan Screening Room",
+  "Sony Square IMAX Auditorium",
+  "Balaka Cine Lounge"
+];
 
 // Persistent Room State
 let activeHall = null;
@@ -2683,12 +2725,28 @@ function navigateToWatchParty(tab = "halls") {
 }
 
 // Global Watch Party Navigation Triggers
-document.querySelectorAll("#open-party-btn, #hero-party-btn, #btn-player-party").forEach(b => {
+document.querySelectorAll("#open-party-btn, #nav-rooms-link").forEach(b => {
+  b.addEventListener("click", (e) => {
+    e.preventDefault();
+    navigateToWatchParty("halls");
+  });
+});
+document.querySelectorAll("#hero-party-btn, #btn-player-party").forEach(b => {
   b.addEventListener("click", (e) => {
     e.preventDefault();
     navigateToWatchParty("host");
   });
 });
+
+// Random Hall Name Generator
+if (btnRandomHallName && partyHallNameInput) {
+  btnRandomHallName.addEventListener("click", () => {
+    const randomPick = RANDOM_HALL_NAMES[Math.floor(Math.random() * RANDOM_HALL_NAMES.length)];
+    partyHallNameInput.value = randomPick;
+    partyHallNameInput.focus();
+    notify(`🎲 Selected hall name: ${randomPick}`);
+  });
+}
 
 // Copy Invite Link
 async function copyHallInviteLink(code) {
@@ -2712,6 +2770,8 @@ if (btnStartParty) {
     const isPublic = visPublicRadio ? visPublicRadio.checked : true;
     const roomCode = getPersistentHostRoomCode();
     const hallName = partyHallNameInput?.value?.trim() || `${(currentUser && currentUser.name) ? currentUser.name.split(" ")[0] : "VIP"}'s Grand Cinema`;
+    const language = partyLangSelect?.value || "all";
+    const capacity = partyCapacitySelect?.value || "unlimited";
     
     const initialMovie = (activeHall && activeHall.movieTitle) ? activeHall : {
       movieTitle: "Dune: Part Two",
@@ -2725,6 +2785,8 @@ if (btnStartParty) {
       roomCode,
       isHost: true,
       hallName,
+      language,
+      capacity,
       movieTitle: initialMovie.movieTitle || "Dune: Part Two",
       poster: initialMovie.poster || "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
       tmdbId: initialMovie.tmdbId,
@@ -2733,7 +2795,9 @@ if (btnStartParty) {
       isPublic,
       hostName: (currentUser && currentUser.name) ? currentUser.name : "VIP Host",
       hostAvatar: (currentUser && currentUser.avatar) ? currentUser.avatar : "👑",
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      startTime: Date.now(),
+      isPlaying: true
     };
     saveActiveHallState();
     enterTheatreHall(activeHall);
@@ -2803,7 +2867,9 @@ function joinTheatreHallByCode(code) {
     trailerId: "Way9Dexny3w",
     isPublic: false,
     hostName: "Grand Host",
-    hostAvatar: "👑"
+    hostAvatar: "👑",
+    startTime: Date.now(),
+    isPlaying: true
   };
   enterTheatreHall(guestHall);
   notify(`🍿 Entering Cinema Hall ${cleanCode}... Taking seat!`);
@@ -2822,9 +2888,13 @@ if (btnSubmitJoin && joinRoomInput) {
 // ==========================================================================
 // Virtual Cinema Theatre Hall Controller
 // ==========================================================================
-function enterTheatreHall(hallData) {
+function enterTheatreHall(hallData, startSeconds = 0) {
   if (!theatreRoomView) return;
-  currentHallSession = hallData;
+  currentHallSession = {
+    ...hallData,
+    startTime: hallData.startTime || Date.now(),
+    isPlaying: typeof hallData.isPlaying === "boolean" ? hallData.isPlaying : true
+  };
 
   // Close other player modals if open
   if (videoDialog?.open) closeVideoPlayer();
@@ -2855,17 +2925,20 @@ function enterTheatreHall(hallData) {
   if (hallData.isHost) {
     if (btnTheatreDismiss) btnTheatreDismiss.hidden = false;
     if (theatreHostDeck) theatreHostDeck.hidden = false;
+    if (btnTheatrePauseReq) btnTheatrePauseReq.hidden = true;
+    if (btnHostPlayPause) btnHostPlayPause.textContent = currentHallSession.isPlaying ? "⏸️ Pause Stream" : "▶️ Resume Stream";
     populateTheatreMovieSwitcher(hallData.movieTitle);
   } else {
     if (btnTheatreDismiss) btnTheatreDismiss.hidden = true;
     if (theatreHostDeck) theatreHostDeck.hidden = true;
+    if (btnTheatrePauseReq) btnTheatrePauseReq.hidden = false;
   }
 
   // Initialize Audience Seating
   initHallAudience(hallData);
 
-  // Load Stream onto Big Cinema Screen
-  loadTheatreScreen(hallData.title || hallData.movieTitle, hallData.tmdbId, hallData.type, hallData.trailerId);
+  // Load Stream onto Big Cinema Screen with Live TV offset
+  loadTheatreScreen(hallData.title || hallData.movieTitle, hallData.tmdbId, hallData.type, hallData.trailerId, startSeconds);
 
   // Broadcast presence
   broadcastHallEvent({
@@ -2878,6 +2951,15 @@ function enterTheatreHall(hallData) {
       isHost: !!hallData.isHost
     }
   });
+
+  // If audience, request live playback state from host
+  if (!hallData.isHost) {
+    broadcastHallEvent({
+      type: "request_sync",
+      roomCode: hallData.roomCode,
+      fromUser: currentUser.name || "Guest"
+    });
+  }
 
   // Post Welcome in Lounge Chat
   appendTheatreChatMessage("system", "🎬 Welcome to the Grand Virtual Theatre! Whisper in chat or tap emojis to react live on screen.");
@@ -2897,8 +2979,8 @@ function leaveTheatreHall() {
 
 if (btnTheatreLeave) btnTheatreLeave.addEventListener("click", leaveTheatreHall);
 
-// Load Cinema Screen Video Stream
-function loadTheatreScreen(title, tmdbId, type = "movie", trailerId = "") {
+// Load Cinema Screen Video Stream with Live Sync Offset
+function loadTheatreScreen(title, tmdbId, type = "movie", trailerId = "", startSeconds = 0) {
   if (!theatrePlayerFrame) return;
   if (theatreProjectorShield) theatreProjectorShield.hidden = false;
 
@@ -2922,10 +3004,11 @@ function loadTheatreScreen(title, tmdbId, type = "movie", trailerId = "") {
 
   const isYoutube = type === "youtube" || isBangla || !tmdbId;
   let url = "";
+  const startParam = startSeconds > 0 ? `&start=${Math.floor(startSeconds)}` : "";
 
   if (isYoutube) {
     const yId = trailerId || catalogEntry?.trailerId || "K9W52rpdlLQ";
-    url = `https://www.youtube-nocookie.com/embed/${yId}?autoplay=1&controls=1&rel=0&modestbranding=1&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`;
+    url = `https://www.youtube-nocookie.com/embed/${yId}?autoplay=1&controls=1&rel=0&modestbranding=1&enablejsapi=1${startParam}&origin=${encodeURIComponent(window.location.origin)}`;
   } else {
     url = CONFIG.STREAM_SERVERS[0].getUrl(tmdbId, type);
   }
@@ -2933,11 +3016,102 @@ function loadTheatreScreen(title, tmdbId, type = "movie", trailerId = "") {
   theatrePlayerFrame.src = url;
   theatrePlayerFrame.onload = () => {
     if (theatreProjectorShield) theatreProjectorShield.hidden = true;
+    if (startSeconds > 0 && isYoutube) {
+      setTimeout(() => {
+        sendYouTubeCommand(theatrePlayerFrame, "seekTo", [Math.floor(startSeconds), true]);
+      }, 500);
+    }
   };
   setTimeout(() => {
     if (theatreProjectorShield) theatreProjectorShield.hidden = true;
   }, 2400);
 }
+
+// Host Play/Pause Authority Controller
+function toggleHostPlayPause(forcePlay) {
+  if (!currentHallSession || !currentHallSession.isHost) return;
+  const nextIsPlaying = typeof forcePlay === "boolean" ? forcePlay : !currentHallSession.isPlaying;
+  currentHallSession.isPlaying = nextIsPlaying;
+
+  if (btnHostPlayPause) {
+    btnHostPlayPause.textContent = nextIsPlaying ? "⏸️ Pause Stream" : "▶️ Resume Stream";
+  }
+
+  if (nextIsPlaying) {
+    sendYouTubeCommand(theatrePlayerFrame, "playVideo");
+    appendTheatreChatMessage("system", "▶️ Host resumed playback for all auditorium seats.");
+    notify("▶️ Stream resumed for everyone.");
+  } else {
+    sendYouTubeCommand(theatrePlayerFrame, "pauseVideo");
+    appendTheatreChatMessage("system", "⏸️ Host paused the stream for a break.");
+    notify("⏸️ Stream paused for everyone.");
+  }
+
+  broadcastHallEvent({
+    type: "sync_playback",
+    roomCode: currentHallSession.roomCode,
+    isPlaying: nextIsPlaying,
+    timestamp: Date.now()
+  });
+}
+
+if (btnHostPlayPause) {
+  btnHostPlayPause.addEventListener("click", () => toggleHostPlayPause());
+}
+
+// Audience Request Pause Break
+if (btnTheatrePauseReq) {
+  btnTheatrePauseReq.addEventListener("click", () => {
+    if (!currentHallSession) return;
+    if (currentHallSession.isHost) {
+      notify("👑 You are the host! Use host controls at the bottom to pause.");
+      return;
+    }
+
+    const myName = currentUser.name || "Audience Member";
+    broadcastHallEvent({
+      type: "request_pause",
+      roomCode: currentHallSession.roomCode,
+      userName: myName,
+      userId: currentUser.id || "guest_me"
+    });
+
+    appendTheatreChatMessage("system", "✋ You requested a pause break.");
+    notify("✋ Pause request sent to the Host!");
+  });
+}
+
+// Re-Sync Stream with Host (Zero Delay)
+function triggerTheatreResync() {
+  if (!currentHallSession) return;
+  if (currentHallSession.isHost) {
+    const elapsed = Math.max(0, Math.floor((Date.now() - (currentHallSession.startTime || Date.now())) / 1000));
+    broadcastHallEvent({
+      type: "sync_movie",
+      roomCode: currentHallSession.roomCode,
+      movieTitle: currentHallSession.movieTitle,
+      tmdbId: currentHallSession.tmdbId,
+      type: currentHallSession.type,
+      trailerId: currentHallSession.trailerId,
+      elapsed: elapsed,
+      isPlaying: currentHallSession.isPlaying
+    });
+    notify("⚡ Forced live timestamp sync to all auditorium seats!");
+  } else {
+    broadcastHallEvent({
+      type: "request_sync",
+      roomCode: currentHallSession.roomCode,
+      fromUser: currentUser.name || "Guest"
+    });
+    if (currentHallSession.startTime) {
+      const elapsed = Math.max(0, Math.floor((Date.now() - currentHallSession.startTime) / 1000));
+      sendYouTubeCommand(theatrePlayerFrame, "seekTo", [elapsed, true]);
+    }
+    notify("⚡ Stream re-synchronized with Host (Zero Delay)!");
+  }
+}
+
+if (btnTheatreResync) btnTheatreResync.addEventListener("click", triggerTheatreResync);
 
 // Populate Host Movie Switcher Dropdown
 function populateTheatreMovieSwitcher(currentTitle) {
@@ -2960,11 +3134,22 @@ function populateTheatreMovieSwitcher(currentTitle) {
       activeHall.tmdbId = tmdbId;
       activeHall.type = type;
       activeHall.trailerId = trailerId;
+      activeHall.startTime = Date.now();
+      activeHall.isPlaying = true;
       saveActiveHallState();
     }
 
+    if (currentHallSession) {
+      currentHallSession.movieTitle = newTitle;
+      currentHallSession.tmdbId = tmdbId;
+      currentHallSession.type = type;
+      currentHallSession.trailerId = trailerId;
+      currentHallSession.startTime = Date.now();
+      currentHallSession.isPlaying = true;
+    }
+
     if (theatreMovieTitle) theatreMovieTitle.textContent = newTitle;
-    loadTheatreScreen(newTitle, tmdbId, type, trailerId);
+    loadTheatreScreen(newTitle, tmdbId, type, trailerId, 0);
 
     broadcastHallEvent({
       type: "sync_movie",
@@ -2972,7 +3157,9 @@ function populateTheatreMovieSwitcher(currentTitle) {
       movieTitle: newTitle,
       tmdbId,
       type,
-      trailerId
+      trailerId,
+      elapsed: 0,
+      isPlaying: true
     });
 
     appendTheatreChatMessage("system", `👑 Host changed the feature presentation to: ${newTitle}`);
@@ -2982,16 +3169,7 @@ function populateTheatreMovieSwitcher(currentTitle) {
 
 if (btnHostResync) {
   btnHostResync.addEventListener("click", () => {
-    if (!currentHallSession) return;
-    broadcastHallEvent({
-      type: "sync_movie",
-      roomCode: currentHallSession.roomCode,
-      movieTitle: currentHallSession.movieTitle,
-      tmdbId: currentHallSession.tmdbId,
-      type: currentHallSession.type,
-      trailerId: currentHallSession.trailerId
-    });
-    notify("⚡ Re-synced stream broadcast sent to all auditorium seats!");
+    triggerTheatreResync();
   });
 }
 
@@ -3077,6 +3255,35 @@ if (btnMinCornerChat && theatreCornerChat) {
     btnMinCornerChat.textContent = theatreCornerChat.classList.contains("is-minimized") ? "▴" : "▾";
   });
 }
+
+// 100% Transparent & Hideable Chat Overlay Logic
+function toggleTheatreChat(forceShow) {
+  if (!theatreCornerChat) return;
+  const isCurrentlyHidden = theatreCornerChat.classList.contains("is-chat-hidden");
+  const shouldHide = typeof forceShow === "boolean" ? !forceShow : !isCurrentlyHidden;
+
+  theatreCornerChat.classList.toggle("is-chat-hidden", shouldHide);
+  if (btnShowCornerChat) {
+    btnShowCornerChat.hidden = !shouldHide;
+  }
+
+  if (shouldHide) {
+    notify("👁️ Chat hidden for full-screen immersion. Press 'C' or tap 'Show Chat' to restore.");
+  }
+}
+
+if (btnHideCornerChat) btnHideCornerChat.addEventListener("click", () => toggleTheatreChat(false));
+if (btnShowCornerChat) btnShowCornerChat.addEventListener("click", () => toggleTheatreChat(true));
+
+// Keyboard shortcut 'C' or 'c' to toggle chat when inside theatre
+window.addEventListener("keydown", (e) => {
+  if (!theatreRoomView || theatreRoomView.hidden) return;
+  if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.isContentEditable) return;
+  if (e.key === "c" || e.key === "C") {
+    e.preventDefault();
+    toggleTheatreChat();
+  }
+});
 
 // Toggle Audience Roster Popover
 if (btnToggleRoster && theatreRosterPopover) {
@@ -3205,8 +3412,74 @@ if (hallChannel) {
       }
     } else if (data.type === "sync_movie") {
       if (theatreMovieTitle) theatreMovieTitle.textContent = data.movieTitle;
-      loadTheatreScreen(data.movieTitle, data.tmdbId, data.type, data.trailerId);
+      currentHallSession.movieTitle = data.movieTitle;
+      currentHallSession.tmdbId = data.tmdbId;
+      currentHallSession.type = data.type;
+      currentHallSession.trailerId = data.trailerId;
+      if (data.elapsed) currentHallSession.startTime = Date.now() - (data.elapsed * 1000);
+      loadTheatreScreen(data.movieTitle, data.tmdbId, data.type, data.trailerId, data.elapsed || 0);
       appendTheatreChatMessage("system", `👑 Host changed feature presentation to: ${data.movieTitle}`);
+    } else if (data.type === "sync_playback") {
+      if (typeof data.isPlaying === "boolean") {
+        currentHallSession.isPlaying = data.isPlaying;
+        if (data.isPlaying) {
+          sendYouTubeCommand(theatrePlayerFrame, "playVideo");
+          appendTheatreChatMessage("system", "▶️ Playback resumed.");
+        } else {
+          sendYouTubeCommand(theatrePlayerFrame, "pauseVideo");
+          appendTheatreChatMessage("system", "⏸️ Host paused the stream.");
+        }
+      }
+    } else if (data.type === "request_pause") {
+      if (currentHallSession.isHost) {
+        notify(`✋ ${data.userName} requested a pause break!`, 5000);
+        const pauseMsg = document.createElement("div");
+        pauseMsg.className = "c-msg c-msg--system";
+        const btnId = `btn-quick-pause-${Date.now()}`;
+        pauseMsg.innerHTML = `✋ <strong>${escapeHTML(data.userName)}</strong> requested a pause break! <button type="button" class="button button--glass button--xs" style="margin-left:6px;padding:2px 8px;font-size:0.75rem;" id="${btnId}">⏸️ Pause Now</button>`;
+        if (theatreChatBody) {
+          theatreChatBody.appendChild(pauseMsg);
+          theatreChatBody.scrollTop = theatreChatBody.scrollHeight;
+          pauseMsg.querySelector(`#${btnId}`)?.addEventListener("click", () => {
+            toggleHostPlayPause(false);
+            pauseMsg.remove();
+          });
+        }
+      } else {
+        appendTheatreChatMessage("system", `✋ <em>${escapeHTML(data.userName)}</em> requested a pause break.`);
+      }
+    } else if (data.type === "request_sync") {
+      if (currentHallSession.isHost) {
+        const elapsed = Math.max(0, Math.floor((Date.now() - (currentHallSession.startTime || Date.now())) / 1000));
+        broadcastHallEvent({
+          type: "sync_state",
+          roomCode: currentHallSession.roomCode,
+          movieTitle: currentHallSession.movieTitle,
+          tmdbId: currentHallSession.tmdbId,
+          type: currentHallSession.type,
+          trailerId: currentHallSession.trailerId,
+          isPlaying: currentHallSession.isPlaying,
+          elapsed: elapsed
+        });
+      }
+    } else if (data.type === "sync_state") {
+      if (!currentHallSession.isHost) {
+        if (data.movieTitle && data.movieTitle !== currentHallSession.movieTitle) {
+          if (theatreMovieTitle) theatreMovieTitle.textContent = data.movieTitle;
+          currentHallSession.movieTitle = data.movieTitle;
+          currentHallSession.tmdbId = data.tmdbId;
+          currentHallSession.type = data.type;
+          currentHallSession.trailerId = data.trailerId;
+          loadTheatreScreen(data.movieTitle, data.tmdbId, data.type, data.trailerId, data.elapsed || 0);
+        } else if (data.elapsed > 0) {
+          sendYouTubeCommand(theatrePlayerFrame, "seekTo", [data.elapsed, true]);
+        }
+        if (typeof data.isPlaying === "boolean") {
+          currentHallSession.isPlaying = data.isPlaying;
+          if (data.isPlaying) sendYouTubeCommand(theatrePlayerFrame, "playVideo");
+          else sendYouTubeCommand(theatrePlayerFrame, "pauseVideo");
+        }
+      }
     } else if (data.type === "dismiss") {
       notify("🛑 The Host has ended this Cinema Hall. Returning to Lobby...");
       leaveTheatreHall();
@@ -3239,7 +3512,9 @@ function renderBoxOfficeHalls() {
       type: activeHall.type,
       trailerId: activeHall.trailerId,
       isPublic: activeHall.isPublic ?? true,
-      isMyHall: true
+      isMyHall: true,
+      language: activeHall.language || "all",
+      capacity: activeHall.capacity || "unlimited"
     });
   }
 
@@ -3248,7 +3523,9 @@ function renderBoxOfficeHalls() {
     if (!list.some(item => item.roomCode === h.roomCode)) {
       list.push({
         ...h,
-        isPublic: true
+        isPublic: true,
+        language: "all",
+        capacity: "unlimited"
       });
     }
   });
@@ -3266,7 +3543,9 @@ function renderBoxOfficeHalls() {
       tmdbId: "157336",
       type: "movie",
       trailerId: "2LqzF5WauS2",
-      isPublic: false
+      isPublic: false,
+      language: "en",
+      capacity: "10"
     });
   }
 
@@ -3296,14 +3575,17 @@ function renderBoxOfficeHalls() {
     <div class="box-office-card" id="card-${hall.roomCode}">
       <div class="box-office-card__top">
         <h4 class="box-office-card__hall-name" title="${hall.hallName}">${hall.hallName}</h4>
-        <span class="hall-tag-badge ${hall.isPublic ? 'hall-tag-badge--public' : 'hall-tag-badge--private'}">
-          ${hall.isPublic ? '🌐 Public' : '🔒 Private'}
-        </span>
+        <div style="display:flex;gap:6px;align-items:center;">
+          ${hall.language && hall.language !== 'all' ? `<span style="font-size:0.65rem;background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;color:#ddd;">🗣️ ${hall.language.toUpperCase()}</span>` : ''}
+          <span class="hall-tag-badge ${hall.isPublic ? 'hall-tag-badge--public' : 'hall-tag-badge--private'}">
+            ${hall.isPublic ? '🌐 Public' : '🔒 Private'}
+          </span>
+        </div>
       </div>
 
       <!-- Live Screening Feature Preview (Shown BEFORE entering!) -->
       <div class="hall-screening-banner">
-        <img class="hall-screening-poster" src="${hall.poster || 'https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg'}" alt="${hall.movieTitle}" loading="lazy">
+        <img class="hall-screening-poster" src="${hall.poster || 'https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg'}" alt="${hall.movieTitle}" loading="lazy" onerror="this.src='https://picsum.photos/seed/movie/120/180'">
         <div class="hall-screening-info">
           <div class="hall-live-tag"><span class="pulse-dot"></span> NOW SCREENING</div>
           <h5 class="hall-screening-title" title="${hall.movieTitle}">${hall.movieTitle}</h5>
@@ -3311,6 +3593,7 @@ function renderBoxOfficeHalls() {
             <span>${hall.hostAvatar} ${hall.hostName}</span>
             <span>·</span>
             <span>👥 ${hall.viewers} Watching</span>
+            ${hall.capacity && hall.capacity !== 'unlimited' ? `<span>· Max ${hall.capacity}</span>` : ''}
           </div>
         </div>
       </div>
@@ -3379,11 +3662,14 @@ document.querySelectorAll("#hall-filter-pills .hall-pill").forEach(pill => {
   });
 });
 
-// Real-Time Search & Project Movie Inside Theatre Room
+// Real-Time Search & Project Movie Inside Theatre Room (Catalog + Global TMDB API)
 function setupTheatreProjectorSearch() {
   if (!theatreProjectorSearch || !theatreProjectorResults) return;
 
+  let searchDebounceTimer = null;
+
   theatreProjectorSearch.addEventListener("input", () => {
+    clearTimeout(searchDebounceTimer);
     const query = theatreProjectorSearch.value.trim().toLowerCase();
     if (!query || query.length < 2) {
       theatreProjectorResults.hidden = true;
@@ -3391,62 +3677,104 @@ function setupTheatreProjectorSearch() {
       return;
     }
 
-    const matches = BUILTIN_CATALOG.filter(m =>
-      (m.title && m.title.toLowerCase().includes(query)) ||
-      (m.genre && m.genre.toLowerCase().includes(query))
-    ).slice(0, 8);
+    searchDebounceTimer = setTimeout(async () => {
+      // 1. Search local BUILTIN_CATALOG
+      const catalogMatches = BUILTIN_CATALOG.filter(m =>
+        (m.title && m.title.toLowerCase().includes(query)) ||
+        (m.genre && m.genre.toLowerCase().includes(query))
+      ).slice(0, 8);
 
-    if (matches.length === 0) {
+      let allResults = [...catalogMatches];
+
+      // 2. Query TMDB multi-search API for global movie access
+      if (query.length >= 3 && typeof searchTmdbPrefix === "function") {
+        try {
+          const tmdbList = await searchTmdbPrefix(query);
+          tmdbList.forEach(item => {
+            if (!allResults.some(r => (r.tmdbId && r.tmdbId === item.tmdb) || (r.title && r.title.toLowerCase() === item.title.toLowerCase()))) {
+              allResults.push({
+                title: item.title,
+                year: item.year,
+                tmdbId: item.tmdb,
+                type: item.type || "movie",
+                trailerId: item.trailer || "",
+                poster: item.poster,
+                isTmdb: true
+              });
+            }
+          });
+        } catch (_) {}
+      }
+
+      if (allResults.length === 0) {
+        theatreProjectorResults.hidden = false;
+        theatreProjectorResults.innerHTML = `<div style="padding:10px;font-size:0.75rem;color:var(--color-muted);text-align:center;">No movies found for "${escapeHTML(query)}". Try another title!</div>`;
+        return;
+      }
+
       theatreProjectorResults.hidden = false;
-      theatreProjectorResults.innerHTML = `<div style="padding:10px;font-size:0.75rem;color:var(--color-muted);text-align:center;">No catalog match found</div>`;
-      return;
-    }
+      theatreProjectorResults.innerHTML = allResults.slice(0, 10).map(m => `
+        <div class="theatre-search-item" data-tmdb="${m.tmdbId || ''}" data-type="${m.type || 'movie'}" data-trailer="${m.trailerId || ''}" data-title="${escapeHTML(m.title)}" data-poster="${m.poster}">
+          <img src="${m.poster}" alt="${escapeHTML(m.title)}" onerror="this.src='https://picsum.photos/seed/movie/120/180'">
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:700;font-size:0.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(m.title)} (${m.year || '2024'})</div>
+            <div style="font-size:0.68rem;color:var(--color-muted);">${m.isTmdb ? '🌐 TMDB Global' : '🎞️ Bioscope Catalog'}</div>
+          </div>
+          <span style="font-size:0.68rem;background:rgba(245,197,24,0.2);color:#ffe071;padding:3px 8px;border-radius:4px;font-weight:700;">📽️ Project</span>
+        </div>
+      `).join("");
 
-    theatreProjectorResults.hidden = false;
-    theatreProjectorResults.innerHTML = matches.map(m => `
-      <div class="theatre-search-item" data-tmdb="${m.tmdbId}" data-type="${m.type || 'movie'}" data-trailer="${m.trailerId || ''}" data-title="${m.title}" data-poster="${m.poster}">
-        <img src="${m.poster}" alt="${m.title}">
-        <strong>${m.title} (${m.year || '2024'})</strong>
-        <span style="font-size:0.68rem;background:rgba(245,197,24,0.2);color:#ffe071;padding:2px 6px;border-radius:4px;">Project</span>
-      </div>
-    `).join("");
+      theatreProjectorResults.querySelectorAll(".theatre-search-item").forEach(item => {
+        item.addEventListener("click", () => {
+          const tmdbId = item.dataset.tmdb;
+          const type = item.dataset.type;
+          const trailerId = item.dataset.trailer;
+          const newTitle = item.dataset.title;
+          const newPoster = item.dataset.poster;
 
-    theatreProjectorResults.querySelectorAll(".theatre-search-item").forEach(item => {
-      item.addEventListener("click", () => {
-        const tmdbId = item.dataset.tmdb;
-        const type = item.dataset.type;
-        const trailerId = item.dataset.trailer;
-        const newTitle = item.dataset.title;
-        const newPoster = item.dataset.poster;
+          theatreProjectorResults.hidden = true;
+          theatreProjectorSearch.value = "";
 
-        theatreProjectorResults.hidden = true;
-        theatreProjectorSearch.value = "";
+          if (activeHall) {
+            activeHall.movieTitle = newTitle;
+            activeHall.poster = newPoster;
+            activeHall.tmdbId = tmdbId;
+            activeHall.type = type;
+            activeHall.trailerId = trailerId;
+            activeHall.startTime = Date.now();
+            activeHall.isPlaying = true;
+            saveActiveHallState();
+          }
 
-        if (activeHall) {
-          activeHall.movieTitle = newTitle;
-          activeHall.poster = newPoster;
-          activeHall.tmdbId = tmdbId;
-          activeHall.type = type;
-          activeHall.trailerId = trailerId;
-          saveActiveHallState();
-        }
+          if (currentHallSession) {
+            currentHallSession.movieTitle = newTitle;
+            currentHallSession.poster = newPoster;
+            currentHallSession.tmdbId = tmdbId;
+            currentHallSession.type = type;
+            currentHallSession.trailerId = trailerId;
+            currentHallSession.startTime = Date.now();
+            currentHallSession.isPlaying = true;
+          }
 
-        if (theatreMovieTitle) theatreMovieTitle.textContent = newTitle;
-        loadTheatreScreen(newTitle, tmdbId, type, trailerId);
+          if (theatreMovieTitle) theatreMovieTitle.textContent = newTitle;
+          loadTheatreScreen(newTitle, tmdbId, type, trailerId, 0);
 
-        broadcastHallEvent({
-          type: "sync_movie",
-          roomCode: currentHallSession?.roomCode,
-          movieTitle: newTitle,
-          tmdbId,
-          type,
-          trailerId
+          broadcastHallEvent({
+            type: "sync_movie",
+            roomCode: currentHallSession?.roomCode,
+            movieTitle: newTitle,
+            tmdbId,
+            type,
+            trailerId,
+            elapsed: 0,
+            isPlaying: true
+          });
+
+          appendTheatreChatMessage("system", `👑 Host projected a new feature: ${newTitle}`);
+          notify(`🎬 Cinema Projector tuned to: ${newTitle}`);
         });
-
-        appendTheatreChatMessage("system", `👑 Host projected a new feature: ${newTitle}`);
-        notify(`🎬 Cinema Projector tuned to: ${newTitle}`);
       });
-    });
+    }, 250);
   });
 
   document.addEventListener("click", (e) => {
@@ -3458,17 +3786,18 @@ function setupTheatreProjectorSearch() {
 
 setupTheatreProjectorSearch();
 
-// Startup Initialization: Check Active Room and URL Query Param
+// Startup Initialization: Check Active Room and URL Hash/Params
 loadActiveHallState();
 renderBoxOfficeHalls();
 
-// Check if visiting directly via link like ?room=BIOSCOPE-7892
-window.addEventListener("DOMContentLoaded", () => {
-  loadActiveHallState();
-  renderBoxOfficeHalls();
+function handleRoomsHashAndQuery() {
+  const hash = window.location.hash;
+  if (hash === "#rooms" || hash === "#watch-party" || hash === "#watch-party-hub") {
+    navigateToWatchParty("halls");
+  }
   try {
     const urlParams = new URLSearchParams(window.location.search);
-    const roomParam = urlParams.get("room");
+    const roomParam = urlParams.get("room") || urlParams.get("join");
     if (roomParam) {
       if (activeHall && activeHall.roomCode.toUpperCase() === roomParam.toUpperCase()) {
         enterTheatreHall(activeHall);
@@ -3477,7 +3806,14 @@ window.addEventListener("DOMContentLoaded", () => {
       }
     }
   } catch (_) {}
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  loadActiveHallState();
+  renderBoxOfficeHalls();
+  handleRoomsHashAndQuery();
 });
+window.addEventListener("hashchange", handleRoomsHashAndQuery);
 
 // Digital Movie Ticket Invite Generator (HTML5 Canvas)
 const ticketDialog = document.querySelector("#ticket-dialog");
