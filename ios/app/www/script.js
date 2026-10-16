@@ -674,7 +674,7 @@ function hydrateContinueWatching() {
 
   continueCarousel.querySelectorAll(".continue-card").forEach(card => {
     card.addEventListener("click", () => {
-      openStream(card.dataset.title, card.dataset.tmdb, card.dataset.type, card.dataset.trailer);
+      openStream(card.dataset.title, card.dataset.tmdb, card.dataset.type, card.dataset.trailer, false, card.dataset.duration);
     });
   });
 }
@@ -1277,6 +1277,7 @@ const customCtrlVolSvg = customMuteBtn?.querySelector(".ctrl-vol-svg");
 const customCtrlMutedSvg = customMuteBtn?.querySelector(".ctrl-muted-svg");
 const customTimeCurr = document.querySelector("#custom-time-curr");
 const customTimeTotal = document.querySelector("#custom-time-total");
+const customTimeline = document.querySelector("#custom-timeline");
 const customTimelineLoaded = document.querySelector("#custom-timeline-loaded");
 const customTimelineCurrent = document.querySelector("#custom-timeline-current");
 const customTimelineRange = document.querySelector("#custom-timeline-range");
@@ -1293,6 +1294,9 @@ let isCustomPlaying = false;
 let isCustomMuted = false;
 let customControlsTimeout = null;
 let customTimeInterval = null;
+let ytHandshakeTimer = null;
+let isUserScrubbing = false;
+let seekCooldownUntil = 0;
 
 function formatPlayerTime(seconds) {
   if (isNaN(seconds) || seconds < 0) return "00:00";
@@ -1308,6 +1312,33 @@ function sendYtCommand(func, args = []) {
   if (customYtFrame && customYtFrame.contentWindow) {
     customYtFrame.contentWindow.postMessage(JSON.stringify({ event: "command", func, args }), "*");
   }
+}
+
+function postYtHandshake() {
+  if (customYtFrame && customYtFrame.contentWindow) {
+    try {
+      customYtFrame.contentWindow.postMessage(JSON.stringify({ event: "listening", id: 1 }), "*");
+      sendYtCommand("getDuration");
+      sendYtCommand("getCurrentTime");
+    } catch (_) {}
+  }
+}
+
+function startYtHandshake() {
+  if (ytHandshakeTimer) {
+    clearInterval(ytHandshakeTimer);
+    ytHandshakeTimer = null;
+  }
+  let count = 0;
+  postYtHandshake();
+  ytHandshakeTimer = setInterval(() => {
+    count++;
+    postYtHandshake();
+    if (count >= 10 || (customDuration > 0 && isCustomPlaying)) {
+      clearInterval(ytHandshakeTimer);
+      ytHandshakeTimer = null;
+    }
+  }, 800);
 }
 
 function setCustomPlayingState(playing) {
@@ -1353,7 +1384,7 @@ function toggleCustomMute() {
 function startCustomTimeTicker() {
   stopCustomTimeTicker();
   customTimeInterval = setInterval(() => {
-    if (!isCustomPlaying) return;
+    if (!isCustomPlaying || isUserScrubbing) return;
     customCurrentTime += 0.5;
     if (customDuration > 0 && customCurrentTime > customDuration) {
       customCurrentTime = customDuration;
@@ -1376,8 +1407,18 @@ function updateCustomProgressUI() {
   if (customDuration > 0) {
     const pct = Math.min(100, Math.max(0, (customCurrentTime / customDuration) * 100));
     if (customTimelineCurrent) customTimelineCurrent.style.width = `${pct}%`;
-    if (customTimelineRange) customTimelineRange.value = pct;
+    if (customTimelineRange && !isUserScrubbing) customTimelineRange.value = pct;
   }
+}
+
+function seekCustomStream(pct) {
+  pct = Math.min(100, Math.max(0, pct));
+  if (customDuration > 0) {
+    customCurrentTime = (pct / 100) * customDuration;
+  }
+  sendYtCommand("seekTo", [customCurrentTime, true]);
+  seekCooldownUntil = Date.now() + 1200;
+  updateCustomProgressUI();
 }
 
 function scheduleControlsHide() {
@@ -1394,7 +1435,7 @@ function showCustomControls() {
   if (isCustomPlaying) scheduleControlsHide();
 }
 
-function loadCustomWhitelabelStream(videoId) {
+function loadCustomWhitelabelStream(videoId, durationSeconds = 0) {
   if (videoFrame) {
     videoFrame.hidden = true;
     videoFrame.src = "";
@@ -1408,12 +1449,17 @@ function loadCustomWhitelabelStream(videoId) {
   }
 
   customCurrentTime = 0;
-  customDuration = 0;
+  const initialDuration = durationSeconds > 0
+    ? durationSeconds
+    : (activeStream?.duration > 0 ? activeStream.duration : 0);
+  customDuration = initialDuration;
   setCustomPlayingState(true);
+  updateCustomProgressUI();
 
   if (customYtFrame) {
-    const originParam = window.location.origin && window.location.origin.startsWith("http") ? `&origin=${window.location.origin}` : "";
+    const originParam = window.location.origin && window.location.origin.startsWith("http") ? `&origin=${encodeURIComponent(window.location.origin)}` : "";
     customYtFrame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&playsinline=1&enablejsapi=1${originParam}`;
+    startYtHandshake();
   }
 
   const engineBadge = document.querySelector("#stream-engine-badge");
@@ -1422,10 +1468,18 @@ function loadCustomWhitelabelStream(videoId) {
 
 function stopCustomWhitelabelStream() {
   stopCustomTimeTicker();
+  if (ytHandshakeTimer) {
+    clearInterval(ytHandshakeTimer);
+    ytHandshakeTimer = null;
+  }
   clearTimeout(customControlsTimeout);
   if (customYtFrame) customYtFrame.src = "";
   if (customPlayerStage) customPlayerStage.hidden = true;
   setCustomPlayingState(false);
+}
+
+if (customYtFrame) {
+  customYtFrame.addEventListener("load", postYtHandshake);
 }
 
 if (customStageShield) customStageShield.addEventListener("click", toggleCustomPlay);
@@ -1435,12 +1489,28 @@ if (customMuteBtn) customMuteBtn.addEventListener("click", toggleCustomMute);
 
 if (customTimelineRange) {
   customTimelineRange.addEventListener("input", (e) => {
+    isUserScrubbing = true;
     const pct = parseFloat(e.target.value);
-    if (customDuration > 0) {
-      customCurrentTime = (pct / 100) * customDuration;
-      sendYtCommand("seekTo", [customCurrentTime, true]);
-      updateCustomProgressUI();
-    }
+    seekCustomStream(pct);
+  });
+  customTimelineRange.addEventListener("change", (e) => {
+    isUserScrubbing = false;
+    const pct = parseFloat(e.target.value);
+    seekCustomStream(pct);
+  });
+  customTimelineRange.addEventListener("pointerup", () => { isUserScrubbing = false; });
+  customTimelineRange.addEventListener("touchend", () => { isUserScrubbing = false; });
+  customTimelineRange.addEventListener("mouseup", () => { isUserScrubbing = false; });
+}
+
+if (customTimeline) {
+  customTimeline.addEventListener("click", (e) => {
+    if (e.target === customTimelineRange) return;
+    const rect = customTimeline.getBoundingClientRect();
+    if (!rect.width) return;
+    const pct = ((e.clientX - rect.left) / rect.width) * 100;
+    if (customTimelineRange) customTimelineRange.value = pct;
+    seekCustomStream(pct);
   });
 }
 
@@ -1466,13 +1536,15 @@ window.addEventListener("keydown", (e) => {
     toggleCustomPlay();
   } else if (e.code === "ArrowLeft") {
     e.preventDefault();
-    customCurrentTime = Math.max(0, customCurrentTime - 5);
+    customCurrentTime = Math.max(0, customCurrentTime - 10);
     sendYtCommand("seekTo", [customCurrentTime, true]);
+    seekCooldownUntil = Date.now() + 1000;
     updateCustomProgressUI();
   } else if (e.code === "ArrowRight") {
     e.preventDefault();
-    customCurrentTime = customDuration > 0 ? Math.min(customDuration, customCurrentTime + 5) : customCurrentTime + 5;
+    customCurrentTime = customDuration > 0 ? Math.min(customDuration, customCurrentTime + 10) : customCurrentTime + 10;
     sendYtCommand("seekTo", [customCurrentTime, true]);
+    seekCooldownUntil = Date.now() + 1000;
     updateCustomProgressUI();
   } else if (e.key === "m" || e.key === "M") {
     toggleCustomMute();
@@ -1560,12 +1632,16 @@ function updateStreamResolutionBadge(quality = "1080p") {
 window.addEventListener("message", (event) => {
   try {
     const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
-    if (data && data.event === "infoDelivery" && data.info) {
-      if (typeof data.info.currentTime === "number") customCurrentTime = data.info.currentTime;
-      if (typeof data.info.duration === "number" && data.info.duration > 0) customDuration = data.info.duration;
+    if (data && (data.event === "infoDelivery" || data.event === "initialDelivery") && data.info) {
+      if (typeof data.info.currentTime === "number" && !isUserScrubbing && Date.now() > seekCooldownUntil) {
+        customCurrentTime = data.info.currentTime;
+      }
+      if (typeof data.info.duration === "number" && data.info.duration > 0) {
+        customDuration = Math.round(data.info.duration);
+      }
       if (typeof data.info.playerState === "number") {
-        if (data.info.playerState === 1) setCustomPlayingState(true);
-        else if (data.info.playerState === 2 || data.info.playerState === 0) setCustomPlayingState(false);
+        if (data.info.playerState === 1 && !isCustomPlaying) setCustomPlayingState(true);
+        else if ((data.info.playerState === 2 || data.info.playerState === 0) && isCustomPlaying) setCustomPlayingState(false);
       }
       if (typeof data.info.videoLoadedFraction === "number" && customTimelineLoaded) {
         customTimelineLoaded.style.width = `${Math.min(100, data.info.videoLoadedFraction * 100)}%`;
@@ -1659,12 +1735,12 @@ function handleStreamErrorOrTimeout() {
     if (streamLoadingShield) streamLoadingShield.hidden = true;
     updateSourceToggleUI(true);
     if (activeStream?.trailerId) {
-      loadCustomWhitelabelStream(activeStream.trailerId);
+      loadCustomWhitelabelStream(activeStream.trailerId, activeStream?.duration);
     } else if (activeStream?.tmdbId) {
       getTmdbTrailerId(activeStream.tmdbId, activeStream.type).then(tKey => {
         if (tKey) {
           activeStream.trailerId = tKey;
-          loadCustomWhitelabelStream(tKey);
+          loadCustomWhitelabelStream(tKey, activeStream?.duration);
         } else {
           notify("⚠️ This title is temporarily unavailable on streaming mirrors.");
         }
@@ -1676,12 +1752,22 @@ function handleStreamErrorOrTimeout() {
 }
 
 // Master openStream function
-async function openStream(title, tmdbId, type = "movie", trailerId = "", isTrailer = false) {
+async function openStream(title, tmdbId, type = "movie", trailerId = "", isTrailer = false, duration = 0) {
   const catalogEntry = (typeof BUILTIN_CATALOG !== "undefined" ? BUILTIN_CATALOG : []).find(
     m => (m.title && m.title.toLowerCase() === (title || "").toLowerCase()) ||
          (m.banglaTitle && title && title.includes(m.banglaTitle)) ||
-         (m.tmdbId && m.tmdbId === String(tmdbId))
+         (m.tmdbId && m.tmdbId === String(tmdbId)) ||
+         (m.trailerId && trailerId && m.trailerId === trailerId)
   );
+
+  let streamDurationSeconds = 0;
+  const rawDuration = duration || catalogEntry?.duration;
+  if (rawDuration) {
+    const parsed = parseInt(rawDuration, 10);
+    if (!isNaN(parsed) && parsed > 0) {
+      streamDurationSeconds = parsed > 500 ? parsed : parsed * 60;
+    }
+  }
 
   const isBangla = Boolean(
     type === "bangla" ||
@@ -1695,7 +1781,7 @@ async function openStream(title, tmdbId, type = "movie", trailerId = "", isTrail
     ))
   );
 
-  activeStream = { title, tmdbId, type, trailerId, isTrailer, isBangla };
+  activeStream = { title, tmdbId, type, trailerId, isTrailer, isBangla, duration: streamDurationSeconds };
   currentFailoverIndex = 0;
 
   if (videoTitle) videoTitle.textContent = `Now Streaming: ${title}`;
@@ -1706,7 +1792,7 @@ async function openStream(title, tmdbId, type = "movie", trailerId = "", isTrail
     activeStream.trailerId = videoKey;
     updateSourceToggleUI(true);
     if (videoKey) {
-      loadCustomWhitelabelStream(videoKey);
+      loadCustomWhitelabelStream(videoKey, streamDurationSeconds);
       const engineBadge = document.querySelector("#stream-engine-badge");
       if (engineBadge) engineBadge.textContent = "BioscopeBD Cinema Engine (HD)";
     } else {
@@ -1733,12 +1819,12 @@ async function openStream(title, tmdbId, type = "movie", trailerId = "", isTrail
   if (isTrailerMode) {
     const finalTrailer = trailerId || catalogEntry?.trailerId;
     if (finalTrailer) {
-      loadCustomWhitelabelStream(finalTrailer);
+      loadCustomWhitelabelStream(finalTrailer, streamDurationSeconds);
     } else if (tmdbId) {
       getTmdbTrailerId(tmdbId, type).then(tKey => {
         if (tKey) {
           activeStream.trailerId = tKey;
-          loadCustomWhitelabelStream(tKey);
+          loadCustomWhitelabelStream(tKey, streamDurationSeconds);
         } else {
           notify("⚠️ Official trailer currently unavailable.");
         }
@@ -1768,7 +1854,7 @@ if (btnToggleMovie) {
   btnToggleMovie.addEventListener("click", () => {
     if (activeStream?.isBangla) {
       if (activeStream?.trailerId) {
-        loadCustomWhitelabelStream(activeStream.trailerId);
+        loadCustomWhitelabelStream(activeStream.trailerId, activeStream?.duration);
         notify("🎬 Playing in BioscopeBD Cinema Player");
       }
       return;
@@ -1786,7 +1872,7 @@ if (btnToggleTrailer) {
   btnToggleTrailer.addEventListener("click", () => {
     if (activeStream?.isBangla) {
       if (activeStream?.trailerId) {
-        loadCustomWhitelabelStream(activeStream.trailerId);
+        loadCustomWhitelabelStream(activeStream.trailerId, activeStream?.duration);
         notify("🎞️ Playing in BioscopeBD Cinema Player");
       }
       return;
@@ -1794,13 +1880,13 @@ if (btnToggleTrailer) {
     activeStream.isTrailer = true;
     updateSourceToggleUI(true);
     if (activeStream?.trailerId) {
-      loadCustomWhitelabelStream(activeStream.trailerId);
+      loadCustomWhitelabelStream(activeStream.trailerId, activeStream?.duration);
       notify("🎞️ Switched to Official High-Definition Teaser");
     } else if (activeStream?.tmdbId) {
       getTmdbTrailerId(activeStream.tmdbId, activeStream.type).then(tKey => {
         if (tKey) {
           activeStream.trailerId = tKey;
-          loadCustomWhitelabelStream(tKey);
+          loadCustomWhitelabelStream(tKey, activeStream?.duration);
           notify("🎞️ Switched to Official High-Definition Teaser");
         } else {
           notify("⚠️ Official teaser not available for this title.");
@@ -2288,7 +2374,7 @@ if (dialogPlayBtn && quickDialog) {
   dialogPlayBtn.addEventListener("click", () => {
     quickDialog.close();
     if (currentQuickMovie) {
-      openStream(currentQuickMovie.title, currentQuickMovie.tmdbId, currentQuickMovie.type, currentQuickMovie.trailerId, false);
+      openStream(currentQuickMovie.title, currentQuickMovie.tmdbId, currentQuickMovie.type, currentQuickMovie.trailerId, false, currentQuickMovie.duration);
     }
   });
 }
@@ -2297,7 +2383,7 @@ if (dialogTrailerBtn && quickDialog) {
   dialogTrailerBtn.addEventListener("click", () => {
     quickDialog.close();
     if (currentQuickMovie) {
-      openStream(currentQuickMovie.title, currentQuickMovie.tmdbId, "youtube", currentQuickMovie.trailerId, true);
+      openStream(currentQuickMovie.title, currentQuickMovie.tmdbId, "youtube", currentQuickMovie.trailerId, true, currentQuickMovie.duration);
     }
   });
 }
@@ -2350,7 +2436,9 @@ function bindCardInteractions(container) {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
       const isCustom = btn.dataset.type === "youtube" || btn.dataset.type === "bangla" || btn.dataset.bangla === "true" || !btn.dataset.tmdb;
-      openStream(btn.dataset.title, btn.dataset.tmdb, btn.dataset.type, btn.dataset.trailer, isCustom);
+      const card = btn.closest(".movie-card");
+      const dur = btn.dataset.duration || card?.dataset.duration;
+      openStream(btn.dataset.title, btn.dataset.tmdb, btn.dataset.type, btn.dataset.trailer, isCustom, dur);
     });
   });
 
@@ -2359,7 +2447,7 @@ function bindCardInteractions(container) {
     card.dataset.bound = "true";
     card.addEventListener("click", () => {
       const isCustom = card.dataset.type === "youtube" || card.dataset.type === "bangla" || card.dataset.bangla === "true" || !card.dataset.tmdb;
-      openStream(card.dataset.title, card.dataset.tmdb, card.dataset.type, card.dataset.trailer, isCustom);
+      openStream(card.dataset.title, card.dataset.tmdb, card.dataset.type, card.dataset.trailer, isCustom, card.dataset.duration);
     });
   });
 }
@@ -3829,7 +3917,7 @@ btnsTriggerDl.forEach(btn => {
         notify(`🚀 High-speed download initiated for "${title}" (${quality}) in IDM / Free Download Manager!`);
       } else {
         notify(`🎬 Opening clean media stream for "${title}"...`);
-        openStream(title, "", "youtube", activeDownloadMovie.trailerId, true);
+        openStream(title, "", "youtube", activeDownloadMovie.trailerId, true, activeDownloadMovie?.duration);
       }
     }, 400);
   });
