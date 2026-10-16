@@ -3481,8 +3481,8 @@ function renderBoxOfficeHalls() {
     grid.innerHTML = `
       <div class="box-office-empty">
         <div class="box-office-empty-icon">🏛️</div>
-        <h4>বর্তমানে কোনো লাইভ সিনেমা রুম চালু নেই</h4>
-        <p>কোনো রুম চালু নেই। আপনি এখনই নিজের একটি পাবলিক বা প্রাইভেট সিনেমা রুম হোস্ট করুন!</p>
+        <h4>No Active Cinema Rooms Right Now</h4>
+        <p>There are currently no active public or private rooms. Host your own auditorium and invite friends to watch together in real-time!</p>
         <button type="button" class="button button--primary button--sm" onclick="switchLoungeTab('host')">🍿 Host First Room Now</button>
       </div>
     `;

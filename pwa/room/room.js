@@ -1143,9 +1143,9 @@ function renderBoxOfficeHalls() {
     grid.innerHTML = `
       <div class="box-office-empty" style="grid-column: 1 / -1; padding: 48px 20px; text-align: center; background: rgba(255,255,255,0.02); border: 1px dashed var(--color-line); border-radius: var(--radius-md);">
         <div class="box-office-empty-icon" style="font-size: 2.8rem; margin-bottom: 12px;">🏛️</div>
-        <h4 style="font-size: 1.2rem; margin-bottom: 6px;">বর্তমানে কোনো লাইভ সিনেমা রুম চালু নেই</h4>
+        <h4 style="font-size: 1.2rem; margin-bottom: 6px;">No Active Cinema Rooms Right Now</h4>
         <p style="color: var(--color-muted); max-width: 480px; margin: 0 auto 18px; font-size: 0.9rem;">
-          কোনো হোস্ট এখনো রুম চালু করেননি। PUBG-র মতো আপনি নিজেই একটি পাবলিক বা প্রাইভেট রুম হোস্ট করুন এবং বন্ধুদের সাথে একসাথে সিনেমা উপভোগ করুন!
+          There are currently no active public or private rooms. Host your own auditorium and invite friends to watch together in real-time!
         </p>
         <button type="button" class="button button--primary button--sm" id="btn-empty-host-now">🍿 Host First Room Now</button>
       </div>
