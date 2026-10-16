@@ -28,7 +28,9 @@
       configurable: false
     });
   } catch (_) {
-    window.open = neutralizedOpen;
+    try {
+      window.open = neutralizedOpen;
+    } catch (_) {}
   }
 
   try {
