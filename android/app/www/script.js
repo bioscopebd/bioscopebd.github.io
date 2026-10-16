@@ -1972,9 +1972,10 @@ function closeVideoPlayer() {
 }
 
 if (videoCloseBtn) videoCloseBtn.addEventListener("click", closeVideoPlayer);
+// Strict explicit close: Only close when user clicks the close [×] button, never on outside backdrop click!
 if (videoDialog) {
-  videoDialog.addEventListener("click", (e) => {
-    if (e.target === videoDialog) closeVideoPlayer();
+  videoDialog.addEventListener("cancel", () => {
+    closeVideoPlayer();
   });
 }
 
