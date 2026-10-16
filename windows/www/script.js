@@ -2189,7 +2189,7 @@ function openQuickView(movieTitle, movieData = null) {
       synopsis: "Critically acclaimed cinema selection with outstanding cinematography and narrative depth.",
       cast: "Leading ensemble cast.",
       parentsGuide: { nudity: "None", violence: "Mild", profanity: "Mild" },
-      tmdbId: movieData?.tmdbId || "693134",
+      tmdbId: typeof movieData?.tmdbId !== "undefined" ? movieData.tmdbId : "",
       trailerId: movieData?.trailerId || "",
       type: movieData?.type || "movie"
     };
