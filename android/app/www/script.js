@@ -4562,12 +4562,6 @@ document.querySelectorAll("#language, #footer-language").forEach(sel => {
   });
 });
 
-const savedLang = localStorage.getItem("bioscope-lang");
-if (savedLang) {
-  document.querySelectorAll("#language, #footer-language").forEach(s => { s.value = savedLang; });
-  setLanguage(savedLang);
-}
-
 // Reveal animations on scroll
 if ("IntersectionObserver" in window && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
   const observer = new IntersectionObserver(entries => {
@@ -4796,7 +4790,6 @@ function initNavContentTabs() {
       if (tabType === "all") targetEl = document.querySelector("#trending");
       else if (tabType === "movie") targetEl = document.querySelector("#trending");
       else if (tabType === "tv") targetEl = document.querySelector("#tv-series");
-      else if (tabType === "bangla") targetEl = document.querySelector("#bangla-cinema");
       else if (tabType === "animation") targetEl = document.querySelector("#anime-cinema");
       else if (tabType === "ai") targetEl = document.querySelector("#ai-cinema");
 

@@ -62,7 +62,15 @@ assert(indexHtml.includes('sandbox="allow-scripts allow-same-origin allow-forms 
 assert(scriptJs.includes('data.info.playerState === 0') && scriptJs.includes('stopCustomTimeTicker();'), "playerState === 0 halts custom time ticker");
 assert(scriptJs.includes('isFull ? streamDurationSeconds : 0'), "openStream does not force 2-hour duration on trailers");
 
-// 7. Categories check
+// 7. Search Bar Fix and Removal of Room & Language from Header
+assert(styleCss.includes('min-width: 220px') && styleCss.includes('.nav__search'), "nav__search has guaranteed min-width to prevent squishing");
+assert(!indexHtml.includes('id="open-party-btn"'), "Rooms button removed from header actions");
+assert(!indexHtml.includes('id="nav-rooms-link"'), "Rooms tab removed from header nav tabs");
+assert(!indexHtml.includes('id="language"'), "Language switcher removed from header");
+assert(!indexHtml.includes('data-content-tab="bangla"'), "Bangla Drama tab removed from header tabs");
+assert(indexHtml.includes('id="watch-party-hub"') && indexHtml.includes('id="watch-party-hub" aria-labelledby="party-hub-title" hidden'), "watch-party-hub is hidden");
+
+// 8. Categories check
 const sections = ['trending', 'bangla-cinema', 'hindi-cinema', 'hollywood-cinema', 'tv-series', 'anime-cinema', 'east-asian-cinema', 'top-rated'];
 sections.forEach(s => {
   const start = indexHtml.indexOf(`id="${s}"`);
