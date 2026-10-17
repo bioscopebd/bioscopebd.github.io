@@ -103,6 +103,26 @@
           return origFormSubmit.apply(this, arguments);
         };
       } catch (_) {}
+
+      // 7. Window Defocus & Anti-Popunder Refocus Shield
+      window.addEventListener("blur", function() {
+        const videoDialog = document.querySelector("#video-dialog");
+        if (videoDialog && videoDialog.open) {
+          setTimeout(function() {
+            window.focus();
+          }, 60);
+        }
+      });
+
+      // 8. Prevent Top-Level Window Navigation Hijack while streaming
+      window.addEventListener("beforeunload", function(e) {
+        const videoDialog = document.querySelector("#video-dialog");
+        if (videoDialog && videoDialog.open) {
+          e.preventDefault();
+          e.returnValue = "";
+          return "";
+        }
+      });
     })();
   </script>
 
@@ -3416,7 +3436,7 @@
         </div>
       </div>
 
-      <iframe id="video-player-frame" src="" allowfullscreen allow="autoplay; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="no-referrer-when-downgrade" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-downloads"></iframe>
+      <iframe id="video-player-frame" src="" allowfullscreen allow="autoplay; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="no-referrer-when-downgrade"></iframe>
 
       <!-- Whitelabel Custom Cinema Player for AI Films & Trailers -->
       <div class="custom-player-stage" id="custom-player-stage" hidden>

@@ -1044,7 +1044,11 @@ function loadTheatreScreen(title, tmdbId, type = "movie", trailerId = "", startS
     url = serverObj ? serverObj.getUrl(tmdbId, type) : (type === "tv" ? `https://vidsrc.pm/embed/tv?tmdb=${tmdbId}&season=1&episode=1` : `https://vidsrc.pm/embed/movie?tmdb=${tmdbId}`);
   }
 
-  theatrePlayerFrame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-presentation allow-downloads");
+  if (isYoutube) {
+    theatrePlayerFrame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-presentation allow-downloads");
+  } else {
+    theatrePlayerFrame.removeAttribute("sandbox");
+  }
   theatrePlayerFrame.src = url;
   let theatreHandshake = false;
   theatrePlayerFrame.onload = () => {
