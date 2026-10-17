@@ -149,6 +149,12 @@ assert(styleCss.includes('.continue-card__thumb') && styleCss.includes('.continu
 assert(!scriptJs.includes('prompt("Enter your Name or Gmail'), "script.js has eliminated browser prompt for Google login");
 assert(scriptJs.includes('handleSocialAuthClick'), "script.js contains seamless in-modal social auth handler");
 
+// 16. Sandbox-Friendly Zero-Ad Stream Providers (Movies & TV Series)
+assert(configJs.includes('vidlink.pro/movie') && configJs.includes('vidlink.pro/tv'), "config.js uses vidlink.pro as primary sandbox-compatible stream engine for movies and TV");
+assert(!configJs.includes('2embed.cc') && !configJs.includes('vidsrc.pm'), "config.js eliminated 2embed and vidsrc.pm which caused sandboxing errors");
+assert(scriptJs.includes('vidlink.pro/movie') && scriptJs.includes('vidlink.pro/tv'), "script.js uses vidlink.pro as primary sandbox-compatible stream engine for movies and TV");
+assert(!scriptJs.includes('2embed.cc') && !scriptJs.includes('vidsrc.pm'), "script.js eliminated 2embed and vidsrc.pm");
+
 console.log(`\nTEST RESULTS: ${passed} passed, ${failed} failed.`);
 if (failed > 0) process.exit(1);
 
