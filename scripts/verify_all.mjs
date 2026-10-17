@@ -149,11 +149,12 @@ assert(!scriptJs.includes('prompt("Enter your Name or Gmail'), "script.js has el
 assert(scriptJs.includes('handleSocialAuthClick'), "script.js contains seamless in-modal social auth handler");
 
 // 16. Sandbox-Friendly Zero-Ad Stream Providers (Movies & TV Series)
-assert(configJs.includes('vidsrc.to/embed/movie') && configJs.includes('vidsrc.to/embed/tv'), "config.js uses vidsrc.to as primary sandbox-compatible stream engine for movies and TV");
-assert(configJs.includes('vidsrc.pm/embed/movie') && configJs.includes('vidsrc.pm/embed/tv'), "config.js uses vidsrc.pm as secondary verified stream engine");
+assert(configJs.includes('vidsrc.pm/embed/movie') && configJs.includes('vidsrc.pm/embed/tv'), "config.js uses vidsrc.pm as primary sandbox-compatible stream engine for movies and TV");
+assert(!configJs.includes('vidsrc.to') && !configJs.includes('vsembed.ru'), "config.js eliminated vidsrc.to which caused 'This content can\\'t be embedded in a sandboxed frame' errors");
 assert(!configJs.includes('vidlink.pro') && !configJs.includes('videasy.net'), "config.js eliminated vidlink.pro and videasy.net which caused 'Please Disable Sandbox' errors");
 assert(!configJs.includes('smashystream') && !configJs.includes('anyembed'), "config.js eliminated smashystream and anyembed which caused ad countdowns and verification blocks");
-assert(scriptJs.includes('vidsrc.to/embed/movie') && scriptJs.includes('vidsrc.to/embed/tv'), "script.js uses vidsrc.to as primary sandbox-compatible stream engine for movies and TV");
+assert(scriptJs.includes('vidsrc.pm/embed/movie') && scriptJs.includes('vidsrc.pm/embed/tv'), "script.js uses vidsrc.pm as primary sandbox-compatible stream engine for movies and TV");
+assert(!scriptJs.includes('vidsrc.to') && !scriptJs.includes('vsembed.ru'), "script.js eliminated vidsrc.to");
 assert(!scriptJs.includes('vidlink.pro') && !scriptJs.includes('videasy.net'), "script.js eliminated vidlink.pro and videasy.net");
 assert(!scriptJs.includes('smashystream') && !scriptJs.includes('anyembed'), "script.js eliminated smashystream and anyembed");
 

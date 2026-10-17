@@ -1041,7 +1041,7 @@ function loadTheatreScreen(title, tmdbId, type = "movie", trailerId = "", startS
   } else {
     const servers = (typeof CONFIG !== "undefined" && CONFIG.STREAM_SERVERS) ? CONFIG.STREAM_SERVERS : [];
     const serverObj = servers[currentTheatreServerIndex] || servers[0];
-    url = serverObj ? serverObj.getUrl(tmdbId, type) : (type === "tv" ? `https://vidsrc.to/embed/tv/${tmdbId}/1/1` : `https://vidsrc.to/embed/movie/${tmdbId}`);
+    url = serverObj ? serverObj.getUrl(tmdbId, type) : (type === "tv" ? `https://vidsrc.pm/embed/tv?tmdb=${tmdbId}&season=1&episode=1` : `https://vidsrc.pm/embed/movie?tmdb=${tmdbId}`);
   }
 
   theatrePlayerFrame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-presentation allow-downloads");
