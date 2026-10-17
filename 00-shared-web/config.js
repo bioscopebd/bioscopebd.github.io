@@ -29,12 +29,11 @@
 
   // Auto-Server Stream Failover Providers (Strictly Zero Ads & No Popups, Fully Sandbox-Compatible)
   STREAM_SERVERS: [
-    { id: "1", name: "Bioscope Primary (Fast Cloud)", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}` : `https://www.2embed.cc/embed/${id}` },
-    { id: "2", name: "Bioscope Ultra (Direct HD)", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://www.2embed.skin/embedtv/${id}&s=${s}&e=${e}` : `https://www.2embed.skin/embed/${id}` },
+    { id: "1", name: "Bioscope Primary (Fast Cloud)", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://vidsrc.pm/embed/tv/${id}/${s}/${e}` : `https://vidsrc.pm/embed/movie/${id}` },
+    { id: "2", name: "Bioscope Ultra (Direct HD)", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}` : `https://www.2embed.cc/embed/${id}` },
     { id: "3", name: "Bioscope Multi-Stream", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://vidsrc.to/embed/tv/${id}/${s}/${e}` : `https://vidsrc.to/embed/movie/${id}` },
     { id: "4", name: "Bioscope Alternative Mirror", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}` : `https://multiembed.mov/?video_id=${id}&tmdb=1` },
-    { id: "5", name: "Bioscope VidSrc Mirror", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://vidsrc.pm/embed/tv?tmdb=${id}&season=${s}&episode=${e}` : `https://vidsrc.pm/embed/movie?tmdb=${id}` },
-    { id: "6", name: "Bioscope Global Mirror", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://vidsrc.net/embed/tv/${id}/${s}/${e}` : `https://vidsrc.net/embed/movie/${id}` }
+    { id: "5", name: "Bioscope Global Mirror", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://www.2embed.skin/embedtv/${id}&s=${s}&e=${e}` : `https://www.2embed.skin/embed/${id}` }
   ]
 };
 
