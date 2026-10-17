@@ -120,6 +120,15 @@ assert(indexHtml.includes('4Gz1HkpZhwWpyuual7eytb5CBj9.jpg') && indexHtml.includ
 assert(!indexHtml.includes('LXdGgrbIC3k9LbeDo5YDAvx3d0.jpg'), "Chhutir Ghonta does not use Tagalog film poster");
 assert(indexHtml.includes('WlUtB3a2Kbo/maxresdefault.jpg'), "Chhutir Ghonta uses authentic film thumbnail");
 
+// 13. Bhat Dey (ভাত দে) and YouTube Playback Integration
+const configJs = fs.readFileSync('00-shared-web/config.js', 'utf8');
+assert(indexHtml.includes('Bhat Dey (ভাত দে)') && indexHtml.includes('z0g7cXKqMC8') && indexHtml.includes('684903'), "Bhat Dey exists in index.html with YouTube ID z0g7cXKqMC8 and TMDB 684903");
+assert(configJs.includes('bhat-dey') && configJs.includes('z0g7cXKqMC8') && configJs.includes('684903'), "Bhat Dey exists in config.js catalog with YouTube ID z0g7cXKqMC8 and TMDB 684903");
+assert(indexHtml.includes('id="btn-player-youtube"'), "index.html contains btn-player-youtube button");
+assert(indexHtml.includes('id="btn-header-youtube"'), "index.html contains btn-header-youtube button");
+assert(indexHtml.includes('id="dialog-youtube-link"'), "index.html contains dialog-youtube-link button in quick view");
+assert(scriptJs.includes('btn-player-youtube') && scriptJs.includes('btn-header-youtube'), "script.js dynamically updates YouTube links on player stream");
+
 console.log(`\nTEST RESULTS: ${passed} passed, ${failed} failed.`);
 if (failed > 0) process.exit(1);
 

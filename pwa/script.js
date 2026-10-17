@@ -1100,17 +1100,21 @@ async function searchTmdbPrefix(query) {
     return (data.results || [])
       .filter(i => (i.media_type === "movie" || i.media_type === "tv") && (i.title || i.name))
       .slice(0, 6)
-      .map(item => ({
-        title: item.title || item.name,
-        year: (item.release_date || item.first_air_date || "2024").slice(0, 4),
-        tmdb: String(item.id),
-        type: item.media_type,
-        trailer: "",
-        poster: item.poster_path ? `https://image.tmdb.org/t/p/w92${item.poster_path}` : "https://picsum.photos/seed/movie/120/180",
-        rating: item.vote_average ? `★ ${item.vote_average.toFixed(1)}` : "★ 8.0",
-        badge: item.media_type === "tv" ? "TV Series" : "Movie",
-        isAi: false
-      }));
+      .map(item => {
+        const isBn = item.original_language === "bn" || (item.original_title && /[\u0980-\u09FF]/.test(item.original_title)) || String(item.id) === "684903";
+        const catMatch = (typeof BUILTIN_CATALOG !== "undefined" ? BUILTIN_CATALOG : []).find(c => String(c.tmdbId) === String(item.id) || (c.banglaTitle && item.original_title && item.original_title.includes(c.banglaTitle)));
+        return {
+          title: item.title || item.name,
+          year: (item.release_date || item.first_air_date || "2024").slice(0, 4),
+          tmdb: String(item.id),
+          type: isBn ? "bangla" : item.media_type,
+          trailer: catMatch ? catMatch.trailerId : (String(item.id) === "684903" ? "z0g7cXKqMC8" : ""),
+          poster: item.poster_path ? `https://image.tmdb.org/t/p/w92${item.poster_path}` : "https://picsum.photos/seed/movie/120/180",
+          rating: item.vote_average ? `★ ${item.vote_average.toFixed(1)}` : "★ 8.0",
+          badge: isBn ? "Bangla Cinema" : (item.media_type === "tv" ? "TV Series" : "Movie"),
+          isAi: false
+        };
+      });
   } catch (_) {
     return [];
   }
@@ -2190,16 +2194,18 @@ async function openStream(title, tmdbId, type = "movie", trailerId = "", isTrail
       type === "bangla" ||
       catalogEntry?.bangla ||
       /[\u0980-\u09FF]/.test(title || "") ||
+      String(tmdbId) === "684903" ||
       (title && (
         title.includes("Hawa") || title.includes("Priyotoma") || title.includes("Toofan") ||
         title.includes("Aynabaji") || title.includes("Surongo") || title.includes("Shurongo") ||
         title.includes("Poran") || title.includes("Monpura") || title.includes("Pather Panchali") ||
-        title.includes("Dipu Number") || title.includes("Aguner Poroshmoni") || title.includes("Chhutir Ghonta")
+        title.includes("Dipu Number") || title.includes("Aguner Poroshmoni") || title.includes("Chhutir Ghonta") ||
+        title.includes("Bhat Dey") || title.includes("Bhat De") || title.includes("ভাত দে")
       ))
     )
   );
 
-  const isFull = Boolean(catalogEntry?.fullMovie || catalogEntry?.isFullMovie);
+  const isFull = Boolean(catalogEntry?.fullMovie || catalogEntry?.isFullMovie || String(tmdbId) === "684903");
   activeStream = { title, tmdbId, type: isTv ? "tv" : type, trailerId, isTrailer, isBangla, duration: streamDurationSeconds, season: sNum, episode: eNum, isFullMovie: isFull };
   currentFailoverIndex = 0;
 
@@ -2222,11 +2228,30 @@ async function openStream(title, tmdbId, type = "movie", trailerId = "", isTrail
     }
   }
 
+  const updateYtButtons = (ytId) => {
+    const btnPlayerYoutube = document.querySelector("#btn-player-youtube");
+    const btnHeaderYoutube = document.querySelector("#btn-header-youtube");
+    if (ytId) {
+      if (btnPlayerYoutube) {
+        btnPlayerYoutube.href = `https://www.youtube.com/watch?v=${ytId}`;
+        btnPlayerYoutube.style.display = "inline-flex";
+      }
+      if (btnHeaderYoutube) {
+        btnHeaderYoutube.href = `https://www.youtube.com/watch?v=${ytId}`;
+        btnHeaderYoutube.style.display = "inline-flex";
+      }
+    } else {
+      if (btnPlayerYoutube) btnPlayerYoutube.style.display = "none";
+      if (btnHeaderYoutube) btnHeaderYoutube.style.display = "none";
+    }
+  };
+
   // Bangla Movies Route DIRECTLY into BioscopeBD Whitelabel Custom Player Stage
   if (isBangla) {
-    const videoKey = trailerId || catalogEntry?.trailerId;
+    const videoKey = trailerId || catalogEntry?.trailerId || (String(tmdbId) === "684903" || (title && (title.includes("Bhat Dey") || title.includes("ভাত দে"))) ? "z0g7cXKqMC8" : "");
     activeStream.trailerId = videoKey;
     updateSourceToggleUI(true);
+    updateYtButtons(videoKey);
     if (videoKey) {
       loadCustomWhitelabelStream(videoKey, isFull ? streamDurationSeconds : 0);
       const engineBadge = document.querySelector("#stream-engine-badge");
@@ -2243,10 +2268,13 @@ async function openStream(title, tmdbId, type = "movie", trailerId = "", isTrail
   }
 
   // Non-Bangla movies
+  updateYtButtons(trailerId || catalogEntry?.trailerId);
+
   if (!trailerId && tmdbId) {
     getTmdbTrailerId(tmdbId, type).then(tKey => {
       if (tKey && activeStream?.tmdbId === tmdbId) {
         activeStream.trailerId = tKey;
+        updateYtButtons(tKey);
       }
     });
   }
@@ -2262,6 +2290,7 @@ async function openStream(title, tmdbId, type = "movie", trailerId = "", isTrail
       getTmdbTrailerId(tmdbId, type).then(tKey => {
         if (tKey) {
           activeStream.trailerId = tKey;
+          updateYtButtons(tKey);
           loadCustomWhitelabelStream(tKey, streamDurationSeconds);
         } else {
           notify("⚠️ Official trailer currently unavailable.");
@@ -2826,6 +2855,17 @@ function openQuickView(movieTitle, movieData = null) {
     } else {
       quickTvBox.hidden = true;
       if (dialogPlayBtn) dialogPlayBtn.textContent = "▶ Watch Movie";
+    }
+  }
+
+  const dialogYoutubeLink = document.querySelector("#dialog-youtube-link");
+  const yKey = m.trailerId || (m.type === "youtube" ? m.tmdbId : (String(m.tmdbId) === "684903" || (m.title && m.title.includes("Bhat Dey")) ? "z0g7cXKqMC8" : ""));
+  if (dialogYoutubeLink) {
+    if (yKey) {
+      dialogYoutubeLink.href = `https://www.youtube.com/watch?v=${yKey}`;
+      dialogYoutubeLink.style.display = "inline-flex";
+    } else {
+      dialogYoutubeLink.style.display = "none";
     }
   }
 

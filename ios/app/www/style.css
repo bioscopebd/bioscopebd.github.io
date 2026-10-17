@@ -2165,6 +2165,22 @@ mark.search-match {
   color: #00d2ff;
 }
 
+/* --- Player YouTube Direct Stream Button --- */
+.player-tool-btn--youtube {
+  border-color: rgba(255, 68, 68, 0.35);
+  background: rgba(255, 68, 68, 0.08);
+  color: #ff5555;
+}
+.player-tool-btn--youtube:hover {
+  background: rgba(255, 68, 68, 0.22);
+  border-color: #ff4444;
+  color: #fff;
+}
+.source-toggle-btn--yt:hover {
+  background: rgba(255, 68, 68, 0.22) !important;
+  color: #fff !important;
+}
+
 /* --- Offline Cinema Downloader Dialog --- */
 .download-dialog {
   border: 1px solid rgba(245, 197, 24, 0.28);
