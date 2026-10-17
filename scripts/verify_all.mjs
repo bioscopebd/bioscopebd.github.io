@@ -92,5 +92,9 @@ assert(indexHtml.includes('482239') && indexHtml.includes('9XSCOyTZ3g0qo0LVCkcxx
 assert(indexHtml.includes('Channel i Movie'), "Channel i Movies are deployed to the catalog");
 assert(indexHtml.includes('mtfiqLzSSac') && indexHtml.includes('7CHAP3J2FFg'), "Channel i movies have valid official YouTube video IDs");
 
+// 11. Channel B Digital validation
+assert(indexHtml.includes('Channel B Movie'), "Channel B Digital movies are deployed to the catalog");
+assert(indexHtml.includes('VBSUvQTzals') && indexHtml.includes('XY0g1UtI-xk') && indexHtml.includes('ncQKewaiGZw'), "Channel B Digital legendary movies (Jara Brishtite Bhijechilo, Parama, Pushpadhanu) have valid video IDs");
+
 console.log(`\nTEST RESULTS: ${passed} passed, ${failed} failed.`);
 if (failed > 0) process.exit(1);
