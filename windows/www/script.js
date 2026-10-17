@@ -2358,7 +2358,7 @@ function loadSilentStreamEndpoint(failoverIndex = 0) {
 
   if (videoFrame) {
     videoFrame.hidden = false;
-    videoFrame.removeAttribute("sandbox");
+    videoFrame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-presentation allow-downloads");
 
     let hasHandshaked = false;
     videoFrame.onload = () => {

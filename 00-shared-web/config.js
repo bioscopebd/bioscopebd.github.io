@@ -27,7 +27,7 @@
     anonKey: ""
   },
 
-  // Auto-Server Stream Failover Providers (Strictly Zero Ads & No Popups, Fully Decoy-Shield Compatible)
+  // Auto-Server Stream Failover Providers (Strictly Zero Ads & No Popups, Fully Sandbox-Compatible)
   STREAM_SERVERS: [
     { id: "1", name: "Bioscope Primary (Fast Cloud)", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}` : `https://www.2embed.cc/embed/${id}` },
     { id: "2", name: "Bioscope Ultra (Direct HD)", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://www.2embed.skin/embedtv/${id}&s=${s}&e=${e}` : `https://www.2embed.skin/embed/${id}` },

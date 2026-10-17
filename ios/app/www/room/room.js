@@ -1044,11 +1044,7 @@ function loadTheatreScreen(title, tmdbId, type = "movie", trailerId = "", startS
     url = serverObj ? serverObj.getUrl(tmdbId, type) : (type === "tv" ? `https://www.2embed.cc/embedtv/${tmdbId}&s=1&e=1` : `https://www.2embed.cc/embed/${tmdbId}`);
   }
 
-  if (isYoutube) {
-    theatrePlayerFrame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-presentation allow-downloads");
-  } else {
-    theatrePlayerFrame.removeAttribute("sandbox");
-  }
+  theatrePlayerFrame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-presentation allow-downloads");
   theatrePlayerFrame.src = url;
   let theatreHandshake = false;
   theatrePlayerFrame.onload = () => {
