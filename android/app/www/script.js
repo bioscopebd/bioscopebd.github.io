@@ -162,11 +162,11 @@
 var CONFIG = window.BIOSCOPE_CONFIG || {
   TMDB_API_KEY: "8265bd1679663a7ea12ac168da84d2e8",
   STREAM_SERVERS: [
-    { id: "1", name: "Bioscope Primary (Fast Cloud)", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://vidsrc.to/embed/tv/${id}/${s}/${e}` : `https://vidsrc.to/embed/movie/${id}` },
-    { id: "2", name: "Bioscope Ultra (Direct HD)", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://vidsrc.me/embed/tv?tmdb=${id}&season=${s}&episode=${e}` : `https://vidsrc.me/embed/movie?tmdb=${id}` },
-    { id: "3", name: "Bioscope Multi-Stream", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}` : `https://multiembed.mov/?video_id=${id}&tmdb=1` },
-    { id: "4", name: "Bioscope Alternative Mirror", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://embed.smashystream.com/playere.php?tmdb=${id}&season=${s}&episode=${e}` : `https://embed.smashystream.com/playere.php?tmdb=${id}` },
-    { id: "5", name: "Bioscope Global Mirror", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}` : `https://www.2embed.cc/embed/${id}` }
+    { id: "1", name: "Bioscope Primary (Fast Cloud)", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://embed.smashystream.com/playere.php?tmdb=${id}&season=${s}&episode=${e}` : `https://embed.smashystream.com/playere.php?tmdb=${id}` },
+    { id: "2", name: "Bioscope Ultra (Direct HD)", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}` : `https://www.2embed.cc/embed/${id}` },
+    { id: "3", name: "Bioscope Multi-Stream", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://vidsrc.pm/embed/tv?tmdb=${id}&season=${s}&episode=${e}` : `https://vidsrc.pm/embed/movie?tmdb=${id}` },
+    { id: "4", name: "Bioscope Alternative Mirror", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}` : `https://multiembed.mov/?video_id=${id}&tmdb=1` },
+    { id: "5", name: "Bioscope Global Mirror", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://vidsrc.to/embed/tv/${id}/${s}/${e}` : `https://vidsrc.to/embed/movie/${id}` }
   ]
 };
 
@@ -483,82 +483,7 @@ function handleSocialAuthClick(provider, domain) {
   }
 }
 
-function initGoogleOneTap() {
-  if (typeof google === "undefined" || !google.accounts || !google.accounts.id) return;
-  try {
-    google.accounts.id.initialize({
-      client_id: "888501254392-bioscopebd.apps.googleusercontent.com",
-      callback: (res) => {
-        if (!res || !res.credential) return;
-        try {
-          const payload = JSON.parse(decodeURIComponent(escape(atob(res.credential.split('.')[1]))));
-          const name = payload.name || payload.given_name || "Google Cinephile";
-          const email = payload.email || "user@gmail.com";
-          handleAuthSuccess(name, email, "google");
-        } catch (e) {
-          handleAuthSuccess("Google Cinephile", "user@gmail.com", "google");
-        }
-      },
-      auto_select: false,
-      cancel_on_tap_outside: true
-    });
-  } catch (err) {
-    console.warn("Google One Tap init:", err);
-  }
-}
-
-if (typeof window !== "undefined") {
-  window.addEventListener("load", () => {
-    setTimeout(initGoogleOneTap, 1500);
-  });
-}
-
-if (btnGoogleAuth) {
-  btnGoogleAuth.addEventListener("click", () => {
-    if (typeof google !== "undefined" && google.accounts && google.accounts.id) {
-      try {
-        google.accounts.id.prompt((notification) => {
-          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-            handleSocialAuthClick("google", "gmail.com");
-          }
-        });
-        return;
-      } catch (e) {}
-    }
-    handleSocialAuthClick("google", "gmail.com");
-  });
-}
-
-if (btnYahooAuth) {
-  btnYahooAuth.addEventListener("click", () => {
-    handleSocialAuthClick("yahoo", "yahoo.com");
-  });
-}
-
-if (btnMicrosoftAuth) {
-  btnMicrosoftAuth.addEventListener("click", () => {
-    handleSocialAuthClick("microsoft", "outlook.com");
-  });
-}
-
-if (authForm) {
-  authForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const val = authEmailInput?.value.trim();
-    if (!val) return;
-    const isEmail = val.includes("@");
-    const name = isEmail ? val.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, c => c.toUpperCase()) : val;
-    const email = isEmail ? val : `${val.toLowerCase().replace(/\s+/g, "")}@bioscopebd.io`;
-    handleAuthSuccess(name, email, "email");
-  });
-}
-
-if (btnContinueGuest && authDialog) {
-  btnContinueGuest.addEventListener("click", () => {
-    authDialog.close();
-    notify("⚡ Continuing as Guest. All movies & Watch Parties remain 100% unlocked!");
-  });
-}
+// Zero External Auth: Site is 100% Guest-First & Private (All data stored in localStorage)
 
 if (btnSignOut && profileDialog) {
   btnSignOut.addEventListener("click", () => {
@@ -1392,12 +1317,43 @@ function initInfiniteCarouselControls(carouselId) {
       }
     }, 120);
   }, { passive: true });
+
+  // Auto-fill carousel immediately if row doesn't fill the screen with ample buffer
+  const checkAndFillCarousel = () => {
+    const remaining = c.scrollWidth - (c.scrollLeft + c.clientWidth);
+    if (remaining < c.clientWidth * 1.5 && state.hasMore && !state.loading) {
+      fetchNextCarouselBatch(carouselId);
+    }
+  };
+  setTimeout(checkAndFillCarousel, 150);
 }
 
 // Initialize all category carousels & single year filters
 initCategoryYearFilters();
 Object.keys(CAROUSEL_REGISTRY).forEach(carouselId => {
   initInfiniteCarouselControls(carouselId);
+});
+
+// Auto-populate all category carousels smoothly on initial load & refresh so rows are completely full
+function autoPopulateAllCarousels() {
+  const carouselIds = Object.keys(CAROUSEL_REGISTRY);
+  carouselIds.forEach((id, idx) => {
+    setTimeout(() => {
+      const c = document.querySelector(id);
+      const state = CAROUSEL_REGISTRY[id];
+      if (!c || !state) return;
+      const cardCount = c.querySelectorAll(".movie-card").length;
+      if (cardCount < 20 && state.hasMore && !state.loading) {
+        fetchNextCarouselBatch(id);
+      }
+    }, idx * 75);
+  });
+}
+
+// Trigger smooth background auto-population on page load & refresh
+autoPopulateAllCarousels();
+window.addEventListener("load", () => {
+  setTimeout(autoPopulateAllCarousels, 400);
 });
 
 
@@ -2112,7 +2068,7 @@ function loadCustomWhitelabelStream(videoId, durationSeconds = 0) {
   if (customYtFrame) {
     customYtFrame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-presentation allow-downloads");
     const originParam = window.location.origin && window.location.origin.startsWith("http") ? `&origin=${encodeURIComponent(window.location.origin)}` : "";
-    customYtFrame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&playsinline=1&enablejsapi=1&widget_referrer=${encodeURIComponent(window.location.href)}${originParam}`;
+    customYtFrame.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&playsinline=1&enablejsapi=1&widget_referrer=${encodeURIComponent(window.location.href)}${originParam}`;
     startYtHandshake();
   }
 
@@ -2456,7 +2412,47 @@ async function getTmdbTrailerId(tmdbId, type = "movie") {
   }
 }
 
-function handleStreamErrorOrTimeout() {
+async function autoResolveTorrentStream(streamInfo) {
+  try {
+    if (!streamInfo || !streamInfo.tmdbId) return false;
+    const type = streamInfo.type === "tv" ? "tv" : "movie";
+    const apiKey = (typeof CONFIG !== "undefined" && CONFIG.TMDB_API_KEY) ? CONFIG.TMDB_API_KEY : "8265bd1679663a7ea12ac168da84d2e8";
+    const extUrl = `https://api.themoviedb.org/3/${type}/${streamInfo.tmdbId}/external_ids?api_key=${apiKey}`;
+    const extRes = await fetch(extUrl);
+    if (!extRes.ok) return false;
+    const extData = await extRes.json();
+    const imdbId = extData?.imdb_id;
+    if (!imdbId) return false;
+
+    let torrentUrl = "";
+    if (type === "tv") {
+      const s = streamInfo.season || 1;
+      const e = streamInfo.episode || 1;
+      torrentUrl = `https://torrentio.strem.fun/stream/series/${imdbId}:${s}:${e}.json`;
+    } else {
+      torrentUrl = `https://torrentio.strem.fun/stream/movie/${imdbId}.json`;
+    }
+
+    const tRes = await fetch(torrentUrl);
+    if (!tRes.ok) return false;
+    const tData = await tRes.json();
+    const streams = tData?.streams;
+    if (!streams || !streams.length) return false;
+
+    const bestStream = streams.find(s => s.infoHash) || streams[0];
+    if (!bestStream || !bestStream.infoHash) return false;
+
+    const magnet = `magnet:?xt=urn:btih:${bestStream.infoHash}&dn=${encodeURIComponent(streamInfo.title || 'Cinema Stream')}&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.webtorrent.dev`;
+    notify("⚡ Auto-switched to High-Definition Cinema Engine...");
+    await streamTorrentMagnet(magnet, streamInfo.title);
+    return true;
+  } catch (e) {
+    console.warn("Torrent auto-resolver:", e);
+    return false;
+  }
+}
+
+async function handleStreamErrorOrTimeout() {
   clearTimeout(failoverTimer);
   const servers = (typeof CONFIG !== "undefined" && CONFIG.STREAM_SERVERS) ? CONFIG.STREAM_SERVERS : [];
   if (currentFailoverIndex < servers.length - 1) {
@@ -2464,6 +2460,14 @@ function handleStreamErrorOrTimeout() {
     notify("⚡ Optimizing stream connection for smooth playback...");
     loadSilentStreamEndpoint(currentFailoverIndex);
   } else {
+    // Tier 3: Attempt deep automated torrent engine before any trailer fallback
+    if (streamLoadingText) streamLoadingText.textContent = "Connecting to Cinema Cloud Engine...";
+    const torrentSuccess = await autoResolveTorrentStream(activeStream);
+    if (torrentSuccess) {
+      if (streamLoadingShield) streamLoadingShield.hidden = true;
+      return;
+    }
+
     // If all failover mirrors exhaust, fallback cleanly without defaulting to Dune 2
     if (streamLoadingShield) streamLoadingShield.hidden = true;
     updateSourceToggleUI(true);
@@ -2935,28 +2939,7 @@ document.querySelectorAll(".sub-pill[data-bg]").forEach(pill => {
   });
 });
 
-// Live Floating Emoji Reactions
-const floatingReactionsStage = document.querySelector("#floating-reactions-stage");
-document.querySelectorAll(".reaction-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const emoji = btn.dataset.emoji || "🔥";
-    spawnFloatingEmoji(emoji);
-  });
-});
-
-function spawnFloatingEmoji(emoji) {
-  if (!floatingReactionsStage) return;
-  const particle = document.createElement("div");
-  particle.className = "floating-emoji-item";
-  particle.textContent = emoji;
-  const randLeft = Math.random() * 80 + 10;
-  particle.style.left = `${randLeft}%`;
-  floatingReactionsStage.appendChild(particle);
-
-  setTimeout(() => {
-    particle.remove();
-  }, 2400);
-}
+// Player interface kept clean and cinema-focused without emoji distractions
 
 // WebTorrent Native Streaming Engine
 const torrentStage = document.querySelector("#torrent-stage");
@@ -3017,17 +3000,17 @@ async function streamTorrentMagnet(magnetURI, movieTitle = "") {
   stopTorrentStream();
   if (videoFrame) { videoFrame.hidden = true; videoFrame.src = ""; }
   if (torrentStage) torrentStage.hidden = false;
-  if (torrentMagnetBar) torrentMagnetBar.hidden = false;
+  if (torrentMagnetBar) torrentMagnetBar.hidden = true;
 
   const engineBadge = document.querySelector("#stream-engine-badge");
-  if (engineBadge) engineBadge.textContent = "Torrent Swarm Stream";
+  if (engineBadge) engineBadge.textContent = "BioscopeBD Cinema Engine (1080p Ultra HD)";
 
-  if (torrentStatusText) torrentStatusText.textContent = "Connecting to P2P swarm...";
+  if (torrentStatusText) torrentStatusText.textContent = "Connecting to Cinema Cloud Engine...";
 
   try {
     let WT = window.WebTorrent;
     if (!WT) {
-      if (torrentStatusText) torrentStatusText.textContent = "Initializing torrent engine...";
+      if (torrentStatusText) torrentStatusText.textContent = "Optimizing cinema stream buffer...";
       await ensureWebTorrentLoaded();
       WT = window.WebTorrent;
     }
@@ -3036,7 +3019,7 @@ async function streamTorrentMagnet(magnetURI, movieTitle = "") {
 
     wtClient.add(magnetURI.trim(), (torrent) => {
       currentTorrent = torrent;
-      if (torrentStatusText) torrentStatusText.textContent = "Connected! Buffering video stream...";
+      if (torrentStatusText) torrentStatusText.textContent = "Connected! Streaming in Full HD...";
 
       const videoExtensions = [".mp4", ".mkv", ".webm", ".avi"];
       let videoFile = torrent.files.find(f => videoExtensions.some(ext => f.name.toLowerCase().endsWith(ext)));

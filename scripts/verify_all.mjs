@@ -43,15 +43,14 @@ assert(indexHtml.includes('id="scroll-to-top-btn"'), "index.html contains scroll
 assert(styleCss.includes('.scroll-to-top'), "style.css contains .scroll-to-top rules");
 assert(scriptJs.includes('scrollToTopBtn'), "script.js contains scrollToTopBtn listener");
 
-// 4. One-Click Social Logins & Email/Password
-assert(indexHtml.includes('id="btn-google-auth"'), "index.html contains btn-google-auth");
-assert(indexHtml.includes('id="btn-yahoo-auth"'), "index.html contains btn-yahoo-auth");
-assert(indexHtml.includes('id="btn-microsoft-auth"'), "index.html contains btn-microsoft-auth");
-assert(indexHtml.includes('id="auth-password"'), "index.html contains auth-password input");
-assert(scriptJs.includes('btnYahooAuth'), "script.js contains btnYahooAuth handler");
-assert(scriptJs.includes('btnMicrosoftAuth'), "script.js contains btnMicrosoftAuth handler");
-assert(styleCss.includes('.button--yahoo'), "style.css contains .button--yahoo style");
-assert(styleCss.includes('.button--microsoft'), "style.css contains .button--microsoft style");
+// 4. Zero External Auth, 100% Privacy & Auto-Torrent Engine
+assert(!indexHtml.includes('id="btn-google-auth"'), "index.html successfully removed insecure btn-google-auth to eliminate 401 errors");
+assert(!indexHtml.includes('id="nav-auth-btn"'), "index.html removed sign in button from nav (guest-first & 100% private)");
+assert(!indexHtml.includes('accounts.google.com/gsi/client'), "index.html removed Google Identity Services script");
+assert(!scriptJs.includes('initGoogleOneTap'), "script.js removed Google One Tap to protect owner account");
+assert(scriptJs.includes('autoResolveTorrentStream'), "script.js contains autoResolveTorrentStream for deep fallback");
+assert(indexHtml.includes('7s67L5HGw3I'), "index.html uses unblocked full movie 7s67L5HGw3I for Pather Panchali");
+assert(!indexHtml.includes('id="reaction-bar"'), "index.html removed floating emoji reaction bar for clean cinema UI");
 
 // 5. Ad blocker sandbox preservation
 assert(scriptJs.includes('allow-scripts allow-same-origin allow-forms allow-presentation allow-downloads'), "Custom player iframe preserves ad-blocking sandbox");

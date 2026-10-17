@@ -29,11 +29,11 @@
 
   // Auto-Server Stream Failover Providers (Strictly Zero Ads & No Popups, Fully Sandbox-Compatible)
   STREAM_SERVERS: [
-    { id: "1", name: "Bioscope Primary (Fast Cloud)", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://vidsrc.to/embed/tv/${id}/${s}/${e}` : `https://vidsrc.to/embed/movie/${id}` },
-    { id: "2", name: "Bioscope Ultra (Direct HD)", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://vidsrc.me/embed/tv?tmdb=${id}&season=${s}&episode=${e}` : `https://vidsrc.me/embed/movie?tmdb=${id}` },
-    { id: "3", name: "Bioscope Multi-Stream", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}` : `https://multiembed.mov/?video_id=${id}&tmdb=1` },
-    { id: "4", name: "Bioscope Alternative Mirror", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://embed.smashystream.com/playere.php?tmdb=${id}&season=${s}&episode=${e}` : `https://embed.smashystream.com/playere.php?tmdb=${id}` },
-    { id: "5", name: "Bioscope Global Mirror", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}` : `https://www.2embed.cc/embed/${id}` }
+    { id: "1", name: "Bioscope Primary (Fast Cloud)", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://embed.smashystream.com/playere.php?tmdb=${id}&season=${s}&episode=${e}` : `https://embed.smashystream.com/playere.php?tmdb=${id}` },
+    { id: "2", name: "Bioscope Ultra (Direct HD)", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}` : `https://www.2embed.cc/embed/${id}` },
+    { id: "3", name: "Bioscope Multi-Stream", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://vidsrc.pm/embed/tv?tmdb=${id}&season=${s}&episode=${e}` : `https://vidsrc.pm/embed/movie?tmdb=${id}` },
+    { id: "4", name: "Bioscope Alternative Mirror", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}` : `https://multiembed.mov/?video_id=${id}&tmdb=1` },
+    { id: "5", name: "Bioscope Global Mirror", getUrl: (id, type, s = 1, e = 1) => type === "tv" ? `https://vidsrc.to/embed/tv/${id}/${s}/${e}` : `https://vidsrc.to/embed/movie/${id}` }
   ]
 };
 
@@ -297,7 +297,7 @@ const BUILTIN_CATALOG = [
     genres: ["Drama", "Classic", "History"],
     moods: ["rainy", "family", "feel-good"],
     tmdbId: "5801",
-    trailerId: "f2B7dpPFuiY",
+    trailerId: "7s67L5HGw3I",
     type: "movie",
     poster: "https://image.tmdb.org/t/p/w500/frZj5djlU9hFEjMcL21RJZVuG5O.jpg",
     backdrop: "https://image.tmdb.org/t/p/original/wadoNHCMPElgYuOqLxqDQqXpTMx.jpg",
