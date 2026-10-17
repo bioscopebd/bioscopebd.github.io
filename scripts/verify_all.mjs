@@ -150,10 +150,10 @@ assert(!scriptJs.includes('prompt("Enter your Name or Gmail'), "script.js has el
 assert(scriptJs.includes('handleSocialAuthClick'), "script.js contains seamless in-modal social auth handler");
 
 // 16. Sandbox-Friendly Zero-Ad Stream Providers (Movies & TV Series)
-assert(configJs.includes('vidlink.pro/movie') && configJs.includes('vidlink.pro/tv'), "config.js uses vidlink.pro as primary sandbox-compatible stream engine for movies and TV");
-assert(!configJs.includes('2embed.cc') && !configJs.includes('vidsrc.pm'), "config.js eliminated 2embed and vidsrc.pm which caused sandboxing errors");
-assert(scriptJs.includes('vidlink.pro/movie') && scriptJs.includes('vidlink.pro/tv'), "script.js uses vidlink.pro as primary sandbox-compatible stream engine for movies and TV");
-assert(!scriptJs.includes('2embed.cc') && !scriptJs.includes('vidsrc.pm'), "script.js eliminated 2embed and vidsrc.pm");
+assert(configJs.includes('vidsrc.to/embed/movie') && configJs.includes('vidsrc.to/embed/tv'), "config.js uses vidsrc.to as primary sandbox-compatible stream engine for movies and TV");
+assert(!configJs.includes('vidlink.pro') && !configJs.includes('videasy.net'), "config.js eliminated vidlink.pro and videasy.net which caused 'Please Disable Sandbox' errors");
+assert(scriptJs.includes('vidsrc.to/embed/movie') && scriptJs.includes('vidsrc.to/embed/tv'), "script.js uses vidsrc.to as primary sandbox-compatible stream engine for movies and TV");
+assert(!scriptJs.includes('vidlink.pro') && !scriptJs.includes('videasy.net'), "script.js eliminated vidlink.pro and videasy.net");
 
 console.log(`\nTEST RESULTS: ${passed} passed, ${failed} failed.`);
 if (failed > 0) process.exit(1);
