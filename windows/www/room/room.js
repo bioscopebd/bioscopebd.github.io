@@ -1041,7 +1041,7 @@ function loadTheatreScreen(title, tmdbId, type = "movie", trailerId = "", startS
   } else {
     const servers = (typeof CONFIG !== "undefined" && CONFIG.STREAM_SERVERS) ? CONFIG.STREAM_SERVERS : [];
     const serverObj = servers[currentTheatreServerIndex] || servers[0];
-    url = serverObj ? serverObj.getUrl(tmdbId, type) : (type === "tv" ? `https://vidsrc.pm/embed/tv?tmdb=${tmdbId}&season=1&episode=1` : `https://vidsrc.pm/embed/movie?tmdb=${tmdbId}`);
+    url = serverObj ? serverObj.getUrl(tmdbId, type) : (type === "tv" ? `https://www.2embed.cc/embedtv/${tmdbId}&s=1&e=1` : `https://www.2embed.cc/embed/${tmdbId}`);
   }
 
   if (isYoutube) {

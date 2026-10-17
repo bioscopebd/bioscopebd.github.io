@@ -149,11 +149,11 @@ assert(!scriptJs.includes('prompt("Enter your Name or Gmail'), "script.js has el
 assert(scriptJs.includes('handleSocialAuthClick'), "script.js contains seamless in-modal social auth handler");
 
 // 16. Multi-Server Zero-Ad Decoy Stream Providers (Movies & TV Series)
-assert(configJs.includes('vidsrc.pm/embed/movie') && configJs.includes('vidsrc.pm/embed/tv'), "config.js uses vidsrc.pm as primary stream engine for movies and TV");
+assert(configJs.includes('2embed.cc/embed') && configJs.includes('2embed.cc/embedtv'), "config.js uses 2embed.cc as primary stream engine for movies and TV");
 assert(configJs.includes('vidsrc.to/embed/movie') && configJs.includes('vidsrc.to/embed/tv'), "config.js includes vidsrc.to for comprehensive movie/TV failover");
 assert(!configJs.includes('vidlink.pro') && !configJs.includes('videasy.net'), "config.js eliminated vidlink.pro and videasy.net");
 assert(!configJs.includes('smashystream') && !configJs.includes('anyembed'), "config.js eliminated smashystream and anyembed");
-assert(scriptJs.includes('vidsrc.pm/embed/movie') && scriptJs.includes('vidsrc.pm/embed/tv'), "script.js uses vidsrc.pm as primary stream engine for movies and TV");
+assert(scriptJs.includes('2embed.cc/embed') && scriptJs.includes('2embed.cc/embedtv'), "script.js uses 2embed.cc as primary stream engine for movies and TV");
 assert(scriptJs.includes('vidsrc.to/embed/movie') && scriptJs.includes('vidsrc.to/embed/tv'), "script.js includes vidsrc.to for comprehensive movie/TV failover");
 assert(!scriptJs.includes('vidlink.pro') && !scriptJs.includes('videasy.net'), "script.js eliminated vidlink.pro and videasy.net");
 assert(!scriptJs.includes('smashystream') && !scriptJs.includes('anyembed'), "script.js eliminated smashystream and anyembed");
