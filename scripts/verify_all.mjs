@@ -82,5 +82,11 @@ sections.forEach(s => {
   }
 });
 
+// 9. Adult poster prevention & correct TMDB IDs
+assert(!indexHtml.includes('871329') && !indexHtml.includes('1D3aRTQeTTvU1Ar3MrzWY24rXvo'), "Operation Sundarbans does not use adult movie TMDB ID or poster");
+assert(indexHtml.includes('859718') && indexHtml.includes('7pU1XQHEtGYvQspNVIOFgvIMxaH'), "Operation Sundarbans uses authentic TMDB ID 859718 and poster");
+assert(!indexHtml.includes('987178') && !indexHtml.includes('6QgHlOb8kw1YIo17hR2JMTBuIkH'), "Poran does not use adult movie TMDB ID or poster");
+assert(indexHtml.includes('865951') && indexHtml.includes('yaiVJIEoPmwxXz1LZyjNT5fCpgx'), "Poran uses authentic TMDB ID 865951 and poster");
+
 console.log(`\nTEST RESULTS: ${passed} passed, ${failed} failed.`);
 if (failed > 0) process.exit(1);
