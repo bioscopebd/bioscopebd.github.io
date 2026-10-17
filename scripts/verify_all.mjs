@@ -142,6 +142,13 @@ assert(scriptJs.includes('currentYear = 2026') && scriptJs.includes('oldestYear 
 assert(styleCss.includes('.category-year-filter'), "style.css contains .category-year-filter rules");
 assert(styleCss.includes('.carousel-shimmer-card'), "style.css contains .carousel-shimmer-card rules");
 
+// 15. Continue Watching UI, Card Removal & Clear History
+assert(scriptJs.includes('btnClearContinue') && scriptJs.includes('continueWatching = []'), "script.js binds btn-clear-continue to clear watch history");
+assert(scriptJs.includes('continue-card__remove'), "script.js supports individual continue watching card removal");
+assert(styleCss.includes('.continue-card__thumb') && styleCss.includes('.continue-card__play'), "style.css styles continue-card thumbnail and centered play button");
+assert(!scriptJs.includes('prompt("Enter your Name or Gmail'), "script.js has eliminated browser prompt for Google login");
+assert(scriptJs.includes('handleSocialAuthClick'), "script.js contains seamless in-modal social auth handler");
+
 console.log(`\nTEST RESULTS: ${passed} passed, ${failed} failed.`);
 if (failed > 0) process.exit(1);
 

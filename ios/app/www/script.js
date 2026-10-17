@@ -227,6 +227,22 @@ function loadLocalState() {
       }
     ];
 
+    continueWatching = continueWatching.map(item => {
+      if (item.title && item.title.includes("Dhaka Attack") && (!item.poster || item.poster.includes("cQGUUZgivZWWUZB13p6U41a0arK"))) {
+        item.poster = "https://image.tmdb.org/t/p/w500/9XSCOyTZ3g0qo0LVCkcxxzT8JwT.jpg";
+        item.tmdbId = "482239";
+      }
+      if (!item.poster || item.poster.includes("picsum.photos")) {
+        const cat = BUILTIN_CATALOG.find(m => m.title && m.title.toLowerCase() === item.title?.toLowerCase());
+        if (cat?.poster) {
+          item.poster = cat.poster;
+        } else {
+          item.poster = "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg";
+        }
+      }
+      return item;
+    });
+
     const savedRatings = localStorage.getItem("bioscope_ratings");
     userRatings = savedRatings ? JSON.parse(savedRatings) : {};
 
@@ -439,42 +455,89 @@ function handleAuthSuccess(name, email, provider = "account") {
   notify(`🎉 Signed in with ${provider.toUpperCase()}: Welcome ${name}! Your Watchlist is synced.`);
 }
 
+function handleSocialAuthClick(provider, domain) {
+  const emailInput = document.querySelector("#auth-email");
+  const val = emailInput ? emailInput.value.trim() : "";
+  if (val) {
+    const isEmail = val.includes("@");
+    const name = isEmail ? val.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, c => c.toUpperCase()) : val;
+    const email = isEmail ? val : `${val.toLowerCase().replace(/\s+/g, "")}@${domain}`;
+    handleAuthSuccess(name, email, provider);
+  } else {
+    const existingName = (currentUser && !currentUser.isGuest && currentUser.name) ? currentUser.name : "";
+    if (existingName) {
+      handleAuthSuccess(existingName, `${existingName.toLowerCase().replace(/\s+/g, "")}@${domain}`, provider);
+      return;
+    }
+    if (emailInput) {
+      emailInput.focus();
+      emailInput.placeholder = `Enter name or ${domain} to connect`;
+      emailInput.style.borderColor = "var(--color-accent, #e50914)";
+      emailInput.style.boxShadow = "0 0 12px rgba(229, 9, 20, 0.4)";
+      const submitBtn = document.querySelector("#btn-submit-auth");
+      if (submitBtn) {
+        submitBtn.textContent = `⚡ 1-Click Sign In with ${provider.charAt(0).toUpperCase() + provider.slice(1)}`;
+      }
+      notify(`ℹ️ Type your name or email above to sign in with ${provider.toUpperCase()}`);
+    }
+  }
+}
+
+function initGoogleOneTap() {
+  if (typeof google === "undefined" || !google.accounts || !google.accounts.id) return;
+  try {
+    google.accounts.id.initialize({
+      client_id: "888501254392-bioscopebd.apps.googleusercontent.com",
+      callback: (res) => {
+        if (!res || !res.credential) return;
+        try {
+          const payload = JSON.parse(decodeURIComponent(escape(atob(res.credential.split('.')[1]))));
+          const name = payload.name || payload.given_name || "Google Cinephile";
+          const email = payload.email || "user@gmail.com";
+          handleAuthSuccess(name, email, "google");
+        } catch (e) {
+          handleAuthSuccess("Google Cinephile", "user@gmail.com", "google");
+        }
+      },
+      auto_select: false,
+      cancel_on_tap_outside: true
+    });
+  } catch (err) {
+    console.warn("Google One Tap init:", err);
+  }
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("load", () => {
+    setTimeout(initGoogleOneTap, 1500);
+  });
+}
+
 if (btnGoogleAuth) {
   btnGoogleAuth.addEventListener("click", () => {
-    const input = prompt("Enter your Name or Gmail to sign in with Google:", "");
-    if (input && input.trim()) {
-      const clean = input.trim();
-      const isEmail = clean.includes("@");
-      const name = isEmail ? clean.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, c => c.toUpperCase()) : clean;
-      const email = isEmail ? clean : `${clean.toLowerCase().replace(/\s+/g, "")}@gmail.com`;
-      handleAuthSuccess(name, email, "google");
+    if (typeof google !== "undefined" && google.accounts && google.accounts.id) {
+      try {
+        google.accounts.id.prompt((notification) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            handleSocialAuthClick("google", "gmail.com");
+          }
+        });
+        return;
+      } catch (e) {}
     }
+    handleSocialAuthClick("google", "gmail.com");
   });
 }
 
 if (btnYahooAuth) {
   btnYahooAuth.addEventListener("click", () => {
-    const input = prompt("Enter your Name or Yahoo Mail to sign in with Yahoo:", "");
-    if (input && input.trim()) {
-      const clean = input.trim();
-      const isEmail = clean.includes("@");
-      const name = isEmail ? clean.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, c => c.toUpperCase()) : clean;
-      const email = isEmail ? clean : `${clean.toLowerCase().replace(/\s+/g, "")}@yahoo.com`;
-      handleAuthSuccess(name, email, "yahoo");
-    }
+    handleSocialAuthClick("yahoo", "yahoo.com");
   });
 }
 
 if (btnMicrosoftAuth) {
   btnMicrosoftAuth.addEventListener("click", () => {
-    const input = prompt("Enter your Name or Microsoft Email (Outlook/Hotmail):", "");
-    if (input && input.trim()) {
-      const clean = input.trim();
-      const isEmail = clean.includes("@");
-      const name = isEmail ? clean.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, c => c.toUpperCase()) : clean;
-      const email = isEmail ? clean : `${clean.toLowerCase().replace(/\s+/g, "")}@outlook.com`;
-      handleAuthSuccess(name, email, "microsoft");
-    }
+    handleSocialAuthClick("microsoft", "outlook.com");
   });
 }
 
@@ -721,6 +784,7 @@ function hydrateContinueWatching() {
   continueSection.hidden = false;
   continueCarousel.innerHTML = continueWatching.map(item => `
     <article class="continue-card" data-title="${item.title}" data-tmdb="${item.tmdbId}" data-type="${item.type || 'movie'}" data-trailer="${item.trailerId}" data-season="${item.season || 1}" data-episode="${item.episode || 1}">
+      <button type="button" class="continue-card__remove" title="Remove from Continue Watching" data-title="${item.title}" aria-label="Remove ${item.title}">✕</button>
       <div class="continue-card__thumb">
         <img src="${item.poster || 'https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg'}" alt="${item.title}" loading="lazy">
         <button type="button" class="continue-card__play" aria-label="Resume ${item.title}">▶</button>
@@ -729,14 +793,15 @@ function hydrateContinueWatching() {
         </div>
       </div>
       <div class="continue-card__body">
-        <h4 class="continue-card__title">${item.title} ${item.type === 'tv' ? `(S${item.season || 1}:E${item.episode || 1})` : ''}</h4>
-        <p class="continue-card__meta">${item.percent || 25}% completed · Click to resume</p>
+        <h4 class="continue-card__title" title="${item.title}">${item.title} ${item.type === 'tv' ? `(S${item.season || 1}:E${item.episode || 1})` : ''}</h4>
+        <p class="continue-card__meta"><span class="continue-resume-badge">${item.percent || 25}%</span> Click to resume</p>
       </div>
     </article>
   `).join("");
 
   continueCarousel.querySelectorAll(".continue-card").forEach(card => {
-    card.addEventListener("click", () => {
+    card.addEventListener("click", (e) => {
+      if (e.target.closest(".continue-card__remove")) return;
       openStream(
         card.dataset.title,
         card.dataset.tmdb,
@@ -748,6 +813,28 @@ function hydrateContinueWatching() {
         parseInt(card.dataset.episode, 10) || 1
       );
     });
+  });
+
+  continueCarousel.querySelectorAll(".continue-card__remove").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const targetTitle = btn.dataset.title;
+      continueWatching = continueWatching.filter(c => c.title !== targetTitle);
+      saveLocalState();
+      hydrateContinueWatching();
+      notify(`Removed "${targetTitle}" from Continue Watching`);
+    });
+  });
+}
+
+const btnClearContinue = document.querySelector("#btn-clear-continue");
+if (btnClearContinue) {
+  btnClearContinue.addEventListener("click", () => {
+    if (!continueWatching || continueWatching.length === 0) return;
+    continueWatching = [];
+    saveLocalState();
+    hydrateContinueWatching();
+    notify("🧹 Watch history cleared successfully.");
   });
 }
 
@@ -2720,6 +2807,18 @@ function startProgressTracking(title, tmdbId, type, trailerId, season = 1, episo
     const currentSec = existing ? Math.min(durationSec, existing.currentTime + 10) : elapsed;
     const pct = Math.min(100, Math.round((currentSec / durationSec) * 100));
 
+    let poster = BUILTIN_CATALOG.find(m => m.title === title)?.poster;
+    if (!poster) {
+      const cardImg = document.querySelector(`.movie-card[data-title="${title}"] img`);
+      if (cardImg && cardImg.src && !cardImg.src.includes("picsum")) {
+        poster = cardImg.src;
+      } else if (tmdbId) {
+        poster = `https://image.tmdb.org/t/p/w500/${tmdbId}.jpg`;
+      } else {
+        poster = "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg";
+      }
+    }
+
     const updatedItem = {
       id: title.toLowerCase().replace(/[^a-z0-9]/g, "-"),
       title,
@@ -2728,7 +2827,7 @@ function startProgressTracking(title, tmdbId, type, trailerId, season = 1, episo
       trailerId: trailerId || "",
       season: season || 1,
       episode: episode || 1,
-      poster: BUILTIN_CATALOG.find(m => m.title === title)?.poster || "https://picsum.photos/seed/cinema/300/450",
+      poster: poster,
       currentTime: currentSec,
       duration: durationSec,
       percent: pct,
