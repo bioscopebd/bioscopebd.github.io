@@ -86,7 +86,11 @@ sections.forEach(s => {
 assert(!indexHtml.includes('871329') && !indexHtml.includes('1D3aRTQeTTvU1Ar3MrzWY24rXvo'), "Operation Sundarbans does not use adult movie TMDB ID or poster");
 assert(indexHtml.includes('859718') && indexHtml.includes('7pU1XQHEtGYvQspNVIOFgvIMxaH'), "Operation Sundarbans uses authentic TMDB ID 859718 and poster");
 assert(!indexHtml.includes('987178') && !indexHtml.includes('6QgHlOb8kw1YIo17hR2JMTBuIkH'), "Poran does not use adult movie TMDB ID or poster");
-assert(indexHtml.includes('865951') && indexHtml.includes('yaiVJIEoPmwxXz1LZyjNT5fCpgx'), "Poran uses authentic TMDB ID 865951 and poster");
+// 10. Dhaka Attack & Channel i Movies validation
+assert(!indexHtml.includes('421679') && !indexHtml.includes('cQGUUZgivZWWUZB13p6U41a0arK'), "Dhaka Attack does not use Japanese movie TMDB ID or poster");
+assert(indexHtml.includes('482239') && indexHtml.includes('9XSCOyTZ3g0qo0LVCkcxxzT8JwT'), "Dhaka Attack uses authentic TMDB ID 482239 and real poster");
+assert(indexHtml.includes('Channel i Movie'), "Channel i Movies are deployed to the catalog");
+assert(indexHtml.includes('mtfiqLzSSac') && indexHtml.includes('7CHAP3J2FFg'), "Channel i movies have valid official YouTube video IDs");
 
 console.log(`\nTEST RESULTS: ${passed} passed, ${failed} failed.`);
 if (failed > 0) process.exit(1);
