@@ -1003,6 +1003,20 @@ body{padding-inline:env(safe-area-inset-left) env(safe-area-inset-right)}
   color: var(--color-accent);
   transform: scale(1.1);
 }
+.custom-ctrl-btn--quality {
+  display: flex !important;
+  flex-direction: row;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(245, 197, 24, 0.35);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+.custom-ctrl-btn--quality:hover {
+  background: rgba(245, 197, 24, 0.18);
+  border-color: var(--color-accent, #f5c518);
+}
 .custom-ctrl-btn svg {
   width: 20px;
   height: 20px;

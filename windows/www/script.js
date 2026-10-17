@@ -2185,6 +2185,9 @@ function setStreamQuality(qualityVal, notifyUser = true) {
   if (playerQualityPicker) playerQualityPicker.value = qualityVal;
   if (toolbarQualityLabel) toolbarQualityLabel.textContent = qualityVal.toUpperCase();
 
+  const customQualityBadge = document.querySelector("#custom-quality-badge");
+  if (customQualityBadge) customQualityBadge.textContent = qualityVal.toUpperCase();
+
   const engineBadge = document.querySelector("#stream-engine-badge");
   if (engineBadge) {
     if (qualityVal === "auto") engineBadge.textContent = "Auto-Optimized Stream (Buffer-Free)";
@@ -2225,6 +2228,16 @@ if (btnQualityTool) {
   });
 }
 
+const customQualityBtn = document.querySelector("#custom-quality-btn");
+if (customQualityBtn) {
+  customQualityBtn.addEventListener("click", () => {
+    const currentIndex = QUALITY_RESOLUTIONS.findIndex(q => q.val === activeStreamQuality);
+    const nextIndex = (currentIndex + 1) % QUALITY_RESOLUTIONS.length;
+    const nextQuality = QUALITY_RESOLUTIONS[nextIndex].val;
+    setStreamQuality(nextQuality, true);
+  });
+}
+
 function updateStreamResolutionBadge(quality = "1080p") {
   const q = String(quality).toLowerCase();
   let matched = "1080p";
@@ -2234,7 +2247,11 @@ function updateStreamResolutionBadge(quality = "1080p") {
   else if (q.includes("720") || q === "hd720") matched = "720p";
   else if (q.includes("480") || q === "large") matched = "480p";
   else if (q.includes("360") || q === "medium") matched = "360p";
-  else if (q.includes("240") || q.includes("144") || q === "small" || q === "tiny") matched = "360p";
+
+  activeStreamQuality = matched;
+  if (toolbarQualityLabel) toolbarQualityLabel.textContent = matched.toUpperCase();
+  const customQualityBadge = document.querySelector("#custom-quality-badge");
+  if (customQualityBadge) customQualityBadge.textContent = matched.toUpperCase();
 
   if (playerQualityPicker && playerQualityPicker.value === "auto") {
     if (toolbarQualityLabel) toolbarQualityLabel.textContent = `AUTO (${matched.toUpperCase()})`;
@@ -2336,7 +2353,7 @@ function loadSilentStreamEndpoint(failoverIndex = 0) {
   if (engineBadge) engineBadge.textContent = "BioscopeBD Cinema Engine (1080p HD)";
 
   const toolbarServerLabel = document.querySelector("#toolbar-server-label");
-  if (toolbarServerLabel) toolbarServerLabel.textContent = "HD Mirror";
+  if (toolbarServerLabel) toolbarServerLabel.textContent = "1080p Ultra HD";
 
   if (videoFrame) {
     videoFrame.hidden = false;
@@ -2345,7 +2362,10 @@ function loadSilentStreamEndpoint(failoverIndex = 0) {
     let hasHandshaked = false;
     videoFrame.onload = () => {
       hasHandshaked = true;
-      if (streamLoadingShield) streamLoadingShield.hidden = true;
+      // Smoothly hide shield after 1800ms so third-party provider scanning screen is completely hidden
+      setTimeout(() => {
+        if (streamLoadingShield) streamLoadingShield.hidden = true;
+      }, 1800);
     };
     videoFrame.onerror = () => {
       handleStreamErrorOrTimeout();
@@ -2857,6 +2877,7 @@ function closeVideoPlayer() {
   stopCustomWhitelabelStream();
   stopTorrentStream();
   if (videoFrame) videoFrame.src = "";
+  if (streamLoadingShield) streamLoadingShield.hidden = true;
   if (videoDialog) videoDialog.close();
 }
 
