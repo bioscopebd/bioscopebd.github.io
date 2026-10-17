@@ -1118,14 +1118,21 @@ async function searchTmdbPrefix(query) {
 
 function renderAutocompleteDropdown(results, query, isLoading = false) {
   if (!searchDropdown) return;
+  const currentQuery = searchInput ? searchInput.value.trim() : "";
+  if (!currentQuery || currentQuery.length === 0) {
+    searchDropdown.hidden = true;
+    searchDropdown.innerHTML = "";
+    return;
+  }
+
   if (!results.length && !isLoading) {
-    searchDropdown.innerHTML = `<div class="search-empty">No titles starting with "${query}". Try another letter or word!</div>`;
+    searchDropdown.innerHTML = `<div class="search-empty">🔍 No matches for "${escapeHTML(query)}". Press Enter to view full library.</div>`;
     searchDropdown.hidden = false;
     return;
   }
 
   currentHighlightedIndex = -1;
-  let html = `<div class="search-dropdown__header"><span>Instant Alphabet Match</span><span>${results.length} titles</span></div>`;
+  let html = `<div class="search-dropdown__header"><span>Search Suggestions</span><span>${results.length} titles</span></div>`;
 
   results.forEach((item, idx) => {
     const highlightedTitle = highlightMatches(item.title, query);
@@ -1164,25 +1171,34 @@ function renderAutocompleteDropdown(results, query, isLoading = false) {
         openStream(title, tmdb, type, trailer);
       }
       searchDropdown.hidden = true;
+      searchDropdown.innerHTML = "";
     });
   });
 }
 
 function handleSearchAutocomplete() {
   const query = searchInput ? searchInput.value.trim() : "";
-  if (!query) {
-    if (searchDropdown) searchDropdown.hidden = true;
+  if (!query || query.length === 0) {
+    if (searchDropdown) {
+      searchDropdown.hidden = true;
+      searchDropdown.innerHTML = "";
+    }
     return;
   }
 
   // 1. Instant Prefix Matching from Local Catalog (0ms delay)
   const localResults = searchCatalogPrefix(query);
-  renderAutocompleteDropdown(localResults, query, true);
+  if (localResults.length > 0) {
+    renderAutocompleteDropdown(localResults, query, true);
+  }
 
   // 2. Debounced TMDB Lookup (150ms for zero UI lag)
   clearTimeout(searchDebounceTimer);
   searchDebounceTimer = setTimeout(async () => {
-    const tmdbResults = await searchTmdbPrefix(query);
+    const currentQuery = searchInput ? searchInput.value.trim() : "";
+    if (!currentQuery || currentQuery !== query) return;
+
+    const tmdbResults = await searchTmdbPrefix(currentQuery);
     const combined = [...localResults];
     const seen = new Set(localResults.map(r => r.title.toLowerCase()));
 
@@ -1193,18 +1209,45 @@ function handleSearchAutocomplete() {
       }
     });
 
-    renderAutocompleteDropdown(combined.slice(0, 8), query, false);
+    renderAutocompleteDropdown(combined.slice(0, 8), currentQuery, false);
   }, 150);
 }
 
 if (searchInput) {
   searchInput.addEventListener("input", () => {
-    handleSearchAutocomplete();
+    const val = searchInput.value.trim();
+    if (val.length === 0) {
+      if (searchDropdown) {
+        searchDropdown.hidden = true;
+        searchDropdown.innerHTML = "";
+      }
+    } else {
+      handleSearchAutocomplete();
+    }
     filterCatalog();
   });
 
   searchInput.addEventListener("focus", () => {
-    if (searchInput.value.trim().length > 0) handleSearchAutocomplete();
+    const val = searchInput.value.trim();
+    if (val.length > 0) {
+      handleSearchAutocomplete();
+    } else {
+      if (searchDropdown) {
+        searchDropdown.hidden = true;
+        searchDropdown.innerHTML = "";
+      }
+    }
+  });
+
+  searchInput.addEventListener("blur", () => {
+    setTimeout(() => {
+      if (!document.activeElement?.closest("#search-dropdown") && !document.activeElement?.closest("#search-form")) {
+        if (searchDropdown) {
+          searchDropdown.hidden = true;
+          searchDropdown.innerHTML = "";
+        }
+      }
+    }, 200);
   });
 
   // Full Keyboard & Touch Accessibility
@@ -1226,9 +1269,17 @@ if (searchInput) {
     } else if (e.key === "Enter") {
       e.preventDefault();
       const target = currentHighlightedIndex >= 0 ? items[currentHighlightedIndex] : items[0];
-      if (target) target.click();
+      if (target) {
+        target.click();
+      } else {
+        searchDropdown.hidden = true;
+        searchDropdown.innerHTML = "";
+        filterCatalog();
+        document.querySelector("#top-rated")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     } else if (e.key === "Escape") {
       searchDropdown.hidden = true;
+      searchDropdown.innerHTML = "";
     }
   });
 
@@ -1236,7 +1287,10 @@ if (searchInput) {
   if (searchForm) {
     searchForm.addEventListener("submit", (e) => {
       e.preventDefault();
-      if (searchDropdown) searchDropdown.hidden = true;
+      if (searchDropdown) {
+        searchDropdown.hidden = true;
+        searchDropdown.innerHTML = "";
+      }
       filterCatalog();
       document.querySelector("#top-rated")?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
@@ -1246,7 +1300,10 @@ if (searchInput) {
   if (navSearchBtn) {
     navSearchBtn.addEventListener("click", (e) => {
       e.preventDefault();
-      if (searchDropdown) searchDropdown.hidden = true;
+      if (searchDropdown) {
+        searchDropdown.hidden = true;
+        searchDropdown.innerHTML = "";
+      }
       filterCatalog();
       document.querySelector("#top-rated")?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
@@ -1256,8 +1313,15 @@ if (searchInput) {
 document.addEventListener("click", (e) => {
   if (searchDropdown && !e.target.closest("#search-form")) {
     searchDropdown.hidden = true;
+    searchDropdown.innerHTML = "";
   }
 });
+
+// Initialization ensure
+if (searchDropdown) {
+  searchDropdown.hidden = true;
+  searchDropdown.innerHTML = "";
+}
 
 // ==========================================================================
 // 6. Time-Budget Quick Duration Filter & Movie Mashup Finder
