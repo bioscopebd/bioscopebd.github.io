@@ -954,25 +954,337 @@ window.addEventListener("scroll", () => {
   }
 }, { passive: true });
 
-// Carousels horizontal controls
-function initCarouselNav(carouselId, prevId, nextId) {
+// ==========================================================================
+// 5. Infinite Horizontal Carousel Engine & Single Year Filters
+// ==========================================================================
+const CAROUSEL_REGISTRY = {
+  "#trending-carousel": {
+    prevId: "#trending-prev",
+    nextId: "#trending-next",
+    type: "trending",
+    page: 1,
+    loading: false,
+    hasMore: true,
+    selectedYear: "all",
+    seenIds: new Set()
+  },
+  "#bangla-carousel": {
+    prevId: "#bangla-prev",
+    nextId: "#bangla-next",
+    type: "bangla",
+    page: 1,
+    loading: false,
+    hasMore: true,
+    selectedYear: "all",
+    seenIds: new Set()
+  },
+  "#hindi-carousel": {
+    prevId: "#hindi-prev",
+    nextId: "#hindi-next",
+    type: "hindi",
+    page: 1,
+    loading: false,
+    hasMore: true,
+    selectedYear: "all",
+    seenIds: new Set()
+  },
+  "#hollywood-carousel": {
+    prevId: "#hollywood-prev",
+    nextId: "#hollywood-next",
+    type: "hollywood",
+    page: 1,
+    loading: false,
+    hasMore: true,
+    selectedYear: "all",
+    seenIds: new Set()
+  },
+  "#tv-carousel": {
+    prevId: "#tv-prev",
+    nextId: "#tv-next",
+    type: "tv",
+    page: 1,
+    loading: false,
+    hasMore: true,
+    selectedYear: "all",
+    seenIds: new Set()
+  },
+  "#anime-carousel": {
+    prevId: "#anime-prev",
+    nextId: "#anime-next",
+    type: "anime",
+    page: 1,
+    loading: false,
+    hasMore: true,
+    selectedYear: "all",
+    seenIds: new Set()
+  },
+  "#east-asian-carousel": {
+    prevId: "#east-asian-prev",
+    nextId: "#east-asian-next",
+    type: "east-asian",
+    page: 1,
+    loading: false,
+    hasMore: true,
+    selectedYear: "all",
+    seenIds: new Set()
+  },
+  "#ai-carousel": {
+    prevId: "#ai-prev",
+    nextId: "#ai-next",
+    type: "ai",
+    page: 1,
+    loading: false,
+    hasMore: true,
+    selectedYear: "all",
+    seenIds: new Set()
+  }
+};
+
+function renderCarouselBatch(container, state, items) {
+  const newItems = items.filter(m => {
+    const tKey = (m.title || "").toLowerCase();
+    const idKey = m.tmdbId ? "tmdb_" + m.tmdbId : "";
+    if (state.seenIds.has(tKey) || (idKey && state.seenIds.has(idKey))) return false;
+    state.seenIds.add(tKey);
+    if (idKey) state.seenIds.add(idKey);
+    return true;
+  });
+
+  if (newItems.length === 0) return;
+
+  const html = newItems.map(m => {
+    const cardHtml = createMovieCardHTML(m);
+    if (state.selectedYear !== "all" && String(m.year) !== state.selectedYear) {
+      return cardHtml.replace('<article class="movie-card', '<article hidden class="movie-card');
+    }
+    return cardHtml;
+  }).join("");
+
+  container.insertAdjacentHTML("beforeend", html);
+  bindCardInteractions(container);
+  initImageLoading();
+}
+
+async function fetchNextCarouselBatch(carouselId) {
   const c = document.querySelector(carouselId);
-  const p = document.querySelector(prevId);
-  const n = document.querySelector(nextId);
-  if (c && p && n) {
-    p.addEventListener("click", () => c.scrollBy({ left: -c.clientWidth * 0.75, behavior: "smooth" }));
-    n.addEventListener("click", () => c.scrollBy({ left: c.clientWidth * 0.75, behavior: "smooth" }));
+  const state = CAROUSEL_REGISTRY[carouselId];
+  if (!c || !state || state.loading || !state.hasMore) return;
+
+  state.loading = true;
+
+  const shimmer = document.createElement("div");
+  shimmer.className = "carousel-shimmer-card";
+  c.appendChild(shimmer);
+
+  try {
+    const pageToFetch = state.page + 1;
+    let url = "";
+    const yrParam = state.selectedYear !== "all" ? `&primary_release_year=${state.selectedYear}` : "";
+    const yrTvParam = state.selectedYear !== "all" ? `&first_air_date_year=${state.selectedYear}` : "";
+
+    if (state.type === "trending") {
+      url = `https://api.themoviedb.org/3/trending/all/day?api_key=${CONFIG.TMDB_API_KEY}&page=${pageToFetch}`;
+    } else if (state.type === "bangla") {
+      const unrendered = BUILTIN_CATALOG.filter(m => m.bangla && !state.seenIds.has((m.title || "").toLowerCase()));
+      if (unrendered.length >= 8 && state.selectedYear === "all") {
+        const batch = unrendered.slice(0, 15);
+        renderCarouselBatch(c, state, batch);
+        shimmer.remove();
+        state.loading = false;
+        return;
+      }
+      url = `https://api.themoviedb.org/3/discover/movie?api_key=${CONFIG.TMDB_API_KEY}&with_original_language=bn&sort_by=popularity.desc&page=${pageToFetch}${yrParam}`;
+    } else if (state.type === "hindi") {
+      url = `https://api.themoviedb.org/3/discover/movie?api_key=${CONFIG.TMDB_API_KEY}&with_original_language=hi&sort_by=popularity.desc&page=${pageToFetch}${yrParam}`;
+    } else if (state.type === "hollywood") {
+      url = `https://api.themoviedb.org/3/discover/movie?api_key=${CONFIG.TMDB_API_KEY}&with_original_language=en&sort_by=popularity.desc&page=${pageToFetch}${yrParam}`;
+    } else if (state.type === "tv") {
+      url = `https://api.themoviedb.org/3/discover/tv?api_key=${CONFIG.TMDB_API_KEY}&sort_by=popularity.desc&page=${pageToFetch}${yrTvParam}`;
+    } else if (state.type === "anime") {
+      url = `https://api.themoviedb.org/3/discover/movie?api_key=${CONFIG.TMDB_API_KEY}&with_genres=16&sort_by=popularity.desc&page=${pageToFetch}${yrParam}`;
+    } else if (state.type === "east-asian") {
+      url = `https://api.themoviedb.org/3/discover/movie?api_key=${CONFIG.TMDB_API_KEY}&with_original_language=ko|ja|zh&sort_by=popularity.desc&page=${pageToFetch}${yrParam}`;
+    } else if (state.type === "ai") {
+      const aiItems = BUILTIN_CATALOG.filter(m => m.genre === "AI Cinema" || m.id?.startsWith("higgs"));
+      if (aiItems.length > 0) {
+        renderCarouselBatch(c, state, aiItems);
+      }
+      shimmer.remove();
+      state.loading = false;
+      state.hasMore = false;
+      return;
+    }
+
+    if (!url) {
+      shimmer.remove();
+      state.loading = false;
+      return;
+    }
+
+    const res = await fetch(url);
+    if (!res.ok) {
+      shimmer.remove();
+      state.loading = false;
+      return;
+    }
+
+    const data = await res.json();
+    const rawResults = (data.results || []).filter(item => (item.title || item.name) && (item.poster_path || item.backdrop_path));
+    
+    if (rawResults.length === 0 || pageToFetch >= (data.total_pages || 100)) {
+      state.hasMore = false;
+    }
+
+    state.page = pageToFetch;
+
+    const formatted = rawResults.map(item => {
+      const title = item.title || item.name;
+      const releaseDate = item.release_date || item.first_air_date || "2024";
+      const year = releaseDate.slice(0, 4);
+      const isTv = item.media_type === "tv" || state.type === "tv";
+      const isBn = item.original_language === "bn" || state.type === "bangla";
+      const isHi = item.original_language === "hi" || state.type === "hindi";
+      const isEastAsian = ["ko", "ja", "zh"].includes(item.original_language) || state.type === "east-asian";
+      const isAnime = state.type === "anime" || (item.genre_ids && item.genre_ids.includes(16));
+      
+      const genreName = (item.genre_ids && item.genre_ids.length > 0 && TMDB_GENRES[item.genre_ids[0]]) || (isTv ? "TV Series" : "Cinema");
+
+      return {
+        title,
+        year,
+        genre: genreName,
+        genres: [genreName],
+        moods: ["all"],
+        duration: isTv ? 45 : 120,
+        tmdbId: String(item.id),
+        trailerId: "",
+        type: isTv ? "tv" : (isBn ? "bangla" : "movie"),
+        bangla: isBn,
+        hindi: isHi,
+        anime: isAnime,
+        eastAsian: isEastAsian,
+        tv: isTv,
+        poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "https://picsum.photos/seed/movie/300/450",
+        backdrop: item.backdrop_path ? `https://image.tmdb.org/t/p/original${item.backdrop_path}` : "",
+        score: item.vote_average ? item.vote_average.toFixed(1) : "8.5"
+      };
+    });
+
+    renderCarouselBatch(c, state, formatted);
+  } catch (err) {
+    console.warn("Failed to paginate carousel:", carouselId, err);
+  } finally {
+    if (shimmer.parentElement) shimmer.remove();
+    state.loading = false;
   }
 }
-initCarouselNav("#trending-carousel", "#trending-prev", "#trending-next");
-initCarouselNav("#ai-carousel", "#ai-prev", "#ai-next");
-initCarouselNav("#bangla-carousel", "#bangla-prev", "#bangla-next");
-initCarouselNav("#hindi-carousel", "#hindi-prev", "#hindi-next");
-initCarouselNav("#hollywood-carousel", "#hollywood-prev", "#hollywood-next");
-initCarouselNav("#tv-carousel", "#tv-prev", "#tv-next");
-initCarouselNav("#anime-carousel", "#anime-prev", "#anime-next");
-initCarouselNav("#east-asian-carousel", "#east-asian-prev", "#east-asian-next");
-initCarouselNav("#thrillers-carousel", "#thrillers-prev", "#thrillers-next");
+
+async function applyCategoryYearFilter(carouselId, year) {
+  const c = document.querySelector(carouselId);
+  const state = CAROUSEL_REGISTRY[carouselId];
+  if (!c || !state) return;
+
+  state.selectedYear = year;
+  const cards = c.querySelectorAll(".movie-card");
+  let visibleCount = 0;
+
+  cards.forEach(card => {
+    const cardYear = card.dataset.year || card.querySelector("p")?.textContent.match(/\b(19\d\d|20[0-2]\d)\b/)?.[0] || "";
+    if (year === "all" || cardYear === String(year)) {
+      card.hidden = false;
+      visibleCount++;
+    } else {
+      card.hidden = true;
+    }
+  });
+
+  c.scrollTo({ left: 0, behavior: "smooth" });
+
+  if (year !== "all" && visibleCount < 6 && state.type && state.type !== "ai") {
+    state.page = 0;
+    state.hasMore = true;
+    await fetchNextCarouselBatch(carouselId);
+  }
+}
+
+function initCategoryYearFilters() {
+  const currentYear = 2026;
+  const oldestYear = 1950;
+
+  document.querySelectorAll(".category-year-filter").forEach(select => {
+    select.innerHTML = `<option value="all">📅 All Years</option>`;
+    for (let yr = currentYear; yr >= oldestYear; yr--) {
+      const opt = document.createElement("option");
+      opt.value = String(yr);
+      opt.textContent = String(yr);
+      select.appendChild(opt);
+    }
+
+    select.addEventListener("change", (e) => {
+      const carouselId = select.dataset.carousel;
+      const selectedYear = e.target.value;
+      applyCategoryYearFilter(carouselId, selectedYear);
+    });
+  });
+}
+
+function initInfiniteCarouselControls(carouselId) {
+  const state = CAROUSEL_REGISTRY[carouselId];
+  if (!state) return;
+  const c = document.querySelector(carouselId);
+  const p = document.querySelector(state.prevId);
+  const n = document.querySelector(state.nextId);
+  if (!c) return;
+
+  c.querySelectorAll(".movie-card").forEach(card => {
+    const title = (card.dataset.title || "").toLowerCase();
+    const tmdb = card.dataset.tmdb;
+    if (title) state.seenIds.add(title);
+    if (tmdb) state.seenIds.add("tmdb_" + tmdb);
+    if (!card.dataset.year) {
+      const match = card.querySelector("p")?.textContent.match(/\b(19\d\d|20[0-2]\d)\b/);
+      if (match) card.dataset.year = match[0];
+    }
+  });
+
+  const scrollStep = () => c.clientWidth * 0.75;
+
+  if (p) {
+    p.addEventListener("click", () => {
+      c.scrollBy({ left: -scrollStep(), behavior: "smooth" });
+    });
+  }
+
+  if (n) {
+    n.addEventListener("click", () => {
+      c.scrollBy({ left: scrollStep(), behavior: "smooth" });
+      setTimeout(() => {
+        const remaining = c.scrollWidth - (c.scrollLeft + c.clientWidth);
+        if (remaining < c.clientWidth * 1.5) {
+          fetchNextCarouselBatch(carouselId);
+        }
+      }, 350);
+    });
+  }
+
+  let scrollDebounce = null;
+  c.addEventListener("scroll", () => {
+    clearTimeout(scrollDebounce);
+    scrollDebounce = setTimeout(() => {
+      const remaining = c.scrollWidth - (c.scrollLeft + c.clientWidth);
+      if (remaining < c.clientWidth * 1.5) {
+        fetchNextCarouselBatch(carouselId);
+      }
+    }, 120);
+  }, { passive: true });
+}
+
+// Initialize all category carousels & single year filters
+initCategoryYearFilters();
+Object.keys(CAROUSEL_REGISTRY).forEach(carouselId => {
+  initInfiniteCarouselControls(carouselId);
+});
+
 
 // Dynamic Ambient Cinematic Backdrop System (Smooth Cross-fade & Ken Burns Animation)
 function initAmbientBackdropSystem() {

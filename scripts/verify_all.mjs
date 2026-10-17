@@ -129,6 +129,18 @@ assert(indexHtml.includes('id="btn-header-youtube"'), "index.html contains btn-h
 assert(indexHtml.includes('id="dialog-youtube-link"'), "index.html contains dialog-youtube-link button in quick view");
 assert(scriptJs.includes('btn-player-youtube') && scriptJs.includes('btn-header-youtube'), "script.js dynamically updates YouTube links on player stream");
 
+// 14. Infinite Horizontal Carousel Engine & Single Year Filters
+const yearFilterCount = (indexHtml.match(/class="category-year-filter"/g) || []).length;
+assert(yearFilterCount >= 8, `index.html contains category-year-filter selects across categories (actual: ${yearFilterCount})`);
+assert(scriptJs.includes('CAROUSEL_REGISTRY'), "script.js contains CAROUSEL_REGISTRY");
+assert(scriptJs.includes('initCategoryYearFilters'), "script.js contains initCategoryYearFilters");
+assert(scriptJs.includes('applyCategoryYearFilter'), "script.js contains applyCategoryYearFilter");
+assert(scriptJs.includes('fetchNextCarouselBatch'), "script.js contains fetchNextCarouselBatch");
+assert(scriptJs.includes('initInfiniteCarouselControls'), "script.js contains initInfiniteCarouselControls");
+assert(scriptJs.includes('currentYear = 2026') && scriptJs.includes('oldestYear = 1950'), "script.js populates single individual years from 2026 down to 1950");
+assert(styleCss.includes('.category-year-filter'), "style.css contains .category-year-filter rules");
+assert(styleCss.includes('.carousel-shimmer-card'), "style.css contains .carousel-shimmer-card rules");
+
 console.log(`\nTEST RESULTS: ${passed} passed, ${failed} failed.`);
 if (failed > 0) process.exit(1);
 

@@ -4799,3 +4799,68 @@ body[data-theme="light"] .nav__search:focus-within {
 .mobile-app-banner__close:hover {
   color: #fff;
 }
+
+/* --- Category Single Year Filter Pill --- */
+.carousel__controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.category-year-filter {
+  appearance: none;
+  -webkit-appearance: none;
+  background: rgba(255, 255, 255, 0.06) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23f5c518' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  color: #e6e6e6;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 6px 28px 6px 12px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  line-height: 1.2;
+  height: 38px;
+}
+
+.category-year-filter:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: var(--color-accent);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(245, 197, 24, 0.25);
+}
+
+.category-year-filter:focus {
+  border-color: var(--color-accent);
+  color: #fff;
+  box-shadow: 0 0 14px rgba(245, 197, 24, 0.35);
+}
+
+.category-year-filter option {
+  background: #14151f;
+  color: #fff;
+  padding: 6px;
+  font-size: 0.85rem;
+}
+
+.carousel-shimmer-card {
+  min-width: 145px;
+  aspect-ratio: 2/3;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(110deg, var(--color-surface) 8%, var(--color-surface-2) 22%, var(--color-surface) 40%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s linear infinite;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+@media (max-width: 767px) {
+  .category-year-filter {
+    height: 34px;
+    padding: 4px 24px 4px 10px;
+    font-size: 0.68rem;
+  }
+}
+
