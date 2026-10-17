@@ -96,5 +96,30 @@ assert(indexHtml.includes('mtfiqLzSSac') && indexHtml.includes('7CHAP3J2FFg'), "
 assert(indexHtml.includes('Channel B Movie'), "Channel B Digital movies are deployed to the catalog");
 assert(indexHtml.includes('VBSUvQTzals') && indexHtml.includes('XY0g1UtI-xk') && indexHtml.includes('ncQKewaiGZw'), "Channel B Digital legendary movies (Jara Brishtite Bhijechilo, Parama, Pushpadhanu) have valid video IDs");
 
+// 12. Authentic Bangla Posters & Foreign Poster Elimination
+assert(!indexHtml.includes('73C9tEuQzjHas0pggzDNAyvH7yL.jpg'), "Hawa does not use Turkish poster");
+assert(indexHtml.includes('19JrYJIicR7vqiDmjdsTRXUHMFK.jpg') && indexHtml.includes('925715'), "Hawa uses authentic Bengali poster and TMDB 925715");
+
+assert(indexHtml.includes('pgkrMs6XKEcJhVPHsA0bZRQJbDx.jpg') && indexHtml.includes('1216385'), "Toofan uses authentic TMDB 1216385 and Bengali poster");
+
+assert(!indexHtml.includes('5KCrKpvO9JF6X6yI7Ww6vjZ6DUP.jpg'), "Priyotoma does not use Narnia poster");
+assert(indexHtml.includes('bbVlVUS5KAO0XLKhSr5oNbbRXbG.jpg') && indexHtml.includes('1032048'), "Priyotoma uses authentic Bengali poster and TMDB 1032048");
+
+assert(!indexHtml.includes('aiZhbfo3hXr0knB2wmkZHUdeGnx.jpg'), "Aynabaji does not use Thieves Gold poster");
+assert(indexHtml.includes('1Cz5Q7PH2JklNV7OzMkTenPGrEf.jpg') && indexHtml.includes('418325'), "Aynabaji uses authentic Bengali poster and TMDB 418325");
+
+assert(!indexHtml.includes('jmAQ4eXd5GCvYFrmoI0fKLr1zuD.jpg'), "Pather Panchali does not use De Jurk poster");
+assert(indexHtml.includes('frZj5djlU9hFEjMcL21RJZVuG5O.jpg') && indexHtml.includes('5801'), "Pather Panchali uses authentic Bengali poster and TMDB 5801");
+
+assert(!indexHtml.includes('dQ5LdPOkRwlTTl3ocObuNGKB1of.jpg'), "Monpura does not use Executive Suite poster");
+assert(indexHtml.includes('b4brqc4JBjXYy8thlKAoP5jFVH0.jpg') && indexHtml.includes('91777'), "Monpura uses authentic Bengali poster and TMDB 91777");
+
+assert(!indexHtml.includes('ejUYqNwDRcbcl58KMdPaglpwfOB.jpg'), "Dipu Number Two does not use French film poster");
+assert(indexHtml.includes('4Gz1HkpZhwWpyuual7eytb5CBj9.jpg') && indexHtml.includes('93527'), "Dipu Number Two uses authentic Bengali poster and TMDB 93527");
+
+assert(!indexHtml.includes('LXdGgrbIC3k9LbeDo5YDAvx3d0.jpg'), "Chhutir Ghonta does not use Tagalog film poster");
+assert(indexHtml.includes('WlUtB3a2Kbo/maxresdefault.jpg'), "Chhutir Ghonta uses authentic film thumbnail");
+
 console.log(`\nTEST RESULTS: ${passed} passed, ${failed} failed.`);
 if (failed > 0) process.exit(1);
+
