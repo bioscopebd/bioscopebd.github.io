@@ -2970,10 +2970,6 @@
       <button class="button button--primary" id="dialog-play-btn" type="button" style="flex:1;">
         <svg viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px;margin-right:6px;fill:currentColor;"><path d="m8 5 11 7-11 7V5Z"/></svg><span id="dialog-play-btn-text">Watch Movie</span>
       </button>
-      <a class="button button--outline" id="dialog-youtube-link" href="#" target="_blank" rel="noopener noreferrer" style="display:none;align-items:center;gap:6px;text-decoration:none;border-color:rgba(255,50,50,0.5);color:#ff5555;" title="Watch directly on YouTube">
-        <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-        <span>Watch on YouTube</span>
-      </a>
       <button class="button button--outline" id="dialog-watchlist-btn" type="button">＋ Watchlist</button>
       <button class="button button--outline" id="dialog-party-btn" type="button" hidden>🍿 Party</button>
       <button class="button button--outline" id="dialog-trailer-btn" type="button">Trailer</button>
@@ -2992,10 +2988,6 @@
         <div class="stream-source-toggle" id="stream-source-toggle">
           <button type="button" class="source-toggle-btn is-active" id="btn-toggle-movie" title="Switch to Full Movie Stream">🎬 Movie</button>
           <button type="button" class="source-toggle-btn" id="btn-toggle-trailer" title="Switch to Official Teaser">🎞️ Teaser</button>
-          <a class="source-toggle-btn source-toggle-btn--yt" id="btn-header-youtube" href="#" target="_blank" rel="noopener noreferrer" title="Watch directly on YouTube (নতুন ট্যাবে দেখুন)" style="display:none;align-items:center;gap:4px;text-decoration:none;color:#ff5555;">
-            <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor;"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-            <span>YouTube</span>
-          </a>
         </div>
         <!-- In-Player TV Episode Controller (Visible only for TV series) -->
         <div class="player-tv-controls" id="player-tv-controls" hidden>
@@ -3215,7 +3207,7 @@
           <span class="tool-icon">⚙️</span>
           <span class="tool-label">Quality: <strong id="toolbar-quality-label">AUTO</strong></span>
         </button>
-        <button type="button" class="player-tool-btn" id="btn-server-tool" title="Switch Cinema Server Mirror">
+        <button type="button" class="player-tool-btn" id="btn-server-tool" title="Switch Cinema Server Mirror" hidden style="display:none!important;">
           <span class="tool-icon">🔄</span>
           <span class="tool-label">Server: <strong id="toolbar-server-label">Mirror 1</strong></span>
         </button>
@@ -3227,10 +3219,6 @@
           <span class="tool-icon">⬇️</span>
           <span class="tool-label">Download (PC)</span>
         </button>
-        <a class="player-tool-btn player-tool-btn--youtube" id="btn-player-youtube" href="#" target="_blank" rel="noopener noreferrer" title="Play directly on YouTube (নতুন ট্যাবে দেখুন)" style="display:none;text-decoration:none;border-color:rgba(255,50,50,0.3);color:#ff5555;">
-          <span class="tool-icon" style="color:#ff4444;">▶️</span>
-          <span class="tool-label">Play on YouTube</span>
-        </a>
       </div>
 
       <div class="player-toolbar__group">

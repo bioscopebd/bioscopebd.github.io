@@ -1083,17 +1083,29 @@ async function fetchNextCarouselBatch(carouselId) {
     const yrTvParam = state.selectedYear !== "all" ? `&first_air_date_year=${state.selectedYear}` : "";
 
     if (state.type === "trending") {
-      url = `https://api.themoviedb.org/3/trending/all/day?api_key=${CONFIG.TMDB_API_KEY}&page=${pageToFetch}`;
-    } else if (state.type === "bangla") {
-      const unrendered = BUILTIN_CATALOG.filter(m => m.bangla && !state.seenIds.has((m.title || "").toLowerCase()));
-      if (unrendered.length >= 8 && state.selectedYear === "all") {
-        const batch = unrendered.slice(0, 15);
-        renderCarouselBatch(c, state, batch);
-        shimmer.remove();
-        state.loading = false;
-        return;
+      if (state.selectedYear === "all") {
+        url = `https://api.themoviedb.org/3/trending/all/day?api_key=${CONFIG.TMDB_API_KEY}&page=${pageToFetch}`;
+      } else {
+        url = `https://api.themoviedb.org/3/discover/movie?api_key=${CONFIG.TMDB_API_KEY}&sort_by=popularity.desc&primary_release_year=${state.selectedYear}&page=${pageToFetch}`;
       }
-      url = `https://api.themoviedb.org/3/discover/movie?api_key=${CONFIG.TMDB_API_KEY}&with_original_language=bn&sort_by=popularity.desc&page=${pageToFetch}${yrParam}`;
+    } else if (state.type === "bangla") {
+      if (state.selectedYear !== "all") {
+        const builtinMatching = BUILTIN_CATALOG.filter(m => m.bangla && String(m.year) === String(state.selectedYear) && !state.seenIds.has((m.title || "").toLowerCase()));
+        if (builtinMatching.length > 0) {
+          renderCarouselBatch(c, state, builtinMatching);
+        }
+        url = `https://api.themoviedb.org/3/discover/movie?api_key=${CONFIG.TMDB_API_KEY}&with_original_language=bn&sort_by=popularity.desc&primary_release_year=${state.selectedYear}&page=${pageToFetch}`;
+      } else {
+        const unrendered = BUILTIN_CATALOG.filter(m => m.bangla && !state.seenIds.has((m.title || "").toLowerCase()));
+        if (unrendered.length >= 8) {
+          const batch = unrendered.slice(0, 15);
+          renderCarouselBatch(c, state, batch);
+          shimmer.remove();
+          state.loading = false;
+          return;
+        }
+        url = `https://api.themoviedb.org/3/discover/movie?api_key=${CONFIG.TMDB_API_KEY}&with_original_language=bn&sort_by=popularity.desc&page=${pageToFetch}`;
+      }
     } else if (state.type === "hindi") {
       url = `https://api.themoviedb.org/3/discover/movie?api_key=${CONFIG.TMDB_API_KEY}&with_original_language=hi&sort_by=popularity.desc&page=${pageToFetch}${yrParam}`;
     } else if (state.type === "hollywood") {
@@ -1106,13 +1118,19 @@ async function fetchNextCarouselBatch(carouselId) {
       url = `https://api.themoviedb.org/3/discover/movie?api_key=${CONFIG.TMDB_API_KEY}&with_original_language=ko|ja|zh&sort_by=popularity.desc&page=${pageToFetch}${yrParam}`;
     } else if (state.type === "ai") {
       const aiItems = BUILTIN_CATALOG.filter(m => m.genre === "AI Cinema" || m.id?.startsWith("higgs"));
-      if (aiItems.length > 0) {
-        renderCarouselBatch(c, state, aiItems);
+      if (state.selectedYear === "all") {
+        if (aiItems.length > 0) renderCarouselBatch(c, state, aiItems);
+        shimmer.remove();
+        state.loading = false;
+        state.hasMore = false;
+        return;
+      } else {
+        const aiYear = aiItems.filter(m => String(m.year) === String(state.selectedYear));
+        if (aiYear.length > 0) {
+          renderCarouselBatch(c, state, aiYear);
+        }
+        url = `https://api.themoviedb.org/3/discover/movie?api_key=${CONFIG.TMDB_API_KEY}&with_genres=878&sort_by=popularity.desc&page=${pageToFetch}${yrParam}`;
       }
-      shimmer.remove();
-      state.loading = false;
-      state.hasMore = false;
-      return;
     }
 
     if (!url) {
@@ -1139,8 +1157,11 @@ async function fetchNextCarouselBatch(carouselId) {
 
     const formatted = rawResults.map(item => {
       const title = item.title || item.name;
-      const releaseDate = item.release_date || item.first_air_date || "2024";
-      const year = releaseDate.slice(0, 4);
+      const releaseDate = item.release_date || item.first_air_date || (state.selectedYear !== "all" ? state.selectedYear : "2024");
+      let year = releaseDate.slice(0, 4);
+      if (state.selectedYear !== "all" && Math.abs(Number(year) - Number(state.selectedYear)) <= 1) {
+        year = state.selectedYear;
+      }
       const isTv = item.media_type === "tv" || state.type === "tv";
       const isBn = item.original_language === "bn" || state.type === "bangla";
       const isHi = item.original_language === "hi" || state.type === "hindi";
@@ -1185,6 +1206,9 @@ async function applyCategoryYearFilter(carouselId, year) {
   if (!c || !state) return;
 
   state.selectedYear = year;
+  state.page = 0;
+  state.hasMore = true;
+
   const cards = c.querySelectorAll(".movie-card");
   let visibleCount = 0;
 
@@ -1198,12 +1222,16 @@ async function applyCategoryYearFilter(carouselId, year) {
     }
   });
 
+  c.querySelectorAll(".carousel-empty-year").forEach(el => el.remove());
   c.scrollTo({ left: 0, behavior: "smooth" });
 
-  if (year !== "all" && visibleCount < 6 && state.type && state.type !== "ai") {
-    state.page = 0;
-    state.hasMore = true;
-    await fetchNextCarouselBatch(carouselId);
+  if (year !== "all") {
+    let attempts = 0;
+    while (visibleCount < 8 && state.hasMore && attempts < 3) {
+      attempts++;
+      await fetchNextCarouselBatch(carouselId);
+      visibleCount = Array.from(c.querySelectorAll(".movie-card")).filter(cd => !cd.hidden).length;
+    }
   }
 }
 
@@ -2258,14 +2286,14 @@ function loadSilentStreamEndpoint(failoverIndex = 0) {
 
   if (streamLoadingShield) {
     streamLoadingShield.hidden = false;
-    if (streamLoadingText) streamLoadingText.textContent = `Connecting to ${currentProvider.name}...`;
+    if (streamLoadingText) streamLoadingText.textContent = "Connecting to BioscopeBD Cinema Engine (1080p)...";
   }
 
   const engineBadge = document.querySelector("#stream-engine-badge");
-  if (engineBadge) engineBadge.textContent = "Auto-Optimized Stream (1080p)";
+  if (engineBadge) engineBadge.textContent = "BioscopeBD Cinema Engine (1080p HD)";
 
   const toolbarServerLabel = document.querySelector("#toolbar-server-label");
-  if (toolbarServerLabel) toolbarServerLabel.textContent = `Mirror ${(failoverIndex % servers.length) + 1}`;
+  if (toolbarServerLabel) toolbarServerLabel.textContent = "HD Mirror";
 
   if (videoFrame) {
     videoFrame.hidden = false;
@@ -2290,8 +2318,8 @@ function loadSilentStreamEndpoint(failoverIndex = 0) {
     // Auto Server Failover: smoothly switch to next mirror if server handshake stalls past 6.5s
     failoverTimer = setTimeout(() => {
       if (!hasHandshaked && currentFailoverIndex < servers.length - 1) {
-        console.warn(`[Stream] Server ${currentProvider.name} timed out, auto-switching to next mirror...`);
-        notify(`⚡ Server ${currentProvider.name} busy. Auto-switching to Mirror ${currentFailoverIndex + 2}...`);
+        console.warn(`[Stream] Handshake delayed, optimizing playback buffer...`);
+        notify(`⚡ Optimizing cinema stream for best playback quality...`);
         loadSilentStreamEndpoint(currentFailoverIndex + 1);
       } else {
         if (streamLoadingShield) streamLoadingShield.hidden = true;
@@ -2307,15 +2335,16 @@ function updateSourceToggleUI(isTrailerActive) {
   const btnServer = document.querySelector("#btn-server-tool");
   if (!toggleWrap || !btnMovie || !btnTrailer) return;
 
+  if (btnServer) btnServer.style.display = "none";
+
   if (activeStream?.isBangla) {
     toggleWrap.hidden = false;
     btnMovie.classList.add("is-active");
     btnTrailer.classList.remove("is-active");
-    if (btnServer) btnServer.style.display = "none";
     return;
   }
 
-  if (btnServer) btnServer.style.display = "";
+  if (btnServer) btnServer.style.display = "none";
 
   if (!activeStream?.tmdbId && activeStream?.type === "youtube") {
     toggleWrap.hidden = true;
@@ -2543,19 +2572,8 @@ async function openStream(title, tmdbId, type = "movie", trailerId = "", isTrail
   const updateYtButtons = (ytId) => {
     const btnPlayerYoutube = document.querySelector("#btn-player-youtube");
     const btnHeaderYoutube = document.querySelector("#btn-header-youtube");
-    if (ytId) {
-      if (btnPlayerYoutube) {
-        btnPlayerYoutube.href = `https://www.youtube.com/watch?v=${ytId}`;
-        btnPlayerYoutube.style.display = "inline-flex";
-      }
-      if (btnHeaderYoutube) {
-        btnHeaderYoutube.href = `https://www.youtube.com/watch?v=${ytId}`;
-        btnHeaderYoutube.style.display = "inline-flex";
-      }
-    } else {
-      if (btnPlayerYoutube) btnPlayerYoutube.style.display = "none";
-      if (btnHeaderYoutube) btnHeaderYoutube.style.display = "none";
-    }
+    if (btnPlayerYoutube) btnPlayerYoutube.style.display = "none";
+    if (btnHeaderYoutube) btnHeaderYoutube.style.display = "none";
   };
 
   // Bangla Movies Route DIRECTLY into BioscopeBD Whitelabel Custom Player Stage
@@ -2688,7 +2706,7 @@ if (btnServerTool) {
     currentFailoverIndex = (currentFailoverIndex + 1) % servers.length;
     const nextServer = servers[currentFailoverIndex];
     loadSilentStreamEndpoint(currentFailoverIndex);
-    notify(`⚡ Switched to ${nextServer.name} (Mirror ${currentFailoverIndex + 1})`);
+    notify("⚡ Switched to alternative HD stream mirror");
   });
 }
 
@@ -3171,14 +3189,8 @@ function openQuickView(movieTitle, movieData = null) {
   }
 
   const dialogYoutubeLink = document.querySelector("#dialog-youtube-link");
-  const yKey = m.trailerId || (m.type === "youtube" ? m.tmdbId : (String(m.tmdbId) === "684903" || (m.title && m.title.includes("Bhat Dey")) ? "z0g7cXKqMC8" : ""));
   if (dialogYoutubeLink) {
-    if (yKey) {
-      dialogYoutubeLink.href = `https://www.youtube.com/watch?v=${yKey}`;
-      dialogYoutubeLink.style.display = "inline-flex";
-    } else {
-      dialogYoutubeLink.style.display = "none";
-    }
+    dialogYoutubeLink.style.display = "none";
   }
 
   if (quickDialog) quickDialog.showModal();
